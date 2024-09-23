@@ -11,6 +11,8 @@ namespace ConsultingKoiFish.DAL.Entities
 	{
 		public Guid Id { get; set; }
 
+        public string UserId {  get; set; }
+
         public string FullName { get; set; } = null!;
         public string? IdentityCard { get; set; }
         public DateTime DateOfBirth { get; set; }

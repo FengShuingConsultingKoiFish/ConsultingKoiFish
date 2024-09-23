@@ -33,8 +33,27 @@ namespace ConsultingKoiFish.DAL
 				.SetBasePath(Directory.GetCurrentDirectory())
 				.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
 				IConfigurationRoot configuration = builder.Build();
-				optionsBuilder.UseSqlServer(configuration.GetConnectionString("OnDemandTutor"));
+				optionsBuilder.UseSqlServer(configuration.GetConnectionString("ConsultingKoiFish"));
 			}
+		}
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			base.OnModelCreating(modelBuilder);
+			modelBuilder.HasDefaultSchema("dbo");
+
+			modelBuilder.Entity<IdentityUser>(entity => { entity.ToTable(name: "User"); });
+			modelBuilder.Entity<IdentityUserRole<string>>(entity => { entity.ToTable(name: "UserRoles"); });
+			modelBuilder.Entity<IdentityRole>(entity => { entity.ToTable(name: "Role"); });
+			modelBuilder.Entity<IdentityUserClaim<string>>(entity => { entity.ToTable(name: "UserClaim"); });
+			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
+			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
+			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<UserDetail>()
+			.HasOne(ud => ud.User)
+			.WithOne() // Không cần truy xuất ngược từ User về UserDetail
+			.HasForeignKey<UserDetail>(ud => ud.UserId)
+			.OnDelete(DeleteBehavior.ClientSetNull);
 		}
 	}
 }
