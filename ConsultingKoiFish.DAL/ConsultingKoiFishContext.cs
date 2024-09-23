@@ -21,6 +21,7 @@ namespace ConsultingKoiFish.DAL
 		#region DbSet
 
 		public virtual DbSet<UserDetail> UserDetails { get; set; }
+		public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 
 		#endregion
 
@@ -53,7 +54,18 @@ namespace ConsultingKoiFish.DAL
 			.HasOne(ud => ud.User)
 			.WithOne() // Không cần truy xuất ngược từ User về UserDetail
 			.HasForeignKey<UserDetail>(ud => ud.UserId)
-			.OnDelete(DeleteBehavior.ClientSetNull);
+			.OnDelete(DeleteBehavior.ClientSetNull)
+			.HasConstraintName("FK_UserDetail_User");
+
+			modelBuilder.Entity<RefreshToken>(entity =>
+			{
+				entity.ToTable(name: "RefreshToken");
+				entity.HasOne(r => r.User)
+					  .WithOne()
+					  .HasForeignKey<RefreshToken>(r => r.UserId)
+					  .OnDelete(DeleteBehavior.ClientSetNull)
+					  .HasConstraintName("FK_RefreshToken_User");
+			});
 		}
 	}
 }
