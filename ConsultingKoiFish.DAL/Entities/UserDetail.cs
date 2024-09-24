@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ConsultingKoiFish.DAL.Entities
 {
-	public class UserDetail
+	public partial class UserDetail
 	{
 		public Guid Id { get; set; }
 

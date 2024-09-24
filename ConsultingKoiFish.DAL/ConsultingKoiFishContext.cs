@@ -11,12 +11,16 @@ using System.Threading.Tasks;
 
 namespace ConsultingKoiFish.DAL
 {
-	public class ConsultingKoiFishContext : IdentityDbContext<IdentityUser>
+	public partial class ConsultingKoiFishContext : IdentityDbContext<IdentityUser>
 	{
-        public ConsultingKoiFishContext(DbContextOptions<ConsultingKoiFishContext> options) : base(options)
-        {
-            
-        }
+		public ConsultingKoiFishContext()
+		{
+
+		}
+		public ConsultingKoiFishContext(DbContextOptions<ConsultingKoiFishContext> options) : base(options)
+		{
+
+		}
 
 		#region DbSet
 
@@ -32,7 +36,7 @@ namespace ConsultingKoiFish.DAL
 			{
 				var builder = new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
-				.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
+				.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 				IConfigurationRoot configuration = builder.Build();
 				optionsBuilder.UseSqlServer(configuration.GetConnectionString("ConsultingKoiFish"));
 			}
@@ -59,13 +63,18 @@ namespace ConsultingKoiFish.DAL
 
 			modelBuilder.Entity<RefreshToken>(entity =>
 			{
-				entity.ToTable(name: "RefreshToken");
+				entity.ToTable(name: "RefreshTokens");
 				entity.HasOne(r => r.User)
 					  .WithOne()
 					  .HasForeignKey<RefreshToken>(r => r.UserId)
 					  .OnDelete(DeleteBehavior.ClientSetNull)
 					  .HasConstraintName("FK_RefreshToken_User");
+				entity.Property(x => x.UserId).HasMaxLength(450);
 			});
+
+			OnModelCreatingPartial(modelBuilder);
 		}
+		partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 	}
+
 }

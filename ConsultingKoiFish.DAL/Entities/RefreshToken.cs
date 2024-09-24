@@ -8,10 +8,9 @@ using System.Threading.Tasks;
 
 namespace ConsultingKoiFish.DAL.Entities
 {
-	public class RefreshToken
+	public partial class RefreshToken
 	{
-		public string Id { get; set; }
-		[MaxLength(450)]
+		public Guid Id { get; set; }
 		public string UserId { get; set; }
 		public string JwtId { get; set; }
 		public string Token { get; set; }

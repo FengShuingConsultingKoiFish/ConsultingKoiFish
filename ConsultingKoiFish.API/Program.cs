@@ -1,4 +1,9 @@
 
+using ConsultingKoiFish.API.ConfigExtensions;
+using ConsultingKoiFish.DAL;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 namespace ConsultingKoiFish.API
 {
 	public class Program
@@ -14,6 +19,30 @@ namespace ConsultingKoiFish.API
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen();
 
+			//set up policy
+			builder.Services.AddCors(opts =>
+			{
+				opts.AddPolicy("corspolicy", build =>
+				{
+					build.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+				});
+			});
+
+			//set up DB
+			var connectionString = builder.Configuration.GetConnectionString("ConsultingKoiFish");
+			Console.WriteLine($"ConnectionString: {connectionString}");
+
+			builder.Services.AddDbContext<ConsultingKoiFishContext>(options => options.UseSqlServer(connectionString));
+
+			//set Identity
+			builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ConsultingKoiFishContext>().AddDefaultTokenProviders();
+
+			//set repo base
+			builder.Services.AddRepoBase();
+
+			//set Unit Of Work
+			builder.Services.AddUnitOfWork();
+
 			var app = builder.Build();
 
 			// Configure the HTTP request pipeline.
@@ -23,6 +52,7 @@ namespace ConsultingKoiFish.API
 				app.UseSwaggerUI();
 			}
 
+			app.UseCors("corspolicy");
 			app.UseHttpsRedirection();
 
 			app.UseAuthorization();
