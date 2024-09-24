@@ -2,6 +2,7 @@
 using ConsultingKoiFish.API.ConfigExtensions;
 using ConsultingKoiFish.DAL;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsultingKoiFish.API
@@ -46,8 +47,11 @@ namespace ConsultingKoiFish.API
 			//set AutoMapper
 			builder.Services.AddMapper();
 
-			//st Services
+			//set Services
 			builder.Services.AddBLLServices();
+
+			// API Behavior
+			builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 
 			var app = builder.Build();
 
