@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ConsultingKoiFish.BLL.Helpers.Fillters;
 using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
