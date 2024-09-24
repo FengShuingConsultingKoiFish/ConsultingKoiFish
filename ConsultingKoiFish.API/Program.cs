@@ -43,6 +43,9 @@ namespace ConsultingKoiFish.API
 			//set Unit Of Work
 			builder.Services.AddUnitOfWork();
 
+			//set AutoMapper
+			builder.Services.AddMapper();
+
 			var app = builder.Build();
 
 			// Configure the HTTP request pipeline.
