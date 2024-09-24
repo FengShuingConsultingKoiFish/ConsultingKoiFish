@@ -1,0 +1,37 @@
+
+		///=========================HƯỚNG DẪN SỬ DỤNG BASE==================================//
+		I. Về phần data (Lớp DAL):
+			- chỉ việc thêm class vào folder Entities nhớ phải đúng folder vì sai thì chắc chắn cook, bug không lối thoát =)))
+			- sau đó mở thẳng terminal trong project DAL => dotnet ef migrations add [tên migration m thích] -> dotnet ef update database
+			
+		II. Về phần Query:
+			- thích xài gì thì chỉ cần new QueryBuilder<TEntity> rồi chấm các filter như WithPredicate(), WithOrder() ....... sau đó Build() để nó => QueryOption<> rồi truyền vào Get GetAllAsync hoặc GetSingleAsync tùy m.
+			- Paging này hoạt động trên IQueryable nên chỉ sử dụng được với IQueryable thôi, truy vấn về rồi thì gọi CreateAsync là auto paging
+		
+		III. Về phần Repo
+			- inject cái UnitOfWork vào rồi gọi cái hàm GetRepo<TEntity> là nó auto lấy ra repo của entity đó.
+			- có cả quản lý transactions trong UnitOfWork khi nào cần bảo toàn thì dùng begin commit rollback đủ hết
+			
+		IV. Về phần DTOs:
+			- muốn dùng DTO cho thằng nào thì vào folder DTOs tạo 1 folder "tên entity + DTOs" ví dụ: KoiDTOs => chứa các DTO liên quan đến Koi.
+			- sau đó trong folder KoiDTOs tạo các class DTO như bình thường, và các class này BẮT BUỘC TUÂN THỦ: phải bắt đầu bằng tên Entity và kết thúc bằng DTO
+				ví dụ: KoiDetailDTO, KoiCreateDTO, KoiUpdateDTO. (lưu ý bắt buộc) tuân thủ đúng thì mapper tự tìm mà map, không cần m phải đi map từng cái ở profile nữa.
+				
+		V. Về phần Service:
+			- vào folder Implement thêm các service bắt buộc phải tạo đúng folder này.
+			- tên service: BẮT BUỘC KẾT THÚC BẰNG "Service" xem ví dụ ở github sẽ rõ.
+			
+			- T có tạo một base class: BaseServices chứa tất cả những Query chung, filter chung, các CRUD chung cho 1 service
+			- M thích nhanh gọn thì kế thừa nó còn kh thích thì cứ việc viết chay =))))) 
+			- Cách sử dụng cứ vào github xem phần StoreService sẽ rõ.
+			
+			- Class FilerHelper: nó là 1 th cho phép Filter theo key => phục vụ hàm Search => filter kiểu chó gì cũng được nó sẽ quét hết các thuộc tính của entity 
+			
+		VI. Về phần Controller:
+			- T đã làm một BaseApiController riêng trả về thông tin rất đầy đủ của 1 api.
+			- khi m tạo 1 controller kh cần phải kế thừa controller BASE như bth nữa chỉ cần kế thừa BaseApiController và xài những gì t viết thôi
+			- nếu m thích code chay thì không cần kế thừa cũng được
+			- chi tiết sử dụng m cứ xem StoreController là sẽ rõ =)))).
+			
+			
+			THẾ NHÉ, NẾU MUỐN VẤT VẢ HƠN THÌ CỨ VIỆC LÀM THEO Ý MÌNH KH CẦN XÀI MẤY CÁI T LÀM, CHỈ CẦN ĐẶT ĐÚNG TÊN CLASS ĐĂT CLASS ĐÚNG CHỖ (BẮT BUỘC!!!!!!)
