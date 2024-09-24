@@ -46,6 +46,9 @@ namespace ConsultingKoiFish.API
 			//set AutoMapper
 			builder.Services.AddMapper();
 
+			//st Services
+			builder.Services.AddBLLServices();
+
 			var app = builder.Build();
 
 			// Configure the HTTP request pipeline.

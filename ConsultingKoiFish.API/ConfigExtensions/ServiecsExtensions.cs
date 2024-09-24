@@ -1,6 +1,7 @@
 ﻿using ConsultingKoiFish.BLL.Helpers.Mapper;
 using ConsultingKoiFish.DAL.Repositories;
 using ConsultingKoiFish.DAL.UnitOfWork;
+using System.Reflection;
 
 namespace ConsultingKoiFish.API.ConfigExtensions
 {
@@ -18,15 +19,15 @@ namespace ConsultingKoiFish.API.ConfigExtensions
 			services.AddScoped(typeof(IRepoBase<>), typeof(RepoBase<>));
 		}
 
-		////BLL Services
-		//public static void AddBLLServices(this IServiceCollection services)
-		//{
-		//	services.Scan(scan => scan
-		//			.FromAssemblies(Assembly.Load("Task1.BLL"))
-		//			.AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service")))
-		//			.AsImplementedInterfaces()
-		//			.WithScopedLifetime());
-		//}
+		//BLL Services
+		public static void AddBLLServices(this IServiceCollection services)
+		{
+			services.Scan(scan => scan
+					.FromAssemblies(Assembly.Load("ConsultingKoiFish.BLL"))
+					.AddClasses(classes => classes.Where(type => type.Namespace == $"ConsultingKoiFish.BLL.Services.Implements" && type.Name.EndsWith("Service")))
+					.AsImplementedInterfaces()
+					.WithScopedLifetime());
+		}
 
 		//add auto mapper
 		public static void AddMapper(this IServiceCollection services)
