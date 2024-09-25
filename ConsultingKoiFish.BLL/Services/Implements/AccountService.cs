@@ -1,9 +1,12 @@
 using AutoMapper;
 using ConsultingKoiFish.BLL.DTOs.AccountDTOs;
+using ConsultingKoiFish.BLL.DTOs.EmailDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
+using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Enums;
 using ConsultingKoiFish.DAL.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json.Linq;
 
 namespace ConsultingKoiFish.BLL.Services.Implements;
 
@@ -11,66 +14,61 @@ public class AccountService : IAccountService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+	private readonly IIdentityService _identityService;
+	private readonly IEmailService _emailService;
 
-    public AccountService(IUnitOfWork unitOfWork, IMapper mapper, UserManager<IdentityUser> userManager,
-                            RoleManager<IdentityRole> roleManager, SignInManager<IdentityUser> signInManager)
+	public AccountService(IIdentityService identityService, IUnitOfWork unitOfWork
+                           IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _userManager = userManager;
-        _roleManager = roleManager;
-        _signInManager = signInManager;
-    }
-    public async Task<BaseResponse> SignUpAsync(AccountCreateRequestDTO accRequest)
+        _identityService = identityService;
+		_emailService = emailService;
+	}
+    public async Task<AccountViewDTO> SignUpAsync(AccountCreateRequestDTO accRequest)
     {
         try
         {
             await _unitOfWork.BeginTransactionAsync();
-            var existedUser = await _userManager.FindByEmailAsync(accRequest.EmailAddress);
-            if (existedUser != null)
-            {
-                return new BaseResponse
-                {
-                    IsSuccess = false,
-                    Message = "The email is existed in the system. Please try again witn another email."
-                };
-            }
-
             var user = new IdentityUser
             {
                 Email = accRequest.EmailAddress,
-                UserName = accRequest.UserName
+                UserName = accRequest.UserName,
+                PhoneNumber = accRequest.PhoneNumber,
             };
 
-            var createResult = await _userManager.CreateAsync(user, accRequest.Password);
+            var createResult = await _identityService.CreateAsync(user, accRequest.Password);
             if (!createResult.Succeeded)
             {
-                return new BaseResponse
-                {
-                    IsSuccess = false,
-                    Message = "Một số lỗi xảy ra trong quá trình đăng kí tài khoản. Vui lòn thử lại sau ít phút"
-                };
-            }
+                throw new Exception("Một số lỗi xảy ra trong quá trình đăng kí tài khoản. Vui lòn thử lại sau ít phút.");
 
-            await _userManager.AddToRoleAsync(user, Role.Member.ToString());
+			}
+
+            await _identityService.AddToRoleAsync(user, Role.Member.ToString());
 
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitTransactionAsync();
 
-            var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-            return new BaseResponse
+            var emailToken = await _identityService.GenerateEmailConfirmationTokenAsync(user);
+			var confirmationLink = $"https://localhost:7166/api/Users/ConfirmEmail?token={emailToken}&email={user.Email}";
+			var message = new EmailDTO
+			(
+				new string[] { user.Email! },
+				"Confirmation Email Link!",
+				confirmationLink!
+			);
+			_emailService.SendEmail(message);
+            return new AccountViewDTO
             {
-                IsSuccess = true,
-                Message = $"Đăng kí thành công. Vui lòng xác thực thông tin đã gửi ở Email: {user.Email}"
+                Id = user.Id,
+                EmailAddress = user.Email,
+                UserName = user.UserName,
+                PhoneNumBer = user.PhoneNumber,
             };
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine(e);
+            await _unitOfWork.RollBackAsync();
+            return null;
             throw;
         } 
     }
