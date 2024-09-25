@@ -50,6 +50,10 @@ namespace ConsultingKoiFish.API
 			//set Services
 			builder.Services.AddBLLServices();
 
+			//Add Email Config
+			var emailConfig = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+			builder.Services.AddSingleton(emailConfig);
+
 			// API Behavior
 			builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 
