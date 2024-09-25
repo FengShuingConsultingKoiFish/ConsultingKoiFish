@@ -10,6 +10,7 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 	public interface IIdentityService
 	{
 		public Task<IdentityUser> GetByEmailAsync(string email);
+		public Task<IdentityUser> GetByUserNameAsync(string userName);
 		public Task<IdentityResult> CreateAsync(IdentityUser user, string password);
 		public Task<IdentityResult> AddToRoleAsync(IdentityUser user, string role);
 		public Task<string> GenerateEmailConfirmationTokenAsync(IdentityUser user);

@@ -51,5 +51,11 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var existedUser = await _userManager.FindByEmailAsync(email);
 			return existedUser;
 		}
+
+		public async Task<IdentityUser> GetByUserNameAsync(string userName)
+		{
+			var user = await _userManager.FindByNameAsync(userName);
+			return user;
+		}
 	}
 }

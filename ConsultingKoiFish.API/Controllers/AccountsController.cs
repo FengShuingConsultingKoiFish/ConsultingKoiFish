@@ -43,6 +43,14 @@ namespace ConsultingKoiFish.API.Controllers
 					ModelState.AddModelError("EmailAddress", "Email đã tồn tại trong hệ thống. Vui lòng thử một email khác.");
 					return ModelInvalid();
 				}
+
+				var userName = await _identityService.GetByUserNameAsync(accountCreate.UserName);
+				if(userName != null)
+				{
+					ModelState.AddModelError("UserName", "UserName đã tồn tại. Vui lòng chọn một UserName khác.");
+					return ModelInvalid();
+				}
+
 				var response = await _accountService.SignUpAsync(accountCreate);
 
 				if (response == null)
