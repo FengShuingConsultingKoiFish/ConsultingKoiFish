@@ -17,7 +17,7 @@ public class AccountService : IAccountService
 	private readonly IIdentityService _identityService;
 	private readonly IEmailService _emailService;
 
-	public AccountService(IIdentityService identityService, IUnitOfWork unitOfWork
+	public AccountService(IIdentityService identityService, IUnitOfWork unitOfWork,
                            IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
