@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ConsultingKoiFish.BLL.DTOs.AccountDTOs;
+using Microsoft.AspNetCore.Identity;
 
 namespace ConsultingKoiFish.BLL.Helpers.Mapper
 {
@@ -29,6 +31,6 @@ namespace ConsultingKoiFish.BLL.Helpers.Mapper
 					CreateMap(entityType, dtoType).ReverseMap();
 				}
 			}
-		}
+        }
     }
 }
