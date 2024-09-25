@@ -3,6 +3,7 @@ using ConsultingKoiFish.BLL.Services.Implements;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Web;
 
 namespace ConsultingKoiFish.API.Controllers
 {
@@ -25,7 +26,7 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			try
 			{
-				if(ModelState.IsValid)
+				if(!ModelState.IsValid)
 				{
 					return ModelInvalid();
 				}
@@ -36,7 +37,7 @@ namespace ConsultingKoiFish.API.Controllers
 					return ModelInvalid();
 				}
 
-				var userEmail = await _identityService.GetByEmailAsynce(accountCreate.EmailAddress);
+				var userEmail = await _identityService.GetByEmailAsync(accountCreate.EmailAddress);
 				if (userEmail != null)
 				{
 					ModelState.AddModelError("EmailAddress", "Email đã tồn tại trong hệ thống. Vui lòng thử một email khác.");
@@ -59,5 +60,25 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình đăng kí. Hãy thử lại sau một ít phút nữa.");
 			}
 		}
-    }
+
+		[HttpGet]
+		[Route("VerifyEmail")]
+		public async Task<IActionResult> ConfirmEmailAsync(string token, string email)
+		{
+			var user = await _identityService.GetByEmailAsync(email);
+			if(user == null)
+			{
+				return GetNotFound("Không tìm thấy Email người dùng trong hệ thống.");
+			}
+			var decodedToken = HttpUtility.UrlDecode(token);
+			var response = await _identityService.ConfirmEmailAsync(user, decodedToken.Replace(" ", "+"));
+
+			if (!response.Succeeded)
+			{
+				return Error("Xác thực KHÔNG thành công.");
+			}
+
+			return Success(response, "Xác thực tài khoản thành công.");
+		}
+	}
 }

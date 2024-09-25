@@ -55,6 +55,12 @@ namespace ConsultingKoiFish.API
 			var emailConfig = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
 			builder.Services.AddSingleton(emailConfig);
 
+			//Add config for Required Email
+			builder.Services.Configure<IdentityOptions>(opts => opts.SignIn.RequireConfirmedEmail = true);
+
+			//Add config for verify token
+			builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(1));
+
 			// API Behavior
 			builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 

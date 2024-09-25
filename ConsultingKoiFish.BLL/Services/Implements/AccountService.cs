@@ -7,6 +7,7 @@ using ConsultingKoiFish.DAL.Enums;
 using ConsultingKoiFish.DAL.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json.Linq;
+using System.Web;
 
 namespace ConsultingKoiFish.BLL.Services.Implements;
 
@@ -49,7 +50,7 @@ public class AccountService : IAccountService
             await _unitOfWork.CommitTransactionAsync();
 
             var emailToken = await _identityService.GenerateEmailConfirmationTokenAsync(user);
-			var confirmationLink = $"https://localhost:7166/api/Users/ConfirmEmail?token={emailToken}&email={user.Email}";
+			var confirmationLink = $"https://localhost:7166/api/Accounts/VerifyEmail?token={emailToken}&email={user.Email}";
 			var message = new EmailDTO
 			(
 				new string[] { user.Email! },

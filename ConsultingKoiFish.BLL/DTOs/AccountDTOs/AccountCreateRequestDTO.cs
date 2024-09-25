@@ -20,6 +20,6 @@ public class AccountCreateRequestDTO
     public string ConfirmPassword { get; set; } = null!;
 
     [Required(ErrorMessage = "Số điện thoại không được để trống.")]
-    [Phone]
+    [Phone(ErrorMessage = "Số điện thoại không đúng định dạng")]
     public string PhoneNumber { get; set; } = null!;
 }

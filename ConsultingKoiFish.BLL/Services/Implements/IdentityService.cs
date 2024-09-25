@@ -28,6 +28,12 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return result;
 		}
 
+		public async Task<IdentityResult> ConfirmEmailAsync(IdentityUser user, string token)
+		{
+			var result = await _userManager.ConfirmEmailAsync(user, token);
+			return result;
+		}
+
 		public async Task<IdentityResult> CreateAsync(IdentityUser user, string password)
 		{
 			var result = await _userManager.CreateAsync(user, password);
@@ -40,9 +46,9 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return token;
 		}
 
-		public async Task<IdentityUser> GetByEmailAsynce(string email)
+		public async Task<IdentityUser> GetByEmailAsync(string email)
 		{
-			var existedUser = await _userManager.FindByNameAsync(email);
+			var existedUser = await _userManager.FindByEmailAsync(email);
 			return existedUser;
 		}
 	}
