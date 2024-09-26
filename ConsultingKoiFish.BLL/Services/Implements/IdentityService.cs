@@ -66,19 +66,14 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 
 		public async Task<IdentityUser> GetByEmailOrUserNameAsync(string input)
 		{
-			var userEmail = await _userManager.FindByEmailAsync(input);
-			var username = await _userManager.FindByNameAsync(input);
-			if(userEmail == null || username == null)
+			var user = await _userManager.FindByEmailAsync(input);
+
+			if (user == null)
 			{
-				return null;
+				user = await _userManager.FindByNameAsync(input);
 			}
 
-			if(!userEmail.Id.Equals(username.Id))
-			{
-				return null;
-			}
-
-			return userEmail;
+			return user;
 		}
 
 		public async Task<IdentityUser> GetByUserNameAsync(string userName)

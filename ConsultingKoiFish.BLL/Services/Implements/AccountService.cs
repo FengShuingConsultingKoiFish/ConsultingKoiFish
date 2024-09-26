@@ -193,10 +193,6 @@ public class AccountService : IAccountService
             await _unitOfWork.CommitTransactionAsync();
 
 			var sendEmail = await SendEmailConfirmation(user);
-			if(!sendEmail)
-			{
-				throw new Exception("Lỗi xảy ra trong quá trình gửi email xác thực.");
-			}
             return new AccountViewDTO
             {
                 Id = user.Id,

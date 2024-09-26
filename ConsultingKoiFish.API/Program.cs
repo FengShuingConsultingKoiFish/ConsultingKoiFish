@@ -1,10 +1,11 @@
-
+﻿
 using ConsultingKoiFish.API.ConfigExtensions;
 using ConsultingKoiFish.BLL.Helpers.Config;
 using ConsultingKoiFish.DAL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 
 namespace ConsultingKoiFish.API
@@ -83,7 +84,13 @@ namespace ConsultingKoiFish.API
 			builder.Services.AddSingleton(emailConfig);
 
 			//Add config for Required Email
-			builder.Services.Configure<IdentityOptions>(opts => opts.SignIn.RequireConfirmedEmail = true);
+			builder.Services.Configure<IdentityOptions>(opts =>
+			{
+				opts.SignIn.RequireConfirmedEmail = true;
+				opts.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+				opts.Lockout.MaxFailedAccessAttempts = 5;
+				opts.Lockout.AllowedForNewUsers = true;
+			});
 
 			//Add config for verify token
 			builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(1));
