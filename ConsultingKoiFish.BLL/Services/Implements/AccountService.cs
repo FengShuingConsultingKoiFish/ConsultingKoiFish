@@ -168,6 +168,53 @@ public class AccountService : IAccountService
 		throw new NotImplementedException();
 	}
 
+	public async Task<BaseResponse> SignOutAsync(SignOutDTO signOutDTO)
+	{
+		try
+		{
+			await _unitOfWork.BeginTransactionAsync();
+			var refreshTokenRepo = _unitOfWork.GetRepo<RefreshToken>();
+			var refreshToken = await refreshTokenRepo.GetSingleAsync(new QueryBuilder<RefreshToken>()
+																		.WithPredicate(x => x.Token.Equals(signOutDTO.RefreshToken))
+																		.WithTracking(true)
+																		.WithInclude(x => x.User)
+																		.Build());
+
+			if (refreshToken == null)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Refresh Token không hợp lệ."
+				};
+			}
+
+			if (refreshToken.IsUsed || refreshToken.IsRevoked)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Refresh token đã được sử dụng hoặc thu hồi."
+				};
+			}
+
+			refreshToken.IsRevoked = true;
+			await refreshTokenRepo.UpdateAsync(refreshToken);
+			await _unitOfWork.SaveChangesAsync();
+			await _unitOfWork.CommitTransactionAsync();
+			return new BaseResponse
+			{
+				IsSuccess = true,
+				Message = "Đăng xuất thành công."
+			};
+		}
+		catch(Exception)
+		{
+			await _unitOfWork.RollBackAsync();
+			throw;
+		}
+	}
+
 	public async Task<AccountViewDTO> SignUpAsync(AccountCreateRequestDTO accRequest)
     {
         try

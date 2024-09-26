@@ -286,5 +286,39 @@ namespace ConsultingKoiFish.API.Controllers
 
 			return SaveError(result.Errors);
 		}
+
+		[Authorize]
+		[HttpPost]
+		[Route("sign-out")]
+		public async Task<IActionResult> SignOutAsync([FromBody] SignOutDTO signOutDTO)
+		{
+			try
+			{
+				var user = _identityService.GetUserAsync(User);
+				if(user == null)
+				{
+					return GetNotFound("Không tìm thấy người dùng.");
+				}
+
+				if(!ModelState.IsValid)
+				{
+					return ModelInvalid();
+				}
+				await _identityService.SignOutAsync();
+				var response = await _accountService.SignOutAsync(signOutDTO);
+				if(!response.IsSuccess)
+				{
+					return Error(response.Message);
+				}
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình đăng xuất. Vui lòng thử lại sau ít phút");
+			}
+		}
 	}
 }
