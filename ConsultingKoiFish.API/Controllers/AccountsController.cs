@@ -13,11 +13,13 @@ namespace ConsultingKoiFish.API.Controllers
 	{
 		private readonly IAccountService _accountService;
 		private readonly IIdentityService _identityService;
+		private readonly IConfiguration _configuration;
 
-		public AccountsController(IAccountService accountService, IIdentityService identityService)
+		public AccountsController(IAccountService accountService, IIdentityService identityService, IConfiguration configuration)
         {
 			_accountService = accountService;
 			this._identityService = identityService;
+			this._configuration = configuration;
 		}
 
 		[HttpPost]
@@ -47,7 +49,7 @@ namespace ConsultingKoiFish.API.Controllers
 				var userName = await _identityService.GetByUserNameAsync(accountCreate.UserName);
 				if(userName != null)
 				{
-					ModelState.AddModelError("UserName", "UserName đã tồn tại. Vui lòng chọn một UserName khác.");
+					ModelState.AddModelError("UserNameOrEmail", "UserNameOrEmail đã tồn tại. Vui lòng chọn một UserNameOrEmail khác.");
 					return ModelInvalid();
 				}
 
@@ -87,6 +89,84 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 
 			return Success(response, "Xác thực tài khoản thành công.");
+		}
+
+		[HttpPost]
+		[Route("Authen")]
+		public async Task<IActionResult> SignInAsync(AuthenDTO authenDTO)
+		{
+			try
+			{
+				if(!ModelState.IsValid)
+				{
+					return ModelInvalid();
+				}
+
+				var adminEmail = _configuration["Admin:email"];
+				if(authenDTO.UserNameOrEmail.Equals(adminEmail))
+				{
+					var admin = await _identityService.GetByEmailAsync(adminEmail);
+					var adminPass = await _identityService.CheckPasswordAsync(admin, authenDTO.Password);
+					if(!adminPass)
+					{
+						ModelState.AddModelError("Password", "Mật khẩu không đúng.");
+						return ModelInvalid();
+					}
+
+					var adminToken = await _accountService.GenerateTokenAsync(admin);
+					if(adminToken == null)
+					{
+						return GetUnAuthorized("Đã xảy ra lỗi trong quá trình đăng nhập. Vui lòng thử lại sau ít phút");
+					}
+					return Success(adminToken, "Chào mừng đến với tài khoản Admin.");
+				}
+
+				var user = await _identityService.GetByEmailOrUserNameAsync(authenDTO.UserNameOrEmail);
+				if(user == null)
+				{
+					ModelState.AddModelError("UserNameOrEmail", "Tên đăng nhập hoặc Email không đúng.");
+					return ModelInvalid();
+				}
+
+				var password = await _identityService.CheckPasswordAsync(user, authenDTO.Password);
+				if(!password)
+				{
+					ModelState.AddModelError("Password", "Mật khẩu không đúng.");
+					return ModelInvalid();
+				}
+
+				if(user.EmailConfirmed == false)
+				{
+					var sendEmail = await _accountService.SendEmailConfirmation(user);
+					return GetUnAuthorized(sendEmail.Message);
+				}
+
+				if (user.LockoutEnabled)
+				{
+					return GetUnAuthorized("Tài khoản của bạn đã bị khóa.");
+				}
+
+				if(user.TwoFactorEnabled)
+				{
+					var sendOTP = await _accountService.SendOTP2FA(user, authenDTO.Password);
+					return GetSuccess(sendOTP);
+				}
+
+				var token = await _accountService.GenerateTokenAsync(user);
+				if(token == null)
+				{
+					return Error("Lỗi sinh mã đăng nhập. Vui lòng thử lại sau ít phút.");
+				}
+
+				return Success(token, "Đăng nhập thành công.");
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình đăng nhập. Vui lòng thử lại sau ít phút");
+			}
 		}
 	}
 }

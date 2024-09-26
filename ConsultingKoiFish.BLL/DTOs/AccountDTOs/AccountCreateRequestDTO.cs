@@ -10,7 +10,7 @@ public class AccountCreateRequestDTO
     [EmailAddress(ErrorMessage = "Email sai định dạng. Định dạng đúng: example@gmail.com")]
     public string EmailAddress { get; set; } = null!;
 
-    [Required(ErrorMessage = "UserName không được để trống")]
+    [Required(ErrorMessage = "UserNameOrEmail không được để trống")]
     public string UserName { get; set; } = null!;
 
     [PasswordValidation]

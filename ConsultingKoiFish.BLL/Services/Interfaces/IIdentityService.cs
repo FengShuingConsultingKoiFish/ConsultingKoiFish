@@ -15,5 +15,11 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		public Task<IdentityResult> AddToRoleAsync(IdentityUser user, string role);
 		public Task<string> GenerateEmailConfirmationTokenAsync(IdentityUser user);
 		public Task<IdentityResult> ConfirmEmailAsync(IdentityUser user, string token);
+		public Task<bool> CheckPasswordAsync(IdentityUser user, string password);
+		public Task<IList<string>> GetRolesAsync(IdentityUser user);
+		public Task<IdentityUser> GetByEmailOrUserNameAsync(string input);
+		public Task SignOutAsync();
+		public Task<SignInResult> PasswordSignInAsync(IdentityUser user, string password, bool isPerSistent, bool LockOutOnFailure);
+		public Task<string> GenerateTwoFactorTokenAsync(IdentityUser user, string tokenProvider);
 	}
 }

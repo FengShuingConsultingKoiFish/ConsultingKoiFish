@@ -32,6 +32,16 @@ namespace ConsultingKoiFish.API
 			});
 		}
 
+		protected ActionResult GetUnAuthorized(string message)
+		{
+			return new UnauthorizedObjectResult(new ResponseApiDTO
+			{
+				IsSuccess = false,
+				Message = message,
+				StatusCode = System.Net.HttpStatusCode.Unauthorized
+			});
+		}
+
 		/// <summary>
 		/// Gets the data failed.
 		/// </summary>
@@ -115,7 +125,7 @@ namespace ConsultingKoiFish.API
 		}
 
 		/// <summary>
-		/// Get the loged in UserName;
+		/// Get the loged in UserNameOrEmail;
 		/// </summary>
 		protected string UserName => User.FindFirst(ClaimTypes.Name)?.Value;
 
