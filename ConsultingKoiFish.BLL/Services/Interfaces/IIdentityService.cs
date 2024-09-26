@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,5 +25,10 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		public Task<SignInResult> TwoFactorSignInAsync(string provider, string code, bool isPersistent, bool rememberClient);
 		public Task<bool> IsLockedOutAsync(IdentityUser user);
 		public Task<bool> IsEmailConfirmedAsync(IdentityUser user);
+		public Task ResetAccessFailedCountAsync(IdentityUser user);
+		public Task<IdentityUser> GetUserAsync(ClaimsPrincipal principal);
+		public Task<IdentityResult> SetTwoFactorEnabledAsync(IdentityUser user, bool enable2Fa);
+		public Task<SignInResult> CheckPasswordSignInAsync(IdentityUser user, string password, bool LockOutOnFailure);
+
 	}
 }

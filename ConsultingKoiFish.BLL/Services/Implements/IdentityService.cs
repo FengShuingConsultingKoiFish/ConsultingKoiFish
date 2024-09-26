@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -31,6 +32,12 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		public async Task<bool> CheckPasswordAsync(IdentityUser user, string password)
 		{
 			var result = await _userManager.CheckPasswordAsync(user, password);
+			return result;
+		}
+
+		public async Task<SignInResult> CheckPasswordSignInAsync(IdentityUser user, string password, bool LockOutOnFailure)
+		{
+			var result = await _signInManager.CheckPasswordSignInAsync(user, password, LockOutOnFailure);
 			return result;
 		}
 
@@ -88,6 +95,12 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return userRoles;
 		}
 
+		public async Task<IdentityUser> GetUserAsync(ClaimsPrincipal principal)
+		{
+			var user = await _userManager.GetUserAsync(principal);
+			return user;
+		}
+
 		public async Task<bool> IsEmailConfirmedAsync(IdentityUser user)
 		{
 			return await _userManager.IsEmailConfirmedAsync(user);
@@ -102,6 +115,17 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		public async Task<SignInResult> PasswordSignInAsync(IdentityUser user, string password, bool isPerSistent, bool LockOutOnFailure)
 		{
 			var result = await _signInManager.PasswordSignInAsync(user, password, isPerSistent, LockOutOnFailure);
+			return result;
+		}
+
+		public async Task ResetAccessFailedCountAsync(IdentityUser user)
+		{
+			await _userManager.ResetAccessFailedCountAsync(user);
+		}
+
+		public async Task<IdentityResult> SetTwoFactorEnabledAsync(IdentityUser user, bool enable2Fa)
+		{
+			var result = await _userManager.SetTwoFactorEnabledAsync(user, enable2Fa);
 			return result;
 		}
 

@@ -117,7 +117,7 @@ public class AccountService : IAccountService
 		{
 			var emailToken = await _identityService.GenerateEmailConfirmationTokenAsync(user);
 			var encodedToken = HttpUtility.UrlEncode(emailToken);
-			var confirmationLink = $"https://localhost:7166/api/Accounts/VerifyEmail?token={encodedToken}&email={user.Email}";
+			var confirmationLink = $"https://localhost:7166/api/Accounts/verify-email?token={encodedToken}&email={user.Email}";
 			var message = new EmailDTO
 			(
 				new string[] { user.Email! },
@@ -140,7 +140,7 @@ public class AccountService : IAccountService
 		try
 		{
 			await _identityService.SignOutAsync();
-			await _identityService.PasswordSignInAsync(user, password, true, false);
+			await _identityService.PasswordSignInAsync(user, password, true, true);
 			var otp = await _identityService.GenerateTwoFactorTokenAsync(user, "Email");
 			var message = new EmailDTO
 					(

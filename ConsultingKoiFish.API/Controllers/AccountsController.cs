@@ -1,7 +1,9 @@
 ﻿using ConsultingKoiFish.BLL.DTOs.AccountDTOs;
 using ConsultingKoiFish.BLL.Services.Implements;
 using ConsultingKoiFish.BLL.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Web;
 
@@ -23,7 +25,7 @@ namespace ConsultingKoiFish.API.Controllers
 		}
 
 		[HttpPost]
-		[Route("SignUp")]
+		[Route("sign-up")]
 		public async Task<IActionResult> SignUpAsync([FromBody] AccountCreateRequestDTO accountCreate)
 		{
 			try
@@ -72,7 +74,7 @@ namespace ConsultingKoiFish.API.Controllers
 		}
 
 		[HttpGet]
-		[Route("VerifyEmail")]
+		[Route("verify-email")]
 		public async Task<IActionResult> ConfirmEmailAsync(string token, string email)
 		{
 			var user = await _identityService.GetByEmailAsync(email);
@@ -92,7 +94,7 @@ namespace ConsultingKoiFish.API.Controllers
 		}
 
 		[HttpPost]
-		[Route("Authen")]
+		[Route("authen")]
 		public async Task<IActionResult> SignInAsync([FromBody]AuthenDTO authenDTO)
 		{
 			try
@@ -141,17 +143,18 @@ namespace ConsultingKoiFish.API.Controllers
 					return GetUnAuthorized(sendEmail.Message);
 				}
 
-				if (await _identityService.IsLockedOutAsync(user))
-				{
-					return GetUnAuthorized("Tài khoản của bạn đã bị khóa.");
-				}
-
 				if(user.TwoFactorEnabled)
 				{
 					var sendOTP = await _accountService.SendOTP2FA(user, authenDTO.Password);
 					return GetSuccess(sendOTP);
 				}
 
+				var response = await _identityService.PasswordSignInAsync(user, authenDTO.Password, true, true);
+				if(response.IsLockedOut)
+				{
+					return GetUnAuthorized($"Tài khoản của bạn đã bị khóa vì đăng nhập sai nhiều lần. Khóa đến: {user.LockoutEnd.Value.LocalDateTime}.");
+				}
+				await _identityService.ResetAccessFailedCountAsync(user);
 				var token = await _accountService.GenerateTokenAsync(user);
 				if(token == null)
 				{
@@ -169,8 +172,9 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
+		[Authorize]
 		[HttpPost]
-		[Route("Authen2fa")]
+		[Route("authen2fa")]
 		public async Task<IActionResult> SignIn2FaAsync([FromBody] Authen2FaDTO authen2FaDTO)
 		{
 			try
@@ -207,6 +211,80 @@ namespace ConsultingKoiFish.API.Controllers
 				Console.ResetColor();
 				return Error("Đã có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau ít phút.");
 			}
+		}
+
+		[Authorize]
+		[HttpPost]
+		[Route("enable-2fa")]
+		public async Task<IActionResult> EnableTwoFactorAuthentication([FromBody]AuthenDTO authenDTO)
+		{
+			try
+			{
+				if (!ModelState.IsValid)
+				{
+					return ModelInvalid();
+				}
+
+				var user = await _identityService.GetUserAsync(User);
+				if (user == null)
+				{
+					return GetUnAuthorized("Bạn cần đăng nhập để thực hiện tính năng này.");
+				}
+
+				if (user.TwoFactorEnabled)
+				{
+					return Success(new { TwoFactorEnable = user.TwoFactorEnabled }, "Bạn đã kích hoạt tính năng này rồi");
+				}
+
+				var result = await _identityService.SetTwoFactorEnabledAsync(user, true);
+				if (result.Succeeded)
+				{
+					var sendOTP = await _accountService.SendOTP2FA(user, authenDTO.Password);
+					return GetSuccess(sendOTP);
+				}
+
+				return Error("Xác thực 2 yếu tố không thành công. Vui lòng thử lại sau");
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình đăng nhập. Vui lòng thử lại sau ít phút");
+			}
+		}
+
+		[Authorize]
+		[HttpPost]
+		[Route("disable-2fa")]
+		public async Task<IActionResult> DisableTwoFactorAuthentication([FromBody] AuthenDTO authenDTO)
+		{
+			if (!ModelState.IsValid)
+			{
+				return ModelInvalid();
+			}
+
+			var user = await _identityService.GetUserAsync(User);
+			if (user == null)
+			{
+				return GetUnAuthorized("Không tìm thấy người dùng.");
+			}
+
+			// Xác minh mật khẩu trước khi tắt 2FA
+			var checkPassword = await _identityService.CheckPasswordSignInAsync(user, authenDTO.Password, false);
+			if (!checkPassword.Succeeded)
+			{
+				ModelState.AddModelError("Password", "Mật khẩu không đúng");
+			}
+
+			// Tắt 2FA
+			var result = await _identityService.SetTwoFactorEnabledAsync(user, false);
+			if (result.Succeeded)
+			{
+				return SaveSuccess("Tắt xác thực 2 yếu tố thành công.");
+			}
+
+			return SaveError(result.Errors);
 		}
 	}
 }

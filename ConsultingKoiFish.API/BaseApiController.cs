@@ -1,4 +1,5 @@
 ﻿using ConsultingKoiFish.BLL.DTOs.Response;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -132,18 +133,17 @@ namespace ConsultingKoiFish.API
 		/// <summary>
 		/// Get the logged in user email.
 		/// </summary>
-		//protected string UserEmail => User.FindFirst(Constants.CLAIM_EMAIL)?.Value;
+		protected string UserEmail => User.FindFirst(ClaimTypes.Email)?.Value;
 
 		/// <summary>
 		/// Get the loged in UserId;
 		/// </summary>
-		protected long UserId
+		protected string UserId
 		{
 			get
 			{
 				var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-				long.TryParse(id, out long userId);
-				return userId;
+				return id;
 			}
 		}
 
