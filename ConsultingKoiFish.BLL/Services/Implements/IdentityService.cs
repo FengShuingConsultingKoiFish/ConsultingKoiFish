@@ -83,6 +83,12 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return user;
 		}
 
+		public async Task<IdentityUser> GetByIdAsync(string id)
+		{
+			var user = await _userManager.FindByIdAsync(id);
+			return user;
+		}
+
 		public async Task<IdentityUser> GetByUserNameAsync(string userName)
 		{
 			var user = await _userManager.FindByNameAsync(userName);

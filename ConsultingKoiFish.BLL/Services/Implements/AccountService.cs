@@ -23,17 +23,17 @@ namespace ConsultingKoiFish.BLL.Services.Implements;
 
 public class AccountService : IAccountService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+	private readonly IUnitOfWork _unitOfWork;
+	private readonly IMapper _mapper;
 	private readonly IIdentityService _identityService;
 	private readonly IEmailService _emailService;
 	private readonly IConfiguration _configuration;
 
 	public AccountService(IIdentityService identityService, IUnitOfWork unitOfWork,
-                           IEmailService emailService, IConfiguration configuration)
-    {
-        _unitOfWork = unitOfWork;
-        _identityService = identityService;
+						   IEmailService emailService, IConfiguration configuration)
+	{
+		_unitOfWork = unitOfWork;
+		_identityService = identityService;
 		_emailService = emailService;
 		this._configuration = configuration;
 	}
@@ -108,8 +108,106 @@ public class AccountService : IAccountService
 			return null;
 			throw;
 		}
-		
-    }
+
+	}
+
+	public async Task<BaseResponse> CheckToRenewTokenAsync(AuthenResultDTO authenResult)
+	{
+		var jwtTokenHandler = new JwtSecurityTokenHandler();
+		var secretKeyBytes = Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]);
+		var tokenValidateParam = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+		{
+			ValidateIssuer = true,
+			ValidateAudience = true,
+			ValidAudience = _configuration["JWT:ValidAudience"],
+			ValidIssuer = _configuration["JWT:ValidIssuer"],
+			IssuerSigningKey = new SymmetricSecurityKey(secretKeyBytes),
+			ClockSkew = TimeSpan.Zero,
+
+			ValidateLifetime = false
+		};
+
+		try
+		{
+			var tokenInVerification = jwtTokenHandler.ValidateToken(authenResult.Token, tokenValidateParam, out var validatedToken);
+
+			if (validatedToken is JwtSecurityToken jwtSecurityToken)
+			{
+				Console.WriteLine("Algorithm: " + jwtSecurityToken.Header.Alg);
+				Console.WriteLine(SecurityAlgorithms.HmacSha512);
+				var result = jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512, StringComparison.InvariantCultureIgnoreCase);
+				if (!result)
+				{
+					return new BaseResponse
+					{
+						IsSuccess = false,
+						Message = "Access token không hợp lệ"
+					};
+				}
+			}
+
+			var utcExpireDate = long.Parse(tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+
+			var expireDate = ConvertUnixTimeToDateTime(utcExpireDate);
+			if (expireDate > DateTime.UtcNow)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Access token chưa hết hạn."
+				};
+			}
+			var refreshTokenRepo = _unitOfWork.GetRepo<RefreshToken>();
+			var storedToken = await refreshTokenRepo.GetSingleAsync(new QueryBuilder<RefreshToken>()
+																	.WithPredicate(x => x.Token.Equals(authenResult.RefreshToken))
+																	.WithTracking(false)
+																	.Build());
+			if (storedToken == null)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Refresh Token không tồn tại."
+				};
+			}
+
+			if (storedToken.IsUsed)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Refresh token đã được sử dụng."
+				};
+			}
+			if (storedToken.IsRevoked)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Refresh token đã bị thu hồi."
+				};
+			}
+
+			var jti = tokenInVerification.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Jti).Value;
+			if (storedToken.JwtId != jti)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Token không khớp."
+				};
+			}
+			return new BaseResponse
+			{
+				IsSuccess = true,
+				Message = "Token hợp lệ."
+			};
+		}
+		catch(Exception)
+		{
+			throw;
+		}
+	}
 
 	public async Task<BaseResponse> SendEmailConfirmation(IdentityUser user)
 	{
@@ -208,7 +306,7 @@ public class AccountService : IAccountService
 				Message = "Đăng xuất thành công."
 			};
 		}
-		catch(Exception)
+		catch (Exception)
 		{
 			await _unitOfWork.RollBackAsync();
 			throw;
@@ -216,10 +314,10 @@ public class AccountService : IAccountService
 	}
 
 	public async Task<AccountViewDTO> SignUpAsync(AccountCreateRequestDTO accRequest)
-    {
-        try
-        {
-            await _unitOfWork.BeginTransactionAsync();
+	{
+		try
+		{
+			await _unitOfWork.BeginTransactionAsync();
 			var user = new IdentityUser
 			{
 				Email = accRequest.EmailAddress,
@@ -227,34 +325,34 @@ public class AccountService : IAccountService
 				PhoneNumber = accRequest.PhoneNumber,
 			};
 
-            var createResult = await _identityService.CreateAsync(user, accRequest.Password);
-            if (!createResult.Succeeded)
-            {
-                throw new Exception("Một số lỗi xảy ra trong quá trình đăng kí tài khoản. Vui lòn thử lại sau ít phút.");
+			var createResult = await _identityService.CreateAsync(user, accRequest.Password);
+			if (!createResult.Succeeded)
+			{
+				throw new Exception("Một số lỗi xảy ra trong quá trình đăng kí tài khoản. Vui lòn thử lại sau ít phút.");
 
 			}
 
-            await _identityService.AddToRoleAsync(user, Role.Member.ToString());
+			await _identityService.AddToRoleAsync(user, Role.Member.ToString());
 
-            await _unitOfWork.SaveChangesAsync();
-            await _unitOfWork.CommitTransactionAsync();
+			await _unitOfWork.SaveChangesAsync();
+			await _unitOfWork.CommitTransactionAsync();
 
 			var sendEmail = await SendEmailConfirmation(user);
-            return new AccountViewDTO
-            {
-                Id = user.Id,
-                EmailAddress = user.Email,
-                UserName = user.UserName,
-                PhoneNumBer = user.PhoneNumber,
-            };
-        }
-        catch (Exception)
-        {
-            await _unitOfWork.RollBackAsync();
-            return null;
-            throw;
-        } 
-    }
+			return new AccountViewDTO
+			{
+				Id = user.Id,
+				EmailAddress = user.Email,
+				UserName = user.UserName,
+				PhoneNumBer = user.PhoneNumber,
+			};
+		}
+		catch (Exception)
+		{
+			await _unitOfWork.RollBackAsync();
+			return null;
+			throw;
+		}
+	}
 
 	#region Private
 	private string GenerateRefreshToken()
@@ -266,6 +364,14 @@ public class AccountService : IAccountService
 
 			return Convert.ToBase64String(random);
 		}
+	}
+
+	private DateTime ConvertUnixTimeToDateTime(long utcExpireDate)
+	{
+		var dateTimeInterval = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+		dateTimeInterval.AddSeconds(utcExpireDate).ToUniversalTime();
+
+		return dateTimeInterval;
 	}
 	#endregion
 }

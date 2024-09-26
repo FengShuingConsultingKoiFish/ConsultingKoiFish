@@ -320,5 +320,46 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình đăng xuất. Vui lòng thử lại sau ít phút");
 			}
 		}
+
+		[Authorize]
+		[HttpPost]
+		[Route("renew-token")]
+		public async Task<IActionResult> RenewTokenAsync(AuthenResultDTO authenResult)
+		{
+			try
+			{
+				if(string.IsNullOrEmpty(authenResult.Token) || string.IsNullOrEmpty(authenResult.RefreshToken))
+				{
+					ModelState.AddModelError("Token", "Token không được để trống.");
+					ModelState.AddModelError("RefreshToken", "RefreshToken không được để trống");
+					return ModelInvalid();
+				}
+
+				var checkToken = await _accountService.CheckToRenewTokenAsync(authenResult);
+				if(!checkToken.IsSuccess)
+				{
+					return Error(checkToken.Message);
+				}
+				var user = await _identityService.GetUserAsync(User);
+				if(user == null)
+				{
+					return GetNotFound("Không tìm thấy người dùng.");
+				}
+				var newToken = await _accountService.GenerateTokenAsync(user);
+				if(newToken == null)
+				{
+					return Error("Tạo mã đăng nhập mới không thành công. Vui lòng thử lại sau ít phút.");
+				}
+
+				return SaveSuccess(newToken);
+			}
+			catch(Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã có lỗi xảy ra trong quá trình tạo mã đăng nhập mới. Vui lòng thử lại sau ít phút nữa.");
+			} 
+		}
 	}
 }

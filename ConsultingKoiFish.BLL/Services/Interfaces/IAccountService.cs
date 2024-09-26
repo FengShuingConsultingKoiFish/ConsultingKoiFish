@@ -12,4 +12,5 @@ public interface IAccountService
     public Task<BaseResponse> SendEmailConfirmation(IdentityUser user);
     public Task<BaseResponse> SendOTP2FA(IdentityUser user, string password);
     public Task<BaseResponse> SignOutAsync(SignOutDTO signOutDTO);
+    public Task<BaseResponse> CheckToRenewTokenAsync(AuthenResultDTO authenResult);
 }
