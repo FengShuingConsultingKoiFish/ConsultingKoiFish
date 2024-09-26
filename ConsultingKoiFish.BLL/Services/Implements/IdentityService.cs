@@ -88,6 +88,17 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return userRoles;
 		}
 
+		public async Task<bool> IsEmailConfirmedAsync(IdentityUser user)
+		{
+			return await _userManager.IsEmailConfirmedAsync(user);
+		}
+
+		public async Task<bool> IsLockedOutAsync(IdentityUser user)
+		{
+			var response = await _userManager.IsLockedOutAsync(user);
+			return response;
+		}
+
 		public async Task<SignInResult> PasswordSignInAsync(IdentityUser user, string password, bool isPerSistent, bool LockOutOnFailure)
 		{
 			var result = await _signInManager.PasswordSignInAsync(user, password, isPerSistent, LockOutOnFailure);

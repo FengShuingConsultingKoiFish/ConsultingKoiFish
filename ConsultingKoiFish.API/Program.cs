@@ -2,11 +2,14 @@
 using ConsultingKoiFish.API.ConfigExtensions;
 using ConsultingKoiFish.BLL.Helpers.Config;
 using ConsultingKoiFish.DAL;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 namespace ConsultingKoiFish.API
 {
@@ -91,6 +94,27 @@ namespace ConsultingKoiFish.API
 				opts.Lockout.MaxFailedAccessAttempts = 5;
 				opts.Lockout.AllowedForNewUsers = true;
 			});
+
+			//Add authentication
+			builder.Services.AddAuthentication(options => {
+				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+				options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+			}).AddJwtBearer(options => {
+				options.SaveToken = true;
+				options.RequireHttpsMetadata = false;
+				options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+				{
+					ValidateIssuer = true,
+					ValidateAudience = true,
+					ValidAudience = builder.Configuration["JWT:ValidAudience"],
+					ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"])),
+					ClockSkew = TimeSpan.Zero,
+					ValidateLifetime = true,
+				};
+			});
+
 
 			//Add config for verify token
 			builder.Services.Configure<DataProtectionTokenProviderOptions>(opts => opts.TokenLifespan = TimeSpan.FromHours(1));

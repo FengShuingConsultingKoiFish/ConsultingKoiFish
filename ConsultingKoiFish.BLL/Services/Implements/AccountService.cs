@@ -173,12 +173,12 @@ public class AccountService : IAccountService
         try
         {
             await _unitOfWork.BeginTransactionAsync();
-            var user = new IdentityUser
-            {
-                Email = accRequest.EmailAddress,
-                UserName = accRequest.UserName,
-                PhoneNumber = accRequest.PhoneNumber,
-            };
+			var user = new IdentityUser
+			{
+				Email = accRequest.EmailAddress,
+				UserName = accRequest.UserName,
+				PhoneNumber = accRequest.PhoneNumber,
+			};
 
             var createResult = await _identityService.CreateAsync(user, accRequest.Password);
             if (!createResult.Succeeded)

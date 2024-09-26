@@ -22,5 +22,7 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		public Task<SignInResult> PasswordSignInAsync(IdentityUser user, string password, bool isPerSistent, bool LockOutOnFailure);
 		public Task<string> GenerateTwoFactorTokenAsync(IdentityUser user, string tokenProvider);
 		public Task<SignInResult> TwoFactorSignInAsync(string provider, string code, bool isPersistent, bool rememberClient);
+		public Task<bool> IsLockedOutAsync(IdentityUser user);
+		public Task<bool> IsEmailConfirmedAsync(IdentityUser user);
 	}
 }

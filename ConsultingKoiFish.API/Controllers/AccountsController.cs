@@ -135,13 +135,13 @@ namespace ConsultingKoiFish.API.Controllers
 					return ModelInvalid();
 				}
 
-				if(user.EmailConfirmed == false)
+				if(!(await _identityService.IsEmailConfirmedAsync(user)))
 				{
 					var sendEmail = await _accountService.SendEmailConfirmation(user);
 					return GetUnAuthorized(sendEmail.Message);
 				}
 
-				if (user.LockoutEnabled)
+				if (await _identityService.IsLockedOutAsync(user))
 				{
 					return GetUnAuthorized("Tài khoản của bạn đã bị khóa.");
 				}
