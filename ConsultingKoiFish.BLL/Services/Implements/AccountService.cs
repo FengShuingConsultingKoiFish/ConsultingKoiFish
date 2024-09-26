@@ -8,6 +8,7 @@ using ConsultingKoiFish.DAL.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json.Linq;
 using System.Web;
+using static System.Net.WebRequestMethods;
 
 namespace ConsultingKoiFish.BLL.Services.Implements;
 
@@ -55,7 +56,9 @@ public class AccountService : IAccountService
 			(
 				new string[] { user.Email! },
 				"Confirmation Email Link!",
-				confirmationLink!
+				$@"
+<p>- Hệ thống nhận thấy bạn vừa đăng kí với Email: {user.Email}.</p>
+<p>- Vui lòng truy cập vào link này để xác thực tài khoản: {confirmationLink!}</p>"
 			);
 			_emailService.SendEmail(message);
             return new AccountViewDTO
