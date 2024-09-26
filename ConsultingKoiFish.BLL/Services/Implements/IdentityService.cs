@@ -103,5 +103,11 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		{
 			await _signInManager.SignOutAsync();
 		}
+
+		public async Task<SignInResult> TwoFactorSignInAsync(string provider, string code, bool isPersistent, bool rememberClient)
+		{
+			var signIn = await _signInManager.TwoFactorSignInAsync(provider, code, isPersistent, rememberClient);
+			return signIn;
+		}
 	}
 }

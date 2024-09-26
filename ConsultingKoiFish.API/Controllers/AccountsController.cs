@@ -93,7 +93,7 @@ namespace ConsultingKoiFish.API.Controllers
 
 		[HttpPost]
 		[Route("Authen")]
-		public async Task<IActionResult> SignInAsync(AuthenDTO authenDTO)
+		public async Task<IActionResult> SignInAsync([FromBody]AuthenDTO authenDTO)
 		{
 			try
 			{
@@ -166,6 +166,46 @@ namespace ConsultingKoiFish.API.Controllers
 				Console.WriteLine(ex.Message);
 				Console.ResetColor();
 				return Error("Đã xảy ra lỗi trong quá trình đăng nhập. Vui lòng thử lại sau ít phút");
+			}
+		}
+
+		[HttpPost]
+		[Route("Authen2fa")]
+		public async Task<IActionResult> SignIn2FaAsync([FromBody] Authen2FaDTO authen2FaDTO)
+		{
+			try
+			{
+				if (!ModelState.IsValid)
+				{
+					return ModelInvalid();
+				}
+				var user = await _identityService.GetByEmailAsync(authen2FaDTO.Email);
+				if (user == null)
+				{
+					ModelState.AddModelError("Email", "Email không đúng.");
+					return ModelInvalid();
+				}
+
+				var signIn = await _identityService.TwoFactorSignInAsync("Email", authen2FaDTO.Code, false, false);
+				if (!signIn.Succeeded)
+				{
+					return GetUnAuthorized($"Mã OTP {authen2FaDTO.Code} không hợp lệ.");
+				}
+
+				var token = await _accountService.GenerateTokenAsync(user);
+				if (token == null)
+				{
+					return GetUnAuthorized("Không thể sinh mã đăng nhập. Vui lòng thử lại sau ít phút.");
+				}
+
+				return Success(token, "Đăng nhập thành công.");
+			}
+			catch(Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau ít phút.");
 			}
 		}
 	}
