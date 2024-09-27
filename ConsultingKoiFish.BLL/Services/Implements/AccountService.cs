@@ -349,7 +349,6 @@ public class AccountService : IAccountService
 		catch (Exception)
 		{
 			await _unitOfWork.RollBackAsync();
-			return null;
 			throw;
 		}
 	}
