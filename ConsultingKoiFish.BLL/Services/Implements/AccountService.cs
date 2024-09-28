@@ -45,7 +45,7 @@ public class AccountService : IAccountService
 			var authClaims = new List<Claim>
 			{
 				new Claim("Email", user.Email),
-				new Claim("Jti", Guid.NewGuid().ToString()),
+				new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
 				new Claim("Id", user.Id),
 				new Claim("Name", user.UserName)
 			};
