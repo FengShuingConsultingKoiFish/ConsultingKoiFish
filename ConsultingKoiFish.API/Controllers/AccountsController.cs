@@ -225,7 +225,7 @@ namespace ConsultingKoiFish.API.Controllers
 					return ModelInvalid();
 				}
 
-				var user = await _identityService.GetUserAsync(User);
+				var user = await _identityService.GetByIdAsync(UserId);
 				if (user == null)
 				{
 					return GetUnAuthorized("Bạn cần đăng nhập để thực hiện tính năng này.");
@@ -264,7 +264,7 @@ namespace ConsultingKoiFish.API.Controllers
 				return ModelInvalid();
 			}
 
-			var user = await _identityService.GetUserAsync(User);
+			var user = await _identityService.GetByIdAsync(UserId);
 			if (user == null)
 			{
 				return GetUnAuthorized("Không tìm thấy người dùng.");
@@ -294,8 +294,8 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			try
 			{
-				var user = _identityService.GetUserAsync(User);
-				if(user == null)
+				var user = await _identityService.GetByIdAsync(UserId);
+				if (user == null)
 				{
 					return GetNotFound("Không tìm thấy người dùng.");
 				}
@@ -340,8 +340,8 @@ namespace ConsultingKoiFish.API.Controllers
 				{
 					return Error(checkToken.Message);
 				}
-				var user = await _identityService.GetUserAsync(User);
-				if(user == null)
+				var user = await _identityService.GetByIdAsync(UserId);
+				if (user == null)
 				{
 					return GetNotFound("Không tìm thấy người dùng.");
 				}

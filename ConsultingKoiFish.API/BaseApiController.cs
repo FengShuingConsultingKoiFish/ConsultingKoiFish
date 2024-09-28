@@ -128,12 +128,12 @@ namespace ConsultingKoiFish.API
 		/// <summary>
 		/// Get the loged in UserNameOrEmail;
 		/// </summary>
-		protected string UserName => User.FindFirst(ClaimTypes.Name)?.Value;
+		protected string UserName => User.FindFirst("Name")?.Value;
 
 		/// <summary>
 		/// Get the logged in user email.
 		/// </summary>
-		protected string UserEmail => User.FindFirst(ClaimTypes.Email)?.Value;
+		protected string UserEmail => User.FindFirst("Email")?.Value;
 
 		/// <summary>
 		/// Get the loged in UserId;
@@ -142,7 +142,7 @@ namespace ConsultingKoiFish.API
 		{
 			get
 			{
-				var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+				var id = User.FindFirst("Id")?.Value;
 				return id;
 			}
 		}

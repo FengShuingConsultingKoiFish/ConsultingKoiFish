@@ -30,6 +30,5 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		public Task<IdentityResult> SetTwoFactorEnabledAsync(IdentityUser user, bool enable2Fa);
 		public Task<SignInResult> CheckPasswordSignInAsync(IdentityUser user, string password, bool LockOutOnFailure);
 		public Task<IdentityUser> GetByIdAsync(string id);	
-
 	}
 }
