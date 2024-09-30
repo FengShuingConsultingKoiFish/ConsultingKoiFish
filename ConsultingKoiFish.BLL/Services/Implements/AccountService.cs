@@ -203,7 +203,7 @@ public class AccountService : IAccountService
 				Message = "Token hợp lệ."
 			};
 		}
-		catch(Exception)
+		catch (Exception)
 		{
 			throw;
 		}
@@ -353,6 +353,62 @@ public class AccountService : IAccountService
 		}
 	}
 
+	public async Task<BaseResponse> ForgotPasswordAsync(AccountForgotPasswordDTO dto)
+	{
+		var user = await _identityService.GetByEmailAsync(dto.Email);
+
+		if (user == null)
+		{
+			return new BaseResponse
+			{
+				IsSuccess = true,
+				Message = "Nếu email tồn tại thì link xác thực đã được gửi đến. Hãy đảm bảo email của bạn chính xác và truy cập vào link xác thực để thay đổi mật khẩu nhé."
+			};
+		}
+
+		var token = await _identityService.GeneratePasswordResetTokenAsync(user);
+		var forgotUrl = $"https://localhost:7166/api/Accounts/reset-password-view?token={token}&email={user.Email}";
+		var message = new EmailDTO
+				(
+					new string[] { user.Email! },
+					"Forgot Password Link!",
+					forgotUrl!
+				);
+		_emailService.SendEmail(message);
+		return new BaseResponse { IsSuccess = true, Message = "Url đổi mật khẩu đã được gửi đến email của bạn. Hãy truy cập url để đổi mật khẩu nhé."};
+	}
+
+	public async Task<BaseResponse> ResetPasswordAsync(AccountResetpassDTO dto)
+	{
+		try
+		{
+			var user = await _identityService.GetByEmailAsync(dto.Email);
+			if (user == null)
+			{
+				return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy người dùng." };
+			}
+
+			var result = await _identityService.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+			if (!result.Succeeded)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Thay đổi mật khẩu không thành công. Hãy kiểm tra lại Email hoặc Mật Khẩu của bạn."
+				};
+			}
+			return new BaseResponse
+			{
+				IsSuccess = true,
+				Message = "Mật khẩu đã thay đổi thành công."
+			};
+		}
+		catch (Exception ex)
+		{
+			throw;
+		}
+	}
+
 	#region Private
 	private string GenerateRefreshToken()
 	{
@@ -372,5 +428,6 @@ public class AccountService : IAccountService
 
 		return dateTimeInterval;
 	}
+
 	#endregion
 }

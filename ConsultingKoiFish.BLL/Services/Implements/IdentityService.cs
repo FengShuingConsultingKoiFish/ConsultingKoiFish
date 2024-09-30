@@ -59,6 +59,12 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return token;
 		}
 
+		public async Task<string> GeneratePasswordResetTokenAsync(IdentityUser user)
+		{
+			var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+			return token;
+		}
+
 		public async Task<string> GenerateTwoFactorTokenAsync(IdentityUser user, string tokenProvider)
 		{
 			var otp = await _userManager.GenerateTwoFactorTokenAsync(user, tokenProvider);
@@ -127,6 +133,12 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		public async Task ResetAccessFailedCountAsync(IdentityUser user)
 		{
 			await _userManager.ResetAccessFailedCountAsync(user);
+		}
+
+		public async Task<IdentityResult> ResetPasswordAsync(IdentityUser user, string token, string newPass)
+		{
+			var result = await _userManager.ResetPasswordAsync(user, token, newPass);
+			return result;
 		}
 
 		public async Task<IdentityResult> SetTwoFactorEnabledAsync(IdentityUser user, bool enable2Fa)

@@ -13,4 +13,6 @@ public interface IAccountService
     public Task<BaseResponse> SendOTP2FA(IdentityUser user, string password);
     public Task<BaseResponse> SignOutAsync(SignOutDTO signOutDTO);
     public Task<BaseResponse> CheckToRenewTokenAsync(AuthenResultDTO authenResult);
+    public Task<BaseResponse> ForgotPasswordAsync(AccountForgotPasswordDTO dto);
+    public Task<BaseResponse> ResetPasswordAsync(AccountResetpassDTO dto);
 }

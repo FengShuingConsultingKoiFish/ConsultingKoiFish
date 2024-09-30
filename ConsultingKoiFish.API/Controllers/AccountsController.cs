@@ -361,5 +361,63 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã có lỗi xảy ra trong quá trình tạo mã đăng nhập mới. Vui lòng thử lại sau ít phút nữa.");
 			} 
 		}
+
+		[HttpPost]
+		[Route("forgot-password")]
+		public async Task<IActionResult> ForgotPasswordAsync([FromBody]AccountForgotPasswordDTO dto)
+		{
+			try
+			{
+				if(!ModelState.IsValid) return ModelInvalid();
+				var response = await _accountService.ForgotPasswordAsync(dto);
+				if(!response.IsSuccess) return GetError(response.Message);
+				return GetSuccess(response);
+			}
+			catch(Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã có lỗi xảy ra trong quá trình tạo mã đổi mật khẩu. Vui lòng thử lại sau ít phút nữa.");
+			}
+			
+		}
+
+		[HttpGet]
+		[Route("reset-password-view")]
+		public async Task<IActionResult> GetResetPassRequest([FromRoute]string token, [FromRoute]string email)
+		{
+			try
+			{
+				return GetSuccess(new {Token =  token, Email = email});
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã có lỗi xảy ra trong quá trình nhận yêu cầu đổi mật khẩu. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		[HttpPost]
+		[Route("reset-password")]
+		public async Task<IActionResult> ResetPasswordAsync(AccountResetpassDTO dto)
+		{
+			try
+			{
+				if (!ModelState.IsValid) return ModelInvalid();
+				var result = await _accountService.ResetPasswordAsync(dto);
+				if(!result.IsSuccess) return SaveError(result);
+				return SaveSuccess(result);
+			}
+			catch(Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã có lỗi xảy ra trong quá trình thay đổi mật khẩu. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
 	}
 }
