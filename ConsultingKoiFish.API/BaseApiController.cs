@@ -1,4 +1,5 @@
 ﻿using ConsultingKoiFish.BLL.DTOs.Response;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -29,6 +30,16 @@ namespace ConsultingKoiFish.API
 				IsSuccess = false,
 				Message = message,
 				StatusCode = System.Net.HttpStatusCode.NotFound
+			});
+		}
+
+		protected ActionResult GetUnAuthorized(string message)
+		{
+			return new UnauthorizedObjectResult(new ResponseApiDTO
+			{
+				IsSuccess = false,
+				Message = message,
+				StatusCode = System.Net.HttpStatusCode.Unauthorized
 			});
 		}
 
@@ -115,25 +126,24 @@ namespace ConsultingKoiFish.API
 		}
 
 		/// <summary>
-		/// Get the loged in UserName;
+		/// Get the loged in UserNameOrEmail;
 		/// </summary>
-		protected string UserName => User.FindFirst(ClaimTypes.Name)?.Value;
+		protected string UserName => User.FindFirst("Name")?.Value;
 
 		/// <summary>
 		/// Get the logged in user email.
 		/// </summary>
-		//protected string UserEmail => User.FindFirst(Constants.CLAIM_EMAIL)?.Value;
+		protected string UserEmail => User.FindFirst("Email")?.Value;
 
 		/// <summary>
 		/// Get the loged in UserId;
 		/// </summary>
-		protected long UserId
+		protected string UserId
 		{
 			get
 			{
-				var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-				long.TryParse(id, out long userId);
-				return userId;
+				var id = User.FindFirst("Id")?.Value;
+				return id;
 			}
 		}
 

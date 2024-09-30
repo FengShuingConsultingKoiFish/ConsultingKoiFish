@@ -45,6 +45,7 @@ namespace ConsultingKoiFish.DAL
 		{
 			base.OnModelCreating(modelBuilder);
 			modelBuilder.HasDefaultSchema("dbo");
+			SeedRoles(modelBuilder);
 
 			modelBuilder.Entity<IdentityUser>(entity => { entity.ToTable(name: "User"); });
 			modelBuilder.Entity<IdentityUserRole<string>>(entity => { entity.ToTable(name: "UserRoles"); });
@@ -75,6 +76,15 @@ namespace ConsultingKoiFish.DAL
 			OnModelCreatingPartial(modelBuilder);
 		}
 		partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+
+		private static void SeedRoles(ModelBuilder modelBuilder)
+		{
+			modelBuilder.Entity<IdentityRole>().HasData
+				(
+					new IdentityRole() { Name = "Admin", ConcurrencyStamp = "1", NormalizedName = "ADMIN" },
+					new IdentityRole() { Name = "Member", ConcurrencyStamp = "2", NormalizedName = "MEMBER" }
+				);
+		}
 	}
 
 }
