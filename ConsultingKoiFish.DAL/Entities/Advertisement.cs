@@ -16,5 +16,6 @@ namespace ConsultingKoiFish.DAL.Entities
 		public DateTime CreatedDate { get; set; } = DateTime.Now;
 
 		public virtual ApplicationUser User { get; set; }
+		public virtual ICollection<AdAttribute> AdAttributes { get; set; } = new List<AdAttribute>();
 	}
 }
