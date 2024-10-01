@@ -19,7 +19,7 @@ namespace ConsultingKoiFish.DAL.Entities
         public string? Gender { get; set; }
         public string? Avatar { get; set; }
         public string? Status { get; set; }
-        public bool IsLocked { get; set; }
+        public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
         //
         public virtual ApplicationUser User { get; set; }

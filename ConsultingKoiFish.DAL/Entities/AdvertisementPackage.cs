@@ -13,8 +13,9 @@ namespace ConsultingKoiFish.DAL.Entities
 		public double Price { get; set; }
 		public string? Description { get; set; }
 		public int Limit { get; set; }
+        public bool IsActive { get; set; }
 
-		public virtual ICollection<PurchasedPackage> PurchasedPackages { get; set; } = new List<PurchasedPackage>();
+        public virtual ICollection<PurchasedPackage> PurchasedPackages { get; set; } = new List<PurchasedPackage>();
 		public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 	}
 }

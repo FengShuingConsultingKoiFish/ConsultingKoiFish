@@ -14,8 +14,9 @@ namespace ConsultingKoiFish.DAL.Entities
 		public string? Description { get; set; }
 		public double Price { get; set; }
 		public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public bool IsActive { get; set; }
 
-		public virtual ApplicationUser User { get; set; }
+        public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<AdAttribute> AdAttributes { get; set; } = new List<AdAttribute>();
 		public virtual ICollection<AdImage> AdImages { get; set; } = new List<AdImage>();
 		public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
