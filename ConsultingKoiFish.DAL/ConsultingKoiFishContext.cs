@@ -34,6 +34,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<PondCategory> PondCategories { get; set; }
 		public virtual DbSet<Pond> Ponds { get; set; }
 		public virtual DbSet<PondZodiac> PondZodiacs { get; set; }
+		public virtual DbSet<UserPond> UserPonds { get; set; }
 
 		#endregion
 
@@ -62,6 +63,33 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<UserPond>(entity =>
+			{
+				entity.HasKey(up => up.Id);
+
+				entity.Property(up => up.PondName)
+					.IsRequired()
+					.HasMaxLength(256);
+
+				entity.Property(up => up.Description)
+					.HasColumnType("nvarchar(max)");
+
+				entity.Property(up => up.Image)
+					.HasColumnType("nvarchar(max)");
+
+				entity.Property(up => up.UserId)
+					.HasColumnType("nvarchar(450)");
+
+				entity.Property(up => up.ScoreDetail)
+					.HasColumnType("nvarchar(max)");
+
+				// Configure relationship with ApplicationUser
+				entity.HasOne(up => up.User)
+					.WithMany(u => u.UserPonds)
+					.HasForeignKey(up => up.UserId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<PondZodiac>(entity =>
 			{
