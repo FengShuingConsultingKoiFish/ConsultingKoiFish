@@ -396,10 +396,10 @@ public class AccountService : IAccountService
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine($"encode token: {decodedToken}");
 			Console.ResetColor();
-			//if(decodedToken.Contains(" "))
-			//{
-			//	decodedToken = decodedToken.Replace(" ", "%");
-			//}
+			if (decodedToken.Contains(" "))
+			{
+				decodedToken = decodedToken.Replace(" ", "+");
+			}
 			var result = await _identityService.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
 			if (!result.Succeeded)
 			{
