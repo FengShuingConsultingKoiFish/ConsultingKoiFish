@@ -26,6 +26,8 @@ namespace ConsultingKoiFish.DAL
 
 		public virtual DbSet<UserDetail> UserDetails { get; set; }
 		public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+		public virtual DbSet<Zodiac> Zodiacs { get; set; }
+		public virtual DbSet<UserZodiac> UserZodiacs { get; set; }
 
 		#endregion
 
@@ -45,7 +47,7 @@ namespace ConsultingKoiFish.DAL
 		{
 			base.OnModelCreating(modelBuilder);
 			modelBuilder.HasDefaultSchema("dbo");
-			SeedRoles(modelBuilder);
+			//SeedRoles(modelBuilder);
 
 			modelBuilder.Entity<ApplicationUser>(entity => { entity.ToTable(name: "ApplicationUser"); });
 			modelBuilder.Entity<IdentityUserRole<string>>(entity => { entity.ToTable(name: "UserRoles"); });
@@ -54,6 +56,29 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<Zodiac>(entity =>
+			{
+				entity.HasKey(z => z.Id);
+				entity.Property(z => z.ZodiacName)
+						.IsRequired()
+						.HasMaxLength(100);
+			});
+
+			modelBuilder.Entity<UserZodiac>(entity =>
+			{
+				entity.HasKey(uz => uz.Id);
+
+				entity.HasOne(uz => uz.User)
+					.WithOne(u => u.UserZodiac)
+					.HasForeignKey<UserZodiac>(uz => uz.UserId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				entity.HasOne(uz => uz.Zodiac)
+					.WithMany(z => z.UserZodiacs)
+					.HasForeignKey(uz => uz.ZodiacId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<UserDetail>(entity =>
 			{

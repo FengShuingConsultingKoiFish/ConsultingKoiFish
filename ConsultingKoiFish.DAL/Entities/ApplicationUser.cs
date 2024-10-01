@@ -10,5 +10,6 @@ namespace ConsultingKoiFish.DAL.Entities
 	public class ApplicationUser : IdentityUser
 	{
 		public virtual UserDetail UserDetail { get; set; }
+		public virtual UserZodiac UserZodiac { get; set; }
 	}
 }
