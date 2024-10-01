@@ -18,5 +18,6 @@ namespace ConsultingKoiFish.DAL.Entities
 
 		public virtual KoiCategory KoiCategory { get; set; }
 		public virtual ICollection<KoiBreedZodiac> KoiBreedZodiacs { get; set; } = new List<KoiBreedZodiac>();
+		public virtual ICollection<PondDetail> PondDetails { get; set; } = new List<PondDetail>();
 	}
 }

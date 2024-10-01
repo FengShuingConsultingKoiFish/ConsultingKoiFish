@@ -18,5 +18,6 @@ namespace ConsultingKoiFish.DAL.Entities
 		public string? ScoreDetail { get; set; }
 
 		public virtual ApplicationUser User { get; set; }
+		public virtual ICollection<PondDetail> PondDetails { get; set; } = new List<PondDetail>();
 	}
 }

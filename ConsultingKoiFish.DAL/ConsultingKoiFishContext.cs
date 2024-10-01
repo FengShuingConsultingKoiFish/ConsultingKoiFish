@@ -35,6 +35,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<Pond> Ponds { get; set; }
 		public virtual DbSet<PondZodiac> PondZodiacs { get; set; }
 		public virtual DbSet<UserPond> UserPonds { get; set; }
+		public virtual DbSet<PondDetail> PondDetails { get; set; }
 
 		#endregion
 
@@ -63,6 +64,29 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<PondDetail>(entity =>
+			{
+				entity.HasKey(pd => pd.Id);
+
+				// Relationship with Pond
+				entity.HasOne(pd => pd.Pond)
+					.WithMany(p => p.PondDetails)
+					.HasForeignKey(pd => pd.PondId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with KoiBreed
+				entity.HasOne(pd => pd.KoiBreed)
+					.WithMany(kb => kb.PondDetails)
+					.HasForeignKey(pd => pd.KoiBreedId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with UserPond
+				entity.HasOne(pd => pd.UserPond)
+					.WithMany(up => up.PondDetails)
+					.HasForeignKey(pd => pd.UserPondId)
+					.OnDelete(DeleteBehavior.Cascade);
+			});
 
 			modelBuilder.Entity<UserPond>(entity =>
 			{
