@@ -172,7 +172,6 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
-		[Authorize]
 		[HttpPost]
 		[Route("authen2fa")]
 		public async Task<IActionResult> SignIn2FaAsync([FromBody] Authen2FaDTO authen2FaDTO)

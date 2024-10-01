@@ -38,7 +38,7 @@ public class AccountService : IAccountService
 		this._configuration = configuration;
 	}
 
-	public async Task<AuthenResultDTO> GenerateTokenAsync(IdentityUser user)
+	public async Task<AuthenResultDTO> GenerateTokenAsync(ApplicationUser user)
 	{
 		try
 		{
@@ -108,7 +108,6 @@ public class AccountService : IAccountService
 			return null;
 			throw;
 		}
-
 	}
 
 	public async Task<BaseResponse> CheckToRenewTokenAsync(AuthenResultDTO authenResult)
@@ -209,7 +208,7 @@ public class AccountService : IAccountService
 		}
 	}
 
-	public async Task<BaseResponse> SendEmailConfirmation(IdentityUser user)
+	public async Task<BaseResponse> SendEmailConfirmation(ApplicationUser user)
 	{
 		try
 		{
@@ -233,7 +232,7 @@ public class AccountService : IAccountService
 		}
 	}
 
-	public async Task<BaseResponse> SendOTP2FA(IdentityUser user, string password)
+	public async Task<BaseResponse> SendOTP2FA(ApplicationUser user, string password)
 	{
 		try
 		{
@@ -318,7 +317,7 @@ public class AccountService : IAccountService
 		try
 		{
 			await _unitOfWork.BeginTransactionAsync();
-			var user = new IdentityUser
+			var user = new ApplicationUser
 			{
 				Email = accRequest.EmailAddress,
 				UserName = accRequest.UserName,
@@ -329,7 +328,6 @@ public class AccountService : IAccountService
 			if (!createResult.Succeeded)
 			{
 				throw new Exception("Một số lỗi xảy ra trong quá trình đăng kí tài khoản. Vui lòn thử lại sau ít phút.");
-
 			}
 
 			await _identityService.AddToRoleAsync(user, Role.Member.ToString());
@@ -375,7 +373,7 @@ public class AccountService : IAccountService
 					forgotUrl!
 				);
 		_emailService.SendEmail(message);
-		return new BaseResponse { IsSuccess = true, Message = "Url đổi mật khẩu đã được gửi đến email của bạn. Hãy truy cập url để đổi mật khẩu nhé."};
+		return new BaseResponse { IsSuccess = true, Message = "Url đổi mật khẩu đã được gửi đến email của bạn. Hãy truy cập url để đổi mật khẩu nhé." };
 	}
 
 	public async Task<BaseResponse> ResetPasswordAsync(AccountResetpassDTO dto)

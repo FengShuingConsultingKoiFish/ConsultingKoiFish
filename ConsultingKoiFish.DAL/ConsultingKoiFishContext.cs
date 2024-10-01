@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ConsultingKoiFish.DAL
 {
-	public partial class ConsultingKoiFishContext : IdentityDbContext<IdentityUser>
+	public partial class ConsultingKoiFishContext : IdentityDbContext<ApplicationUser>
 	{
 		public ConsultingKoiFishContext()
 		{
@@ -47,7 +47,7 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.HasDefaultSchema("dbo");
 			SeedRoles(modelBuilder);
 
-			modelBuilder.Entity<IdentityUser>(entity => { entity.ToTable(name: "User"); });
+			modelBuilder.Entity<ApplicationUser>(entity => { entity.ToTable(name: "ApplicationUser"); });
 			modelBuilder.Entity<IdentityUserRole<string>>(entity => { entity.ToTable(name: "UserRoles"); });
 			modelBuilder.Entity<IdentityRole>(entity => { entity.ToTable(name: "Role"); });
 			modelBuilder.Entity<IdentityUserClaim<string>>(entity => { entity.ToTable(name: "UserClaim"); });
@@ -55,12 +55,17 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
 
-			modelBuilder.Entity<UserDetail>()
-			.HasOne(ud => ud.User)
-			.WithOne() // Không cần truy xuất ngược từ User về UserDetail
-			.HasForeignKey<UserDetail>(ud => ud.UserId)
-			.OnDelete(DeleteBehavior.ClientSetNull)
-			.HasConstraintName("FK_UserDetail_User");
+			modelBuilder.Entity<UserDetail>(entity =>
+			{
+				entity.ToTable(name: "UserDetails");
+				entity.HasKey(e => e.Id);
+				entity.Property(e => e.UserId).HasMaxLength(450);
+				entity.HasOne(ud => ud.User)
+						.WithOne(u => u.UserDetail)
+						.HasForeignKey<UserDetail>(ud => ud.UserId)
+						.OnDelete(DeleteBehavior.ClientSetNull)
+						.HasConstraintName("FK_UserDetail_ApplicationUser");
+			});
 
 			modelBuilder.Entity<RefreshToken>(entity =>
 			{
@@ -69,7 +74,7 @@ namespace ConsultingKoiFish.DAL
 					  .WithOne()
 					  .HasForeignKey<RefreshToken>(r => r.UserId)
 					  .OnDelete(DeleteBehavior.ClientSetNull)
-					  .HasConstraintName("FK_RefreshToken_User");
+					  .HasConstraintName("FK_RefreshToken_ApplicationUser");
 				entity.Property(x => x.UserId).HasMaxLength(450);
 			});
 
