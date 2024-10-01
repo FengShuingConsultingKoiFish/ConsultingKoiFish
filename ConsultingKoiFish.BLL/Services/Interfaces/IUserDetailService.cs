@@ -1,4 +1,5 @@
 ﻿using ConsultingKoiFish.BLL.DTOs.Response;
+using ConsultingKoiFish.BLL.DTOs.UserDetailDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 {
 	public interface IUserDetailService
 	{
-		Task<BaseResponse> CreateUpdateUserDetail();
+		Task<BaseResponse> CreateUpdateUserDetail(UserDetailRequestDTO dto, string userId);
 	}
 }

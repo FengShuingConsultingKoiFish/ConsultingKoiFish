@@ -14,5 +14,6 @@ namespace ConsultingKoiFish.DAL.UnitOfWork
 		Task BeginTransactionAsync();
 		Task CommitTransactionAsync();
 		Task RollBackAsync();
+		Task<bool> SaveAsync();
 	}
 }
