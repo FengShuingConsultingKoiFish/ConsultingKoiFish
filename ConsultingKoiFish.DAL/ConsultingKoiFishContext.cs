@@ -37,6 +37,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<UserPond> UserPonds { get; set; }
 		public virtual DbSet<PondDetail> PondDetails { get; set; }
 		public virtual DbSet<Image> Images { get; set; }
+		public virtual DbSet<Blog> Blogs { get; set; }
 
 		#endregion
 
@@ -65,6 +66,30 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<Blog>(entity =>
+			{
+				entity.HasKey(b => b.Id);
+
+				entity.Property(b => b.Title)
+					.IsRequired()
+					.HasMaxLength(255);
+
+				entity.Property(b => b.UserId)
+					.HasColumnType("nvarchar(450)");
+
+				entity.Property(b => b.Content)
+					.HasColumnType("nvarchar(max)");
+
+				entity.Property(b => b.CreatedDate)
+					.HasColumnType("datetime2(7)");
+
+				// Configure relationship with ApplicationUser
+				entity.HasOne(b => b.User)
+					.WithMany(u => u.Blogs)
+					.HasForeignKey(b => b.UserId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<Image>(entity =>
 			{

@@ -13,5 +13,6 @@ namespace ConsultingKoiFish.DAL.Entities
 		public virtual UserZodiac UserZodiac { get; set; }
 		public virtual ICollection<UserPond> UserPonds { get; set; } = new List<UserPond>();
 		public virtual ICollection<Image> Images { get; set; } = new List<Image>();
+		public virtual ICollection<Blog> Blogs { get; set; } = new List<Blog>();
 	}
 }
