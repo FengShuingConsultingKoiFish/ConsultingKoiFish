@@ -172,7 +172,6 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
-		[Authorize]
 		[HttpPost]
 		[Route("authen2fa")]
 		public async Task<IActionResult> SignIn2FaAsync([FromBody] Authen2FaDTO authen2FaDTO)
@@ -410,6 +409,48 @@ namespace ConsultingKoiFish.API.Controllers
 				var result = await _accountService.ResetPasswordAsync(dto);
 				if(!result.IsSuccess) return SaveError(result);
 				return SaveSuccess(result);
+			}
+			catch(Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã có lỗi xảy ra trong quá trình thay đổi mật khẩu. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		[Authorize]
+		[HttpPost]
+		[Route("change-password")]
+		public async Task<IActionResult> ChangePasswordAsync(AccountChangePassDTO dto)
+		{
+			try
+			{
+				if (!ModelState.IsValid) return ModelInvalid();
+
+				var user = await _identityService.GetByIdAsync(UserId);
+				if(user != null)
+				{
+					var rightPassword = await _identityService.CheckPasswordAsync(user, dto.OldPassword);
+					if (!rightPassword)
+					{
+						ModelState.AddModelError("OldPassword", "Mật khẩu hiện tại không đúng!");
+						return ModelInvalid();
+					}
+
+					var token = await _identityService.GeneratePasswordResetTokenAsync(user);
+
+					var success = await _identityService.ResetPasswordAsync(user, token, dto.NewPassword);
+					if(!success.Succeeded) return SaveError();
+
+					var newToken = await _accountService.GenerateTokenAsync(user);
+					if(newToken == null) return Error("Đã có lỗi xảy ra trong quá trình sinh mã đăng nhập mới. Xin vui lòng thử lại sau ít phút.");
+
+					var result = new { Success = success, Token = newToken };
+					return SaveSuccess(result);
+				}
+
+				return Error("Người dùng không tồn tại.");
 			}
 			catch(Exception ex)
 			{

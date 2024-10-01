@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -38,7 +39,7 @@ public class AccountService : IAccountService
 		this._configuration = configuration;
 	}
 
-	public async Task<AuthenResultDTO> GenerateTokenAsync(IdentityUser user)
+	public async Task<AuthenResultDTO> GenerateTokenAsync(ApplicationUser user)
 	{
 		try
 		{
@@ -108,7 +109,6 @@ public class AccountService : IAccountService
 			return null;
 			throw;
 		}
-
 	}
 
 	public async Task<BaseResponse> CheckToRenewTokenAsync(AuthenResultDTO authenResult)
@@ -209,7 +209,7 @@ public class AccountService : IAccountService
 		}
 	}
 
-	public async Task<BaseResponse> SendEmailConfirmation(IdentityUser user)
+	public async Task<BaseResponse> SendEmailConfirmation(ApplicationUser user)
 	{
 		try
 		{
@@ -233,7 +233,7 @@ public class AccountService : IAccountService
 		}
 	}
 
-	public async Task<BaseResponse> SendOTP2FA(IdentityUser user, string password)
+	public async Task<BaseResponse> SendOTP2FA(ApplicationUser user, string password)
 	{
 		try
 		{
@@ -318,7 +318,7 @@ public class AccountService : IAccountService
 		try
 		{
 			await _unitOfWork.BeginTransactionAsync();
-			var user = new IdentityUser
+			var user = new ApplicationUser
 			{
 				Email = accRequest.EmailAddress,
 				UserName = accRequest.UserName,
@@ -329,7 +329,6 @@ public class AccountService : IAccountService
 			if (!createResult.Succeeded)
 			{
 				throw new Exception("Một số lỗi xảy ra trong quá trình đăng kí tài khoản. Vui lòn thử lại sau ít phút.");
-
 			}
 
 			await _identityService.AddToRoleAsync(user, Role.Member.ToString());
@@ -367,7 +366,12 @@ public class AccountService : IAccountService
 		}
 
 		var token = await _identityService.GeneratePasswordResetTokenAsync(user);
-		var forgotUrl = $"https://localhost:7166/api/Accounts/reset-password-view?token={token}&email={user.Email}";
+		var encodedToken = WebUtility.UrlEncode(token);
+		Console.ForegroundColor = ConsoleColor.Red;
+		Console.WriteLine($"encode token: {encodedToken}");
+		Console.ResetColor();
+		//var forgotUrl = $"https://localhost:7166/api/Accounts/reset-password-view?token={encodedToken}&email={user.Email}";
+		var forgotUrl = $"http://localhost:5173/Password-reset?token={encodedToken}&email={user.Email}";
 		var message = new EmailDTO
 				(
 					new string[] { user.Email! },
@@ -375,7 +379,7 @@ public class AccountService : IAccountService
 					forgotUrl!
 				);
 		_emailService.SendEmail(message);
-		return new BaseResponse { IsSuccess = true, Message = "Url đổi mật khẩu đã được gửi đến email của bạn. Hãy truy cập url để đổi mật khẩu nhé."};
+		return new BaseResponse { IsSuccess = true, Message = "Url đổi mật khẩu đã được gửi đến email của bạn. Hãy truy cập url để đổi mật khẩu nhé." };
 	}
 
 	public async Task<BaseResponse> ResetPasswordAsync(AccountResetpassDTO dto)
@@ -388,7 +392,15 @@ public class AccountService : IAccountService
 				return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy người dùng." };
 			}
 
-			var result = await _identityService.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+			var decodedToken = WebUtility.UrlDecode(dto.Token);
+			Console.ForegroundColor = ConsoleColor.Red;
+			Console.WriteLine($"encode token: {decodedToken}");
+			Console.ResetColor();
+			if (decodedToken.Contains(" "))
+			{
+				decodedToken = decodedToken.Replace(" ", "+");
+			}
+			var result = await _identityService.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
 			if (!result.Succeeded)
 			{
 				return new BaseResponse

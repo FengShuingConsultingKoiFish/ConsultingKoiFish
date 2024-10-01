@@ -2,6 +2,7 @@
 using ConsultingKoiFish.API.ConfigExtensions;
 using ConsultingKoiFish.BLL.Helpers.Config;
 using ConsultingKoiFish.DAL;
+using ConsultingKoiFish.DAL.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,7 @@ namespace ConsultingKoiFish.API
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen(option =>
 			{
-				option.SwaggerDoc("v1", new OpenApiInfo { Title = "OnDemandTutor API", Version = "v1" });
+				option.SwaggerDoc("v1", new OpenApiInfo { Title = "ConsultingKoiFish API", Version = "v1" });
 				option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 				{
 					In = ParameterLocation.Header,
@@ -68,7 +69,7 @@ namespace ConsultingKoiFish.API
 			builder.Services.AddDbContext<ConsultingKoiFishContext>(options => options.UseSqlServer(connectionString));
 
 			//set Identity
-			builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ConsultingKoiFishContext>().AddDefaultTokenProviders();
+			builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ConsultingKoiFishContext>().AddDefaultTokenProviders();
 
 			//set repo base
 			builder.Services.AddRepoBase();
@@ -123,6 +124,22 @@ namespace ConsultingKoiFish.API
 			builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 
 			var app = builder.Build();
+
+			// Seed data when the application starts
+			using (var scope = app.Services.CreateScope())
+			{
+				var services = scope.ServiceProvider;
+				try
+				{
+					// Gọi phương thức seed dữ liệu admin từ ServicesExtensions
+					 services.SeedData().Wait();
+				}
+				catch (Exception ex)
+				{
+					var logger = services.GetRequiredService<ILogger<Program>>();
+					logger.LogError(ex, "An error occurred while seeding the database.");
+				}
+			}
 
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())

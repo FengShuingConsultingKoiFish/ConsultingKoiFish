@@ -87,5 +87,15 @@ namespace ConsultingKoiFish.DAL.Repositories
 		{
 			return await Get(options).FirstOrDefaultAsync();
 		}
+
+		public async Task<bool> AnyAsync(QueryOptions<T> options)
+		{
+			if(options.Predicate != null)
+			{
+				var result = await _dbSet.AnyAsync(options.Predicate);
+				return result;
+			}
+			return false;
+		}
 	}
 }

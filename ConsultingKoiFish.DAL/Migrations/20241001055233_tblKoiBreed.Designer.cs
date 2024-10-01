@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsultingKoiFish.DAL.Migrations
 {
     [DbContext(typeof(ConsultingKoiFishContext))]
-    [Migration("20240925210316_SeedRoles")]
-    partial class SeedRoles
+    [Migration("20241001055233_tblKoiBreed")]
+    partial class tblKoiBreed
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,133 @@ namespace ConsultingKoiFish.DAL.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.ApplicationUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("ApplicationUser", "dbo");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.KoiBreed", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Colors")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("KoiCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Pattern")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KoiCategoryId");
+
+                    b.ToTable("KoiBreeds", "dbo");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.KoiCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("KoiCategories", "dbo");
+                });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.RefreshToken", b =>
                 {
@@ -98,6 +225,7 @@ namespace ConsultingKoiFish.DAL.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
@@ -106,6 +234,49 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .IsUnique();
 
                     b.ToTable("UserDetails", "dbo");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.UserZodiac", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ZodiacId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.HasIndex("ZodiacId");
+
+                    b.ToTable("UserZodiacs", "dbo");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Zodiac", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ZodiacName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Zodiacs", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -133,22 +304,6 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("Role", "dbo");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "4cfb2b98-4aff-4193-8ca7-4a930197aa7a",
-                            ConcurrencyStamp = "1",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = "3304dd02-c1af-4df9-a0f6-13592734e523",
-                            ConcurrencyStamp = "2",
-                            Name = "Member",
-                            NormalizedName = "MEMBER"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -174,71 +329,6 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("RoleClaim", "dbo");
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.ToTable("User", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -322,26 +412,53 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.ToTable("UserToken", "dbo");
                 });
 
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.KoiBreed", b =>
+                {
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.KoiCategory", "KoiCategory")
+                        .WithMany("KoiBreeds")
+                        .HasForeignKey("KoiCategoryId")
+                        .IsRequired();
+
+                    b.Navigation("KoiCategory");
+                });
+
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.RefreshToken", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", "User")
                         .WithOne()
                         .HasForeignKey("ConsultingKoiFish.DAL.Entities.RefreshToken", "UserId")
                         .IsRequired()
-                        .HasConstraintName("FK_RefreshToken_User");
+                        .HasConstraintName("FK_RefreshToken_ApplicationUser");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.UserDetail", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
-                        .WithOne()
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", "User")
+                        .WithOne("UserDetail")
                         .HasForeignKey("ConsultingKoiFish.DAL.Entities.UserDetail", "UserId")
                         .IsRequired()
-                        .HasConstraintName("FK_UserDetail_User");
+                        .HasConstraintName("FK_UserDetail_ApplicationUser");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.UserZodiac", b =>
+                {
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", "User")
+                        .WithOne("UserZodiac")
+                        .HasForeignKey("ConsultingKoiFish.DAL.Entities.UserZodiac", "UserId")
+                        .IsRequired();
+
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.Zodiac", "Zodiac")
+                        .WithMany("UserZodiacs")
+                        .HasForeignKey("ZodiacId")
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Zodiac");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -355,7 +472,7 @@ namespace ConsultingKoiFish.DAL.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -364,7 +481,7 @@ namespace ConsultingKoiFish.DAL.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -379,7 +496,7 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -388,11 +505,30 @@ namespace ConsultingKoiFish.DAL.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.ApplicationUser", b =>
+                {
+                    b.Navigation("UserDetail")
+                        .IsRequired();
+
+                    b.Navigation("UserZodiac")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.KoiCategory", b =>
+                {
+                    b.Navigation("KoiBreeds");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Zodiac", b =>
+                {
+                    b.Navigation("UserZodiacs");
                 });
 #pragma warning restore 612, 618
         }

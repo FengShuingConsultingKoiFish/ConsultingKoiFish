@@ -1,18 +1,19 @@
 using ConsultingKoiFish.BLL.DTOs.AccountDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
+using ConsultingKoiFish.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace ConsultingKoiFish.BLL.Services.Implements;
 
 public interface IAccountService
 {
-    public Task<AccountViewDTO> SignUpAsync(AccountCreateRequestDTO accRequest);
-    public Task<AuthenResultDTO> SignInAsync(AuthenDTO authenDTO);
-    public Task<AuthenResultDTO> GenerateTokenAsync(IdentityUser user);
-    public Task<BaseResponse> SendEmailConfirmation(IdentityUser user);
-    public Task<BaseResponse> SendOTP2FA(IdentityUser user, string password);
-    public Task<BaseResponse> SignOutAsync(SignOutDTO signOutDTO);
-    public Task<BaseResponse> CheckToRenewTokenAsync(AuthenResultDTO authenResult);
-    public Task<BaseResponse> ForgotPasswordAsync(AccountForgotPasswordDTO dto);
-    public Task<BaseResponse> ResetPasswordAsync(AccountResetpassDTO dto);
+	Task<AccountViewDTO> SignUpAsync(AccountCreateRequestDTO accRequest);
+	Task<AuthenResultDTO> SignInAsync(AuthenDTO authenDTO);
+	Task<AuthenResultDTO> GenerateTokenAsync(ApplicationUser user);
+	Task<BaseResponse> SendEmailConfirmation(ApplicationUser user);
+	Task<BaseResponse> SendOTP2FA(ApplicationUser user, string password);
+	Task<BaseResponse> SignOutAsync(SignOutDTO signOutDTO);
+	Task<BaseResponse> CheckToRenewTokenAsync(AuthenResultDTO authenResult);
+	Task<BaseResponse> ForgotPasswordAsync(AccountForgotPasswordDTO dto);
+	Task<BaseResponse> ResetPasswordAsync(AccountResetpassDTO dto);
 }
