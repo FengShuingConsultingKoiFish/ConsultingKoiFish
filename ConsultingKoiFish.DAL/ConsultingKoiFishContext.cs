@@ -45,6 +45,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<Comment> Comments { get; set; }
 		public virtual DbSet<AdvertisementPackage> AdvertisementPackages { get; set; }
 		public virtual DbSet<PurchasedPackage> PurchasedPackages { get; set; }
+		public virtual DbSet<Payment> Payments { get; set; }
 
 		#endregion
 
@@ -73,6 +74,35 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<Payment>(entity =>
+			{
+				entity.HasKey(p => p.Id);
+
+				entity.Property(p => p.TransactionId)
+					.IsRequired();
+
+				entity.Property(p => p.Content)
+					.HasColumnType("nvarchar(max)");
+
+				entity.Property(p => p.UserId)
+					.HasColumnType("nvarchar(450)");
+
+				entity.Property(p => p.CreatedDate)
+					.HasColumnType("datetime2(7)");
+
+				// Relationship with ApplicationUser
+				entity.HasOne(p => p.User)
+					.WithMany(u => u.Payments)
+					.HasForeignKey(p => p.UserId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Relationship with AdvertisementPackage
+				entity.HasOne(p => p.AdvertisementPackage)
+					.WithMany(ap => ap.Payments)
+					.HasForeignKey(p => p.AdvertisementPackageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<PurchasedPackage>(entity =>
 			{
