@@ -76,6 +76,17 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return new PaginatedList<UserDetailViewDTO>(resultDTO, pagedRecords.TotalItems, pageIndex, pageSize);
 		}
 
+		public async Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetailsByName(int pageIndex, int pageSize, string name)
+		{
+			var repo = _unitOfWork.GetRepo<UserDetail>();
+			var loadedRecords = repo.Get(new QueryBuilder<UserDetail>()
+										.WithPredicate(x => x.IsActive == true && x.FullName.Contains(name))
+										.Build());
+			var pagedRecords = await PaginatedList<UserDetail>.CreateAsync(loadedRecords, pageIndex, pageSize);
+			var resultDTO = _mapper.Map<List<UserDetailViewDTO>>(pagedRecords);
+			return new PaginatedList<UserDetailViewDTO>(resultDTO, pagedRecords.TotalItems, pageIndex, pageSize);
+		}
+
 		public async Task<UserDetailViewDTO> GetUserDetailByUserId(string userId)
 		{
 			var repo = _unitOfWork.GetRepo<UserDetail>();

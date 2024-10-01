@@ -14,7 +14,7 @@ namespace ConsultingKoiFish.API.Controllers
 		private readonly IUserDetailService _userDetailService;
 
 		public UserDetailsController(IUserDetailService userDetailService)
-        {
+		{
 			this._userDetailService = userDetailService;
 		}
 
@@ -27,9 +27,9 @@ namespace ConsultingKoiFish.API.Controllers
 			{
 				if (!ModelState.IsValid) return ModelInvalid();
 
-				if(dto.Gender != null)
+				if (dto.Gender != null)
 				{
-					if(!dto.Gender.Equals("Male") && !dto.Gender.Equals("Female"))
+					if (!dto.Gender.Equals("Male") && !dto.Gender.Equals("Female"))
 					{
 						ModelState.AddModelError("Gender", "Giới tính chỉ nhận Male hoặc Female.");
 						return ModelInvalid();
@@ -72,12 +72,33 @@ namespace ConsultingKoiFish.API.Controllers
 
 		[Authorize]
 		[HttpGet]
-		[Route("get-all-details")]
-		public async Task<IActionResult> GetAllUserDetails(int pageIndex, int pageSize)
+		[Route("get-all-details/{pageIndex}/{pageSize}")]
+		public async Task<IActionResult> GetAllUserDetails([FromRoute] int pageIndex, [FromRoute] int pageSize)
 		{
 			try
 			{
 				var data = await _userDetailService.GetAllUserDetails(pageIndex, pageSize);
+				var response = new PagingDTO<UserDetailViewDTO>(data);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+			}
+		}
+
+		[Authorize]
+		[HttpGet]
+		[Route("filter-all-details-By-Name/{pageIndex}/{pageSize}/{name}")]
+		public async Task<IActionResult> GetAllUserDetailsByName([FromRoute] int pageIndex, [FromRoute] int pageSize, [FromRoute] string name)
+		{
+			try
+			{
+				var data = await _userDetailService.GetAllUserDetailsByName(pageIndex, pageSize, name);
 				var response = new PagingDTO<UserDetailViewDTO>(data);
 				if (response == null) return GetError();
 				return GetSuccess(response);
