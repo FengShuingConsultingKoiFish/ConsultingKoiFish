@@ -39,6 +39,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<Image> Images { get; set; }
 		public virtual DbSet<Blog> Blogs { get; set; }
 		public virtual DbSet<BlogImage> BlogImages { get; set; }
+		public virtual DbSet<Advertisement> Advertisements { get; set; }
 
 		#endregion
 
@@ -67,6 +68,33 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<Advertisement>(entity =>
+			{
+				entity.HasKey(ad => ad.Id);
+
+				entity.Property(ad => ad.Title)
+					.IsRequired()
+					.HasMaxLength(256);
+
+				entity.Property(ad => ad.UserId)
+					.HasColumnType("nvarchar(450)");
+
+				entity.Property(ad => ad.Description)
+					.HasColumnType("nvarchar(max)");
+
+				entity.Property(ad => ad.Price)
+					.HasColumnType("float");
+
+				entity.Property(ad => ad.CreatedDate)
+					.HasColumnType("datetime2(7)");
+
+				// Configure relationship with ApplicationUser
+				entity.HasOne(ad => ad.User)
+					.WithMany(u => u.Advertisements)
+					.HasForeignKey(ad => ad.UserId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<BlogImage>(entity =>
 			{
