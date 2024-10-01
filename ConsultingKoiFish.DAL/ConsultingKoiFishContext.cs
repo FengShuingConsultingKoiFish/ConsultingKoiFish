@@ -42,6 +42,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<Advertisement> Advertisements { get; set; }
 		public virtual DbSet<AdAttribute> AdAttributes { get; set; }
 		public virtual DbSet<AdImage> AdImages { get; set; }
+		public virtual DbSet<Comment> Comments { get; set; }
 
 		#endregion
 
@@ -70,6 +71,39 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<Comment>(entity =>
+			{
+				entity.HasKey(c => c.Id);
+
+				entity.Property(c => c.Content)
+					.IsRequired()
+					.HasMaxLength(200);
+
+				entity.Property(c => c.CreatedDate)
+					.HasColumnType("datetime2(7)");
+
+				entity.Property(c => c.UserId)
+					.HasColumnType("nvarchar(450)");
+
+				// Relationship with ApplicationUser
+				entity.HasOne(c => c.User)
+					.WithMany(u => u.Comments)
+					.HasForeignKey(c => c.UserId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Relationship with Blog
+				entity.HasOne(c => c.Blog)
+					.WithMany(b => b.Comments)
+					.HasForeignKey(c => c.BlogId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Relationship with Advertisement
+				entity.HasOne(c => c.Advertisement)
+					.WithMany(ad => ad.Comments)
+					.HasForeignKey(c => c.AdvertisementId)
+					.OnDelete(DeleteBehavior.Cascade);
+			});
 
 			modelBuilder.Entity<AdImage>(entity =>
 			{
