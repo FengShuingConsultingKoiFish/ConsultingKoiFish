@@ -41,6 +41,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<BlogImage> BlogImages { get; set; }
 		public virtual DbSet<Advertisement> Advertisements { get; set; }
 		public virtual DbSet<AdAttribute> AdAttributes { get; set; }
+		public virtual DbSet<AdImage> AdImages { get; set; }
 
 		#endregion
 
@@ -69,6 +70,23 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<AdImage>(entity =>
+			{
+				entity.HasKey(ai => ai.Id);
+
+				// Relationship with Advertisement
+				entity.HasOne(ai => ai.Advertisement)
+					.WithMany(ad => ad.AdImages)
+					.HasForeignKey(ai => ai.AdvertisementId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with Image
+				entity.HasOne(ai => ai.Image)
+					.WithMany(i => i.AdImages)
+					.HasForeignKey(ai => ai.ImageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<AdAttribute>(entity =>
 			{

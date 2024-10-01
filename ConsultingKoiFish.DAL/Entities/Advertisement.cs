@@ -17,5 +17,6 @@ namespace ConsultingKoiFish.DAL.Entities
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<AdAttribute> AdAttributes { get; set; } = new List<AdAttribute>();
+		public virtual ICollection<AdImage> AdImages { get; set; } = new List<AdImage>();
 	}
 }
