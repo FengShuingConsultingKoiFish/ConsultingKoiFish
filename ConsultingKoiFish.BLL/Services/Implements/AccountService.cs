@@ -366,6 +366,9 @@ public class AccountService : IAccountService
 
 		var token = await _identityService.GeneratePasswordResetTokenAsync(user);
 		var encodedToken = HttpUtility.UrlEncode(token);
+		Console.ForegroundColor = ConsoleColor.Red;
+		Console.WriteLine($"encode token: {encodedToken}");
+		Console.ResetColor();
 		var forgotUrl = $"https://localhost:7166/api/Accounts/reset-password-view?token={encodedToken}&email={user.Email}";
 		var message = new EmailDTO
 				(
@@ -388,6 +391,9 @@ public class AccountService : IAccountService
 			}
 
 			var decodedToken = HttpUtility.UrlDecode(dto.Token);
+			Console.ForegroundColor = ConsoleColor.Red;
+			Console.WriteLine($"encode token: {decodedToken}");
+			Console.ResetColor();
 			var result = await _identityService.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
 			if (!result.Succeeded)
 			{

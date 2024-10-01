@@ -37,7 +37,7 @@ namespace ConsultingKoiFish.API.ConfigExtensions
 			services.AddAutoMapper(typeof(MappingProfile));
 		}
 
-		//seed data
+		//Seed Data
 		public static async Task SeedData(this IServiceProvider serviceProvider)
 		{
 			var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
