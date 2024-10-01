@@ -38,6 +38,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<PondDetail> PondDetails { get; set; }
 		public virtual DbSet<Image> Images { get; set; }
 		public virtual DbSet<Blog> Blogs { get; set; }
+		public virtual DbSet<BlogImage> BlogImages { get; set; }
 
 		#endregion
 
@@ -66,6 +67,23 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<BlogImage>(entity =>
+			{
+				entity.HasKey(bi => bi.Id);
+
+				// Relationship with Blog
+				entity.HasOne(bi => bi.Blog)
+					.WithMany(b => b.BlogImages)
+					.HasForeignKey(bi => bi.BlogId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with Image
+				entity.HasOne(bi => bi.Image)
+					.WithMany(i => i.BlogImages)
+					.HasForeignKey(bi => bi.ImageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<Blog>(entity =>
 			{

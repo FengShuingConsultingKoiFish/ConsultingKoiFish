@@ -15,5 +15,6 @@ namespace ConsultingKoiFish.DAL.Entities
 		public DateTime CreatedDate { get; set; } = DateTime.Now;
 
 		public virtual ApplicationUser User { get; set; }
+		public virtual ICollection<BlogImage> BlogImages { get; set; } = new List<BlogImage>();
 	}
 }
