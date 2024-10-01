@@ -12,5 +12,6 @@ namespace ConsultingKoiFish.DAL.Entities
 		public string ZodiacName { get; set; }
 
 		public virtual ICollection<UserZodiac> UserZodiacs { get; set; }
+		public virtual ICollection<KoiBreedZodiac> KoiBreedZodiacs { get; set; } = new List<KoiBreedZodiac>();
 	}
 }
