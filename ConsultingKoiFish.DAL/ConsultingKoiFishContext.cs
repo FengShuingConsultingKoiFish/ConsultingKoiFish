@@ -43,6 +43,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<AdAttribute> AdAttributes { get; set; }
 		public virtual DbSet<AdImage> AdImages { get; set; }
 		public virtual DbSet<Comment> Comments { get; set; }
+		public virtual DbSet<AdvertisementPackage> AdvertisementPackages { get; set; }
 
 		#endregion
 
@@ -71,6 +72,24 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<AdvertisementPackage>(entity =>
+			{
+				entity.HasKey(ap => ap.Id);
+
+				entity.Property(ap => ap.Name)
+					.IsRequired()
+					.HasMaxLength(200);
+
+				entity.Property(ap => ap.Price)
+					.IsRequired();
+
+				entity.Property(ap => ap.Description)
+					.HasColumnType("nvarchar(max)");
+
+				entity.Property(ap => ap.Limit)
+					.IsRequired();
+			});
 
 			modelBuilder.Entity<Comment>(entity =>
 			{
