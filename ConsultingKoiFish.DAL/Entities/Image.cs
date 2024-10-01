@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,10 +11,11 @@ namespace ConsultingKoiFish.DAL.Entities
 	{
 		public int Id { get; set; }
 		public string FilePath { get; set; } = null!;
+		[AllowNull]
 		public string? AltText { get; set; }
 		public string UserId { get; set; }
 		public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
 
         public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<BlogImage> BlogImages { get; set; } = new List<BlogImage>();

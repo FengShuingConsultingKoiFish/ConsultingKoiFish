@@ -4,6 +4,7 @@ using ConsultingKoiFish.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsultingKoiFish.DAL.Migrations
 {
     [DbContext(typeof(ConsultingKoiFishContext))]
-    partial class ConsultingKoiFishContextModelSnapshot : ModelSnapshot
+    [Migration("20241001113245_updateUserDetail")]
+    partial class updateUserDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,10 +38,12 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("AttributeName")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("AttributeValue")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 

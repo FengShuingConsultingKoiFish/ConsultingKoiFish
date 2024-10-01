@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace ConsultingKoiFish.DAL.Entities
 		public string UserId { get; set; }
 		public int AdvertisementPackageId { get; set; }
 		public long TransactionId { get; set; }
+		[AllowNull]
 		public string? Content { get; set; }
 		public DateTime CreatedDate { get; set; } = DateTime.Now;
 

@@ -13,7 +13,7 @@ namespace ConsultingKoiFish.DAL.Entities
 		public int BlogId { get; set; }
 		public int AdvertisementId { get; set; }
 		public string Content { get; set; } = null!;
-		public DateTime CreatedDate { get; set; }
+		public DateTime CreatedDate { get; set; } = DateTime.Now;
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual Blog Blog { get; set; }

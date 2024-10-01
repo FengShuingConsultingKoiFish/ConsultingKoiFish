@@ -195,11 +195,9 @@ namespace ConsultingKoiFish.DAL
 				entity.HasKey(aa => aa.Id);
 
 				entity.Property(aa => aa.AttributeName)
-					.IsRequired()
 					.HasMaxLength(100);
 
 				entity.Property(aa => aa.AttributeValue)
-					.IsRequired()
 					.HasMaxLength(255);
 
 				// Configure relationship with Advertisement
