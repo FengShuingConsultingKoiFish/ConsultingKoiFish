@@ -365,7 +365,8 @@ public class AccountService : IAccountService
 		}
 
 		var token = await _identityService.GeneratePasswordResetTokenAsync(user);
-		var forgotUrl = $"https://localhost:7166/api/Accounts/reset-password-view?token={token}&email={user.Email}";
+		var encodedToken = HttpUtility.UrlEncode(token);
+		var forgotUrl = $"https://localhost:7166/api/Accounts/reset-password-view?token={encodedToken}&email={user.Email}";
 		var message = new EmailDTO
 				(
 					new string[] { user.Email! },
@@ -386,7 +387,8 @@ public class AccountService : IAccountService
 				return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy người dùng." };
 			}
 
-			var result = await _identityService.ResetPasswordAsync(user, dto.Token, dto.NewPassword);
+			var decodedToken = HttpUtility.UrlDecode(dto.Token);
+			var result = await _identityService.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
 			if (!result.Succeeded)
 			{
 				return new BaseResponse
