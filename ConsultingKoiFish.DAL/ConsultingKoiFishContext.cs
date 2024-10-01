@@ -36,6 +36,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<PondZodiac> PondZodiacs { get; set; }
 		public virtual DbSet<UserPond> UserPonds { get; set; }
 		public virtual DbSet<PondDetail> PondDetails { get; set; }
+		public virtual DbSet<Image> Images { get; set; }
 
 		#endregion
 
@@ -65,6 +66,30 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
 
+			modelBuilder.Entity<Image>(entity =>
+			{
+				entity.HasKey(i => i.Id);
+
+				entity.Property(i => i.FilePath)
+					.IsRequired()
+					.HasColumnType("nvarchar(max)");
+
+				entity.Property(i => i.AltText)
+					.HasMaxLength(255);
+
+				entity.Property(i => i.UserId)
+					.HasMaxLength(450);
+
+				entity.Property(i => i.CreatedDate)
+					.HasColumnType("datetime2(7)");
+
+				// Configure relationship with ApplicationUser
+				entity.HasOne(i => i.User)
+					.WithMany(u => u.Images)
+					.HasForeignKey(i => i.UserId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
+
 			modelBuilder.Entity<PondDetail>(entity =>
 			{
 				entity.HasKey(pd => pd.Id);
@@ -85,7 +110,7 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(pd => pd.UserPond)
 					.WithMany(up => up.PondDetails)
 					.HasForeignKey(pd => pd.UserPondId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
 			modelBuilder.Entity<UserPond>(entity =>
