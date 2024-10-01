@@ -48,5 +48,25 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
 			}
 		}
-    }
+
+		[Authorize]
+		[HttpGet]
+		[Route("get-user-detail")]
+		public async Task<IActionResult> GetUserDetailByUserId()
+		{
+			try
+			{
+				var response = await _userDetailService.GetUserDetailByUserId(UserId);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+			}
+		}
+	}
 }

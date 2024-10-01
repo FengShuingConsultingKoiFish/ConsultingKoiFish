@@ -63,5 +63,15 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				throw;
 			}
 		}
+
+		public async Task<UserDetailViewDTO> GetUserDetailByUserId(string userId)
+		{
+			var repo = _unitOfWork.GetRepo<UserDetail>();
+			var response = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
+													.WithPredicate(x => x.UserId.Equals(userId))
+													.WithTracking(false)
+													.Build());
+			return _mapper.Map<UserDetailViewDTO>(response);
+		}
 	}
 }

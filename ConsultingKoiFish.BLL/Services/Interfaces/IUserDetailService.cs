@@ -11,5 +11,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 	public interface IUserDetailService
 	{
 		Task<BaseResponse> CreateUpdateUserDetail(UserDetailRequestDTO dto, string userId);
+		Task<UserDetailViewDTO> GetUserDetailByUserId(string userId);
 	}
 }
