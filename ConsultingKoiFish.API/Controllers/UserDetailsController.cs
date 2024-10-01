@@ -111,5 +111,26 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
 			}
 		}
+
+		[Authorize]
+		[HttpPost]
+		[Route("delete-user-detail")]
+		public async Task<IActionResult> DeleteUserDetail()
+		{
+			try
+			{
+				var userId = UserId;
+				var response = await _userDetailService.DeleteUserDetail(userId);
+				if (!response.IsSuccess) return SaveError(response.Message);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+			}
+		}
 	}
 }

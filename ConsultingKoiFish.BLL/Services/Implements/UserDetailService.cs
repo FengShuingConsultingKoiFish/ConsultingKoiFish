@@ -65,6 +65,28 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			}
 		}
 
+		public async Task<BaseResponse> DeleteUserDetail(string userId)
+		{
+			var repo = _unitOfWork.GetRepo<UserDetail>();
+			var any = await repo.AnyAsync(new QueryBuilder<UserDetail>()
+												.WithPredicate(x => x.UserId.Equals(userId))
+												.Build());
+			if (any)
+			{
+				var userDetail = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
+															.WithPredicate(x => x.UserId.Equals(userId))
+															.Build());
+				if (userId != userDetail.UserId) return new BaseResponse { IsSuccess = false, Message = "Người dùng không khớp." };
+				userDetail.IsActive = false;
+				await repo.UpdateAsync(userDetail);
+				var saver = await _unitOfWork.SaveAsync();
+				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Xóa dữ liệu thất bại" };
+				return new BaseResponse { IsSuccess = true, Message = "Xóa dữ liệu thành công" };
+			}
+
+			return new BaseResponse { IsSuccess = false, Message = "Không tồn tại người dùng." };
+		}
+
 		public async Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetails(int pageIndex, int pageSize)
 		{
 			var repo = _unitOfWork.GetRepo<UserDetail>();
