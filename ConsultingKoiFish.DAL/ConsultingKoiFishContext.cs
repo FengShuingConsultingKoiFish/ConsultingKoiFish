@@ -28,6 +28,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
 		public virtual DbSet<Zodiac> Zodiacs { get; set; }
 		public virtual DbSet<UserZodiac> UserZodiacs { get; set; }
+		public virtual DbSet<KoiCategory> KoiCategories { get; set; }
 
 		#endregion
 
@@ -56,6 +57,18 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<KoiCategory>(entity =>
+			{
+				entity.HasKey(kc => kc.Id);
+
+				entity.Property(kc => kc.Name)
+					.IsRequired()
+					.HasMaxLength(100);
+
+				entity.Property(kc => kc.Description)
+					.HasColumnType("nvarchar(max)");
+			});
 
 			modelBuilder.Entity<Zodiac>(entity =>
 			{
