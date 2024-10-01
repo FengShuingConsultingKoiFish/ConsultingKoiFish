@@ -13,13 +13,9 @@ namespace ConsultingKoiFish.DAL
 {
 	public partial class ConsultingKoiFishContext : IdentityDbContext<ApplicationUser>
 	{
-		public ConsultingKoiFishContext()
-		{
 
-		}
 		public ConsultingKoiFishContext(DbContextOptions<ConsultingKoiFishContext> options) : base(options)
 		{
-
 		}
 
 		#region DbSet
@@ -65,7 +61,6 @@ namespace ConsultingKoiFish.DAL
 		{
 			base.OnModelCreating(modelBuilder);
 			modelBuilder.HasDefaultSchema("dbo");
-			//SeedRoles(modelBuilder);
 
 			modelBuilder.Entity<ApplicationUser>(entity => { entity.ToTable(name: "ApplicationUser"); });
 			modelBuilder.Entity<IdentityUserRole<string>>(entity => { entity.ToTable(name: "UserRoles"); });

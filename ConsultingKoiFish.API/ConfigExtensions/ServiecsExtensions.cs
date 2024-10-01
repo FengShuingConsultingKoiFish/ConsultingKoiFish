@@ -1,6 +1,8 @@
 ﻿using ConsultingKoiFish.BLL.Helpers.Mapper;
+using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Repositories;
 using ConsultingKoiFish.DAL.UnitOfWork;
+using Microsoft.AspNetCore.Identity;
 using System.Reflection;
 
 namespace ConsultingKoiFish.API.ConfigExtensions
@@ -33,6 +35,47 @@ namespace ConsultingKoiFish.API.ConfigExtensions
 		public static void AddMapper(this IServiceCollection services)
 		{
 			services.AddAutoMapper(typeof(MappingProfile));
+		}
+
+		//seed data
+		public static async Task SeedData(this IServiceProvider serviceProvider)
+		{
+			var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+			var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+			var adminEmail = "minhtam14231204@gmail.com";
+			var adminUserName = "Admin";
+			var adminPhoneNumber = "0942775673";
+			var adminPassword = "ThisIsAdmin123456@";
+
+			// Seed Roles
+			if (!await roleManager.RoleExistsAsync("Admin"))
+			{
+				await roleManager.CreateAsync(new IdentityRole() { Name = "Admin", ConcurrencyStamp = "1", NormalizedName = "ADMIN" });
+			}
+
+			if (!await roleManager.RoleExistsAsync("Member"))
+			{
+				await roleManager.CreateAsync(new IdentityRole() { Name = "Member", ConcurrencyStamp = "2", NormalizedName = "MEMBER" });
+			}
+
+			// Seed Admin User
+			if (await userManager.FindByEmailAsync(adminEmail) == null)
+			{
+				var adminUser = new ApplicationUser
+				{
+					Email = adminEmail,
+					UserName = adminUserName,
+					PhoneNumber = adminPhoneNumber,
+					EmailConfirmed = true
+				};
+
+				var result = await userManager.CreateAsync(adminUser, adminPassword);
+				if (result.Succeeded)
+				{
+					await userManager.AddToRoleAsync(adminUser, "Admin");
+				}
+			}
 		}
 	}
 }
