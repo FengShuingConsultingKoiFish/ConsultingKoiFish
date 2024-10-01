@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -365,7 +366,7 @@ public class AccountService : IAccountService
 		}
 
 		var token = await _identityService.GeneratePasswordResetTokenAsync(user);
-		var encodedToken = HttpUtility.UrlEncode(token);
+		var encodedToken = WebUtility.UrlEncode(token);
 		Console.ForegroundColor = ConsoleColor.Red;
 		Console.WriteLine($"encode token: {encodedToken}");
 		Console.ResetColor();
@@ -391,14 +392,14 @@ public class AccountService : IAccountService
 				return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy người dùng." };
 			}
 
-			var decodedToken = HttpUtility.UrlDecode(dto.Token);
+			var decodedToken = WebUtility.UrlDecode(dto.Token);
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine($"encode token: {decodedToken}");
 			Console.ResetColor();
-			if(decodedToken.Contains(" "))
-			{
-				decodedToken = decodedToken.Replace(" ", "%");
-			}
+			//if(decodedToken.Contains(" "))
+			//{
+			//	decodedToken = decodedToken.Replace(" ", "%");
+			//}
 			var result = await _identityService.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
 			if (!result.Succeeded)
 			{
