@@ -16,5 +16,6 @@ namespace ConsultingKoiFish.DAL.Entities
 		public virtual ICollection<Blog> Blogs { get; set; } = new List<Blog>();
 		public virtual ICollection<Advertisement> Advertisements { get; set; } = new List<Advertisement>();
 		public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+		public virtual ICollection<PurchasedPackage> PurchasedPackages { get; set; } = new List<PurchasedPackage>();
 	}
 }

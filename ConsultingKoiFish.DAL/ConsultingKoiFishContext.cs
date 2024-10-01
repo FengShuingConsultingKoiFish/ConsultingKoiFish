@@ -44,6 +44,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<AdImage> AdImages { get; set; }
 		public virtual DbSet<Comment> Comments { get; set; }
 		public virtual DbSet<AdvertisementPackage> AdvertisementPackages { get; set; }
+		public virtual DbSet<PurchasedPackage> PurchasedPackages { get; set; }
 
 		#endregion
 
@@ -72,6 +73,29 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<PurchasedPackage>(entity =>
+			{
+				entity.HasKey(pp => pp.Id);
+
+				entity.Property(pp => pp.Status)
+					.IsRequired();
+
+				entity.Property(pp => pp.UserId)
+					.HasMaxLength(450);
+
+				// Relationship with ApplicationUser
+				entity.HasOne(pp => pp.User)
+					.WithMany(u => u.PurchasedPackages)
+					.HasForeignKey(pp => pp.UserId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Relationship with AdvertisementPackage
+				entity.HasOne(pp => pp.AdvertisementPackage)
+					.WithMany(ap => ap.PurchasedPackages)
+					.HasForeignKey(pp => pp.AdvertisementPackageId)
+					.OnDelete(DeleteBehavior.Cascade);
+			});
 
 			modelBuilder.Entity<AdvertisementPackage>(entity =>
 			{
