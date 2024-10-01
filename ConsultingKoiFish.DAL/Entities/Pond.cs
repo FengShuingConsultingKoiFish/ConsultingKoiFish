@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 
 namespace ConsultingKoiFish.DAL.Entities
 {
-	public partial class PondCategory
+	public partial class Pond
 	{
 		public int Id { get; set; }
+		public int PondCategoryId { get; set; }
 		public string Name { get; set; } = null!;
 		public string? Description { get; set; }
+		public string? Image { get; set; }
 
-		public virtual ICollection<Pond> Ponds { get; set; } = new List<Pond>();
+		public virtual PondCategory PondCategory { get; set; }
 	}
 }

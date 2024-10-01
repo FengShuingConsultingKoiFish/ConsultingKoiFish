@@ -32,6 +32,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<KoiBreed> KoiBreeds { get; set; }
 		public virtual DbSet<KoiBreedZodiac> KoiBreedZodiacs { get; set; }
 		public virtual DbSet<PondCategory> PondCategories { get; set; }
+		public virtual DbSet<Pond> Ponds { get; set; }
 
 		#endregion
 
@@ -60,6 +61,27 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<Pond>(entity =>
+			{
+				entity.HasKey(p => p.Id);
+
+				entity.Property(p => p.Name)
+					.IsRequired()
+					.HasMaxLength(100);
+
+				entity.Property(p => p.Description)
+					.HasColumnType("nvarchar(max)");
+
+				entity.Property(p => p.Image)
+					.HasColumnType("nvarchar(max)");
+
+				// Configure relationship
+				entity.HasOne(p => p.PondCategory)
+					.WithMany(pc => pc.Ponds)
+					.HasForeignKey(p => p.PondCategoryId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<PondCategory>(entity =>
 			{
