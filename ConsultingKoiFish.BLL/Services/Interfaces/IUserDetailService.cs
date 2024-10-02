@@ -14,7 +14,7 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		Task<BaseResponse> CreateUpdateUserDetail(UserDetailRequestDTO dto, string userId);
 		Task<UserDetailViewDTO> GetUserDetailByUserId(string userId);
 		Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetails(int pageIndex, int pageSize);
-		Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetailsByName(int pageIndex, int pageSize, string name);
+		Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetailsByName(int pageIndex, int pageSize, string? name);
 		Task<BaseResponse> DeleteUserDetail(string userId);
 	}
 }

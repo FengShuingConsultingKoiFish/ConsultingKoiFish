@@ -98,12 +98,16 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return new PaginatedList<UserDetailViewDTO>(resultDTO, pagedRecords.TotalItems, pageIndex, pageSize);
 		}
 
-		public async Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetailsByName(int pageIndex, int pageSize, string name)
+		public async Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetailsByName(int pageIndex, int pageSize, string? name)
 		{
 			var repo = _unitOfWork.GetRepo<UserDetail>();
 			var loadedRecords = repo.Get(new QueryBuilder<UserDetail>()
-										.WithPredicate(x => x.IsActive == true && x.FullName.Contains(name))
+										.WithPredicate(x => x.IsActive == true)
 										.Build());
+			if(string.IsNullOrEmpty(name))
+			{
+				loadedRecords = loadedRecords.Where(x => x.FullName.Contains(name));
+			}
 			var pagedRecords = await PaginatedList<UserDetail>.CreateAsync(loadedRecords, pageIndex, pageSize);
 			var resultDTO = _mapper.Map<List<UserDetailViewDTO>>(pagedRecords);
 			return new PaginatedList<UserDetailViewDTO>(resultDTO, pagedRecords.TotalItems, pageIndex, pageSize);
@@ -113,10 +117,10 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		{
 			var repo = _unitOfWork.GetRepo<UserDetail>();
 			var response = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
-													.WithPredicate(x => x.UserId.Equals(userId))
+													.WithPredicate(x => x.UserId.Equals(userId) && x.IsActive == true)
 													.WithTracking(false)
 													.Build());
-			if (response.IsActive == false) return null;
+			if (response == null) return null;
 			return _mapper.Map<UserDetailViewDTO>(response);
 		}
 	}

@@ -6,6 +6,8 @@ using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
+using Mailjet.Client.Resources;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,7 +75,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		{
 			var repo = _unitOfWork.GetRepo<Image>();
 			var image = await repo.GetSingleAsync(new QueryBuilder<Image>()
-													.WithPredicate(x => x.Id == id)
+													.WithPredicate(x => x.Id == id && x.IsActive == true)
 													.WithTracking(false)
 													.WithInclude(x => x.User)
 													.Build());
@@ -84,11 +86,36 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return response;
 		}
 
+		public async Task<PaginatedList<ImageViewDTO>> GetListImageByName(string? name, string userId, int pageIndex, int pageSize)
+		{
+			var repo = _unitOfWork.GetRepo<Image>();
+			var loadedRecords = repo.Get(new QueryBuilder<Image>()
+												.WithPredicate(x => x.UserId.Equals(userId) && x.IsActive == true)
+												.WithTracking(false)
+												.WithInclude(x => x.User)
+												.Build());
+			if(!string.IsNullOrEmpty(name))
+			{
+				loadedRecords = loadedRecords.Where(x => x.AltText.Contains(name));
+			}
+			
+			var pagedRecords = await PaginatedList<Image>.CreateAsync(loadedRecords, pageIndex, pageSize);
+			var response = new List<ImageViewDTO>();
+			foreach (var image in pagedRecords)
+			{
+				var childResponse = _mapper.Map<ImageViewDTO>(image);
+				childResponse.UserName = image.User.UserName;
+				childResponse.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
+				response.Add(childResponse);
+			}
+			return new PaginatedList<ImageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+		}
+
 		public async Task<PaginatedList<ImageViewDTO>> GetListImageByUserId(string userId, int pageIndex, int pageSize)
 		{
 			var repo = _unitOfWork.GetRepo<Image>();
 			var loadedRecords = repo.Get(new QueryBuilder<Image>()
-												.WithPredicate(x => x.UserId.Equals(userId))
+												.WithPredicate(x => x.UserId.Equals(userId) && x.IsActive == true)
 												.WithTracking(false)
 												.WithInclude(x => x.User)
 												.Build());

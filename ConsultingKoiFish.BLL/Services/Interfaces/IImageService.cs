@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 
 namespace ConsultingKoiFish.BLL.Services.Interfaces
 {
-    public interface IImageService
-    {
-       Task<BaseResponse> CreateUpdateImage(ImageRequestDTO requestDTO, string userId);
-       Task<ImageViewDTO> GetImageById(int id);
-        Task<PaginatedList<ImageViewDTO>> GetListImageByUserId(string userId, int pageIndex, int pageSize);
-    }
+	public interface IImageService
+	{
+		Task<BaseResponse> CreateUpdateImage(ImageRequestDTO requestDTO, string userId);
+		Task<ImageViewDTO> GetImageById(int id);
+		Task<PaginatedList<ImageViewDTO>> GetListImageByUserId(string userId, int pageIndex, int pageSize);
+		Task<PaginatedList<ImageViewDTO>> GetListImageByName(string? name, string userId, int pageIndex, int pageSize);
+	}
 }
