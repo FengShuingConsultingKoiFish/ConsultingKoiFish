@@ -1,4 +1,5 @@
-﻿using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
+﻿using ConsultingKoiFish.BLL.DTOs;
+using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,7 @@ namespace ConsultingKoiFish.API.Controllers
 			this._imageService = imageService;
 		}
 
-		[Authorize(Roles = "Member")]
+		[Authorize()]
 		[HttpPost]
 		[Route("create-update-image")]
 		public async Task<IActionResult> CreateUpdateImage(ImageRequestDTO dto)
@@ -42,5 +43,61 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
 			}
 		}
-    }
+
+		[Authorize()]
+		[HttpGet]
+		[Route("get-image-by-id/{id}")]
+		public async Task<IActionResult> CreateUpdateImage([FromRoute] int id)
+		{
+			try
+			{
+				if (id == 0)
+				{
+					return GetError("Id phải là số nguyên dương");
+				}
+
+				var response = await _imageService.GetImageById(id);
+				if (response == null) return GetError("Ảnh này không tồn tại.");
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		[Authorize()]
+		[HttpGet]
+		[Route("get-images-by-userid/{pageIndex}/{pageSize}")]
+		public async Task<IActionResult> GetListImageByUserId([FromRoute] int pageIndex, [FromRoute] int pageSize)
+		{
+			try
+			{
+				if (pageIndex <= 0)
+				{
+					return GetError("Page Index phải là số nguyên dương.");
+				}
+
+				if (pageSize <= 0)
+				{
+					return GetError("Page Size phải là số nguyên dương.");
+				}
+
+				var data = await _imageService.GetListImageByUserId(UserId, pageIndex, pageSize);
+				var response = new PagingDTO<ImageViewDTO>(data);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+	}
 }

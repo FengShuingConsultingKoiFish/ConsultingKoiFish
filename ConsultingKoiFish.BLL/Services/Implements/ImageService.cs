@@ -3,6 +3,7 @@ using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
+using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
 using System;
@@ -66,6 +67,41 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				await _unitOfWork.RollBackAsync();
 				throw;
 			}
+		}
+
+		public async Task<ImageViewDTO> GetImageById(int id)
+		{
+			var repo = _unitOfWork.GetRepo<Image>();
+			var image = await repo.GetSingleAsync(new QueryBuilder<Image>()
+													.WithPredicate(x => x.Id == id)
+													.WithTracking(false)
+													.WithInclude(x => x.User)
+													.Build());
+			if (image == null) return null;
+			var response = _mapper.Map<ImageViewDTO>(image);
+			response.UserName = image.User.UserName;
+			response.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
+			return response;
+		}
+
+		public async Task<PaginatedList<ImageViewDTO>> GetListImageByUserId(string userId, int pageIndex, int pageSize)
+		{
+			var repo = _unitOfWork.GetRepo<Image>();
+			var loadedRecords = repo.Get(new QueryBuilder<Image>()
+												.WithPredicate(x => x.UserId.Equals(userId))
+												.WithTracking(false)
+												.WithInclude(x => x.User)
+												.Build());
+			var pagedRecords = await PaginatedList<Image>.CreateAsync(loadedRecords, pageIndex, pageSize);
+			var response = new List<ImageViewDTO>();
+			foreach (var image in pagedRecords)
+			{
+				var childResponse = _mapper.Map<ImageViewDTO>(image);
+				childResponse.UserName = image.User.UserName;
+				childResponse.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
+				response.Add(childResponse);
+			}
+			return new PaginatedList<ImageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
 		}
 	}
 }
