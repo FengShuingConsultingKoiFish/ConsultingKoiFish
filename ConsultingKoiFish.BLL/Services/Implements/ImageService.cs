@@ -22,7 +22,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		private readonly IMapper _mapper;
 
 		public ImageService(IUnitOfWork unitOfWork, IMapper mapper)
-        {
+		{
 			this._unitOfWork = unitOfWork;
 			this._mapper = mapper;
 		}
@@ -37,19 +37,19 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				var any = await repo.AnyAsync(new QueryBuilder<Image>()
 										.WithPredicate(x => x.Id == requestDTO.Id)
 										.Build());
-				if(any)
+				if (any)
 				{
 					var image = await repo.GetSingleAsync(new QueryBuilder<Image>()
 														.WithPredicate(x => x.Id == requestDTO.Id)
 														.Build());
-					if(!image.UserId.Equals(userId)) return new BaseResponse { IsSuccess = false, Message = "Ảnh không khớp với người dùng."};
+					if (!image.UserId.Equals(userId)) return new BaseResponse { IsSuccess = false, Message = "Ảnh không khớp với người dùng." };
 					var updatedImageDto = new ImageUpdateDTO { AltText = requestDTO.AltText };
 					var updatedImage = _mapper.Map(updatedImageDto, image);
 					await repo.UpdateAsync(updatedImage);
 				}
 				else
 				{
-					var createdImageDto = new ImageCreateDTO { AltText= requestDTO.AltText, FilePath = requestDTO.FilePath};
+					var createdImageDto = new ImageCreateDTO { AltText = requestDTO.AltText, FilePath = requestDTO.FilePath };
 					var createdImage = _mapper.Map<Image>(createdImageDto);
 					createdImage.UserId = userId;
 					createdImage.IsActive = true;
@@ -69,6 +69,32 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				await _unitOfWork.RollBackAsync();
 				throw;
 			}
+		}
+
+		public async Task<BaseResponse> DeleteImage(int id, string userId)
+		{
+			var repo = _unitOfWork.GetRepo<Image>();
+			var any = await repo.AnyAsync(new QueryBuilder<Image>()
+											.WithPredicate(x => x.Id == id)
+											.Build());
+			if (any)
+			{
+				var image = await repo.GetSingleAsync(new QueryBuilder<Image>()
+														.WithPredicate(x => x.Id == id)
+														.WithTracking(false)
+														.WithInclude(x => x.User)
+														.Build());
+				if (!image.UserId.Equals(userId)) return new BaseResponse { IsSuccess = false, Message = "Ảnh không khớp với người dùng." };
+				image.IsActive = false;
+				await repo.UpdateAsync(image);
+				var saver = await _unitOfWork.SaveAsync();
+				if (!saver)
+				{
+					return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu không thành công." };
+				}
+				return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+			}
+			return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
 		}
 
 		public async Task<ImageViewDTO> GetImageById(int id)
@@ -94,11 +120,11 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 												.WithTracking(false)
 												.WithInclude(x => x.User)
 												.Build());
-			if(!string.IsNullOrEmpty(name))
+			if (!string.IsNullOrEmpty(name))
 			{
 				loadedRecords = loadedRecords.Where(x => x.AltText.Contains(name));
 			}
-			
+
 			var pagedRecords = await PaginatedList<Image>.CreateAsync(loadedRecords, pageIndex, pageSize);
 			var response = new List<ImageViewDTO>();
 			foreach (var image in pagedRecords)
@@ -132,3 +158,4 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		}
 	}
 }
+

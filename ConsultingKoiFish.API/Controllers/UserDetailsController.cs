@@ -93,8 +93,8 @@ namespace ConsultingKoiFish.API.Controllers
 
 		[Authorize]
 		[HttpGet]
-		[Route("filter-all-details-By-Name/{pageIndex}/{pageSize}/{name}")]
-		public async Task<IActionResult> GetAllUserDetailsByName([FromRoute] int pageIndex, [FromRoute] int pageSize, [FromRoute] string name)
+		[Route("filter-all-details-By-Name/{pageIndex}/{pageSize}")]
+		public async Task<IActionResult> GetAllUserDetailsByName([FromRoute] int pageIndex, [FromRoute] int pageSize, string? name)
 		{
 			try
 			{

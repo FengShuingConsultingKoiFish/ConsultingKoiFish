@@ -15,5 +15,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		Task<ImageViewDTO> GetImageById(int id);
 		Task<PaginatedList<ImageViewDTO>> GetListImageByUserId(string userId, int pageIndex, int pageSize);
 		Task<PaginatedList<ImageViewDTO>> GetListImageByName(string? name, string userId, int pageIndex, int pageSize);
+		Task<BaseResponse> DeleteImage(int id, string userId);
 	}
 }
