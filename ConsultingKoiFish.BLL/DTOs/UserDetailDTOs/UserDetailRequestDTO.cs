@@ -17,6 +17,6 @@ namespace ConsultingKoiFish.BLL.DTOs.UserDetailDTOs
         [DataType(DataType.Date)]
         public DateTime? DateOfBirth { get; set; }
         public string? Gender { get; set; }
-        public string? Avatar { get; set; }
+        public int? ImageId { get; set; }
     }
 }

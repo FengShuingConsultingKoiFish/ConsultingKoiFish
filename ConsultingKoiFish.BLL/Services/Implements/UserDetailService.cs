@@ -29,8 +29,16 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			try
 			{
 				var repo = _unitOfWork.GetRepo<UserDetail>();
+				var imageRepo = _unitOfWork.GetRepo<Image>();
 				await _unitOfWork.BeginTransactionAsync();
+
+				var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
+															.WithPredicate(x => x.Id == dto.ImageId && x.IsActive == true)
+															.WithTracking(false)
+															.Build());
+				if (image == null) return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
 				var any = await repo.AnyAsync(new QueryBuilder<UserDetail>()
+
 												.WithPredicate(x => x.UserId.Equals(userId))
 												.Build());
 				if(any)
@@ -41,6 +49,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 					if(userId != userDetail.UserId) return new BaseResponse { IsSuccess = false, Message = "Người dùng không khớp."};
 
 					var updateUserDetail = _mapper.Map(dto, userDetail);
+					updateUserDetail.Avatar = image.FilePath;
 					await repo.UpdateAsync(updateUserDetail);
 				}
 				else
@@ -50,6 +59,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 					userDetail.Id = userDetailId;
 					userDetail.UserId = userId;
 					userDetail.IsActive = true;
+					userDetail.Avatar = image.FilePath;
 					userDetail.CreatedDate = DateTime.Now;
 					await repo.CreateAsync(userDetail);
 				}

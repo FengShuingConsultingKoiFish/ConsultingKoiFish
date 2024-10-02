@@ -403,9 +403,6 @@ public class AccountService : IAccountService
 			var result = await _identityService.ResetPasswordAsync(user, decodedToken, dto.NewPassword);
 			if (!result.Succeeded)
 			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(result.Errors);
-				Console.ResetColor();
 				return new BaseResponse
 				{
 					IsSuccess = false,
