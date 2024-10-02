@@ -396,7 +396,7 @@ public class AccountService : IAccountService
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine($"encode token: {decodedToken}");
 			Console.ResetColor();
-			if (decodedToken.Contains(" "))
+			if (decodedToken.Contains(' '))
 			{
 				decodedToken = decodedToken.Replace(" ", "+");
 			}
