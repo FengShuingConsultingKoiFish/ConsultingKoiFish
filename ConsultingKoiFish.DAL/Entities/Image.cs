@@ -14,8 +14,8 @@ namespace ConsultingKoiFish.DAL.Entities
 		[AllowNull]
 		public string? AltText { get; set; }
 		public string UserId { get; set; }
-		public DateTime CreatedDate { get; set; } = DateTime.Now;
-        public bool IsActive { get; set; } = true;
+		public DateTime CreatedDate { get; set; }
+        public bool IsActive { get; set; }
 
         public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<BlogImage> BlogImages { get; set; } = new List<BlogImage>();
