@@ -1,4 +1,6 @@
+using ConsultingKoiFish.BLL.DTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
+using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -27,6 +29,36 @@ namespace ConsultingKoiFish.API.Controllers
                 var response = await _blogService.CraeteUpdateBlog(dto, UserId);
                 if (!response.IsSuccess) return SaveError(response);
                 return SaveSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
+                return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+            }
+        }
+        
+        [HttpGet]
+        [Route("get-all-blogs/{pageIndex}/{pageSize}")]
+        public async Task<IActionResult> GetAllBlogs([FromRoute] int pageIndex, [FromRoute] int pageSize)
+        {
+            try
+            {
+                if (pageIndex <= 0)
+                {
+                    return GetError("Page Index phải là số nguyên dương.");
+                }
+
+                if (pageSize <= 0)
+                {
+                    return GetError("Page Size phải là số nguyên dương.");
+                }
+
+                var data = await _blogService.GetAllBlogs( pageIndex, pageSize);
+                var response = new PagingDTO<BlogViewDTO>(data);
+                if (response == null) return GetError();
+                return GetSuccess(response);
             }
             catch (Exception ex)
             {

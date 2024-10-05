@@ -1,9 +1,11 @@
 using AutoMapper;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
+using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
+using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
 
@@ -92,5 +94,42 @@ public class BlogService : IBlogService
             await _unitOfWork.RollBackAsync();
             throw;
         }
+    }
+
+    public async Task<PaginatedList<BlogViewDTO>> GetAllBlogs(int pageIndex, int pageSize)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var imageRepo = _unitOfWork.GetRepo<Image>();
+        var loadedRecords = repo.Get(new QueryBuilder<Blog>()
+            .WithTracking(false)
+            .WithInclude(x => x.User, r => r.BlogImages)
+            .Build());
+        var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, pageIndex, pageSize);
+        var response = new List<BlogViewDTO>();
+        foreach (var blog in pagedRecords)
+        {
+            var childResponse = _mapper.Map<BlogViewDTO>(blog);
+            childResponse.UserName = blog.User.UserName;
+            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
+            
+            var blogImages = blog.BlogImages;
+            var repsonseImages = new List<ImageViewDTO>();
+            foreach (var blogImage in blogImages)
+            {
+                var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
+                    .WithPredicate(x => x.Id == blogImage.ImageId)
+                    .WithInclude(x => x.User)
+                    .WithTracking(false)
+                    .Build());
+                var childResponseImage = _mapper.Map<ImageViewDTO>(image);
+                childResponseImage.UserName = image.User.UserName;
+                childResponseImage.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
+                repsonseImages.Add(childResponseImage);
+            }
+
+            childResponse.ImageViewDtos = repsonseImages;
+            response.Add(childResponse);
+        }
+        return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
     }
 }
