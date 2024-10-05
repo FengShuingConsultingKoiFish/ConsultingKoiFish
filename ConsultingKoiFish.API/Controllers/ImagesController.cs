@@ -37,11 +37,10 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
 			}
 		}
-
-		[Authorize()]
+		
 		[HttpGet]
 		[Route("get-image-by-id/{id}")]
-		public async Task<IActionResult> CreateUpdateImage([FromRoute] int id)
+		public async Task<IActionResult> GetImageById([FromRoute] int id)
 		{
 			try
 			{

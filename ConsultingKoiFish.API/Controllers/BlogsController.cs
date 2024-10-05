@@ -68,5 +68,24 @@ namespace ConsultingKoiFish.API.Controllers
                 return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
             }
         }
+        
+        [HttpGet]
+        [Route("get-blog-by-id/{id}")]
+        public async Task<IActionResult> GetBlogById([FromRoute] int id)
+        {
+            try
+            {
+                var response = await _blogService.GetBlogById(id);
+                if (response == null) return GetError("Blog này không tồn tại.");
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
+                return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+            }
+        }
     }
 }

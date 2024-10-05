@@ -101,6 +101,7 @@ public class BlogService : IBlogService
         var repo = _unitOfWork.GetRepo<Blog>();
         var imageRepo = _unitOfWork.GetRepo<Image>();
         var loadedRecords = repo.Get(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.IsActive == true)
             .WithTracking(false)
             .WithInclude(x => x.User, r => r.BlogImages)
             .Build());
@@ -111,25 +112,49 @@ public class BlogService : IBlogService
             var childResponse = _mapper.Map<BlogViewDTO>(blog);
             childResponse.UserName = blog.User.UserName;
             childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-            
-            var blogImages = blog.BlogImages;
-            var repsonseImages = new List<ImageViewDTO>();
-            foreach (var blogImage in blogImages)
-            {
-                var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
-                    .WithPredicate(x => x.Id == blogImage.ImageId)
-                    .WithInclude(x => x.User)
-                    .WithTracking(false)
-                    .Build());
-                var childResponseImage = _mapper.Map<ImageViewDTO>(image);
-                childResponseImage.UserName = image.User.UserName;
-                childResponseImage.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
-                repsonseImages.Add(childResponseImage);
-            }
-
-            childResponse.ImageViewDtos = repsonseImages;
+            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
     }
+
+    public async Task<BlogViewDTO> GetBlogById(int id)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var blog = await repo.GetSingleAsync(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.Id == id && x.IsActive == true)
+            .WithTracking(false)
+            .WithInclude(x => x.User, r => r.BlogImages)
+            .Build());
+        if (blog == null) return null;
+        var response = _mapper.Map<BlogViewDTO>(blog);
+        response.UserName = blog.User.UserName;
+        response.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
+        response.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+        return response;
+    }
+    
+    #region Private
+
+    private async Task<List<ImageViewDTO>> ConvertToImageViews(ICollection<BlogImage> blogImages)
+    {
+        var imageRepo = _unitOfWork.GetRepo<Image>();
+        var repsonseImages = new List<ImageViewDTO>();
+        foreach (var blogImage in blogImages)
+        {
+            var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
+                .WithPredicate(x => x.Id == blogImage.ImageId)
+                .WithInclude(x => x.User)
+                .WithTracking(false)
+                .Build());
+            var childResponseImage = _mapper.Map<ImageViewDTO>(image);
+            childResponseImage.UserName = image.User.UserName;
+            childResponseImage.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
+            repsonseImages.Add(childResponseImage);
+        }
+
+        return repsonseImages;
+    }
+
+    #endregion
 }

@@ -8,4 +8,5 @@ public interface IBlogService
 {
     Task<BaseResponse> CraeteUpdateBlog(BlogRequestDTO dto, string userId);
     Task<PaginatedList<BlogViewDTO>> GetAllBlogs(int pageIndex, int pageSize);
+    Task<BlogViewDTO> GetBlogById(int id);
 }
