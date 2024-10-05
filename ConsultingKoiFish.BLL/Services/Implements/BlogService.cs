@@ -181,7 +181,34 @@ public class BlogService : IBlogService
         response.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
         return response;
     }
-    
+
+    public async Task<BaseResponse> DeleteBlog(int id, string userId)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var any = await repo.AnyAsync(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.Id == id)
+            .Build());
+        if (any)
+        {
+            var blog = await repo.GetSingleAsync(new QueryBuilder<Blog>()
+                .WithPredicate(x => x.Id == id)
+                .WithTracking(false)
+                .WithInclude(x => x.User)
+                .Build());
+            if (!blog.UserId.Equals(userId)) return new BaseResponse { IsSuccess = false, Message = "Blog không thuộc sở hữu người dùng." };
+            blog.IsActive = false;
+            await repo.UpdateAsync(blog);
+            var saver = await _unitOfWork.SaveAsync();
+            if (!saver)
+            {
+                return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu không thành công." };
+            }
+            return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+        }
+        return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
+        
+    }
+
     #region Private
 
     private async Task<List<ImageViewDTO>> ConvertToImageViews(ICollection<BlogImage> blogImages)

@@ -148,5 +148,25 @@ namespace ConsultingKoiFish.API.Controllers
                 return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
             }
         }
+        
+        [Authorize]
+        [HttpPost]
+        [Route("delete-blog/{id}")]
+        public async Task<IActionResult> DeleteImage(int id)
+        {
+            try
+            {
+                var response = await _blogService.DeleteBlog(id, UserId);
+                if (!response.IsSuccess) return SaveError(response);
+                return SaveSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
+                return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+            }
+        }
     }
 }
