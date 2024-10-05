@@ -140,6 +140,32 @@ public class BlogService : IBlogService
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
     }
 
+    public async Task<PaginatedList<BlogViewDTO>> GetAllBlogsByTitle(string? title, int pageIndex, int pageSize)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var imageRepo = _unitOfWork.GetRepo<Image>();
+        var loadedRecords = repo.Get(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.IsActive == true)
+            .WithTracking(false)
+            .WithInclude(x => x.User, r => r.BlogImages)
+            .Build());
+        if (!string.IsNullOrEmpty(title))
+        {
+            loadedRecords = loadedRecords.Where(x => x.Title.Contains(title));
+        }
+        var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, pageIndex, pageSize);
+        var response = new List<BlogViewDTO>();
+        foreach (var blog in pagedRecords)
+        {
+            var childResponse = _mapper.Map<BlogViewDTO>(blog);
+            childResponse.UserName = blog.User.UserName;
+            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
+            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            response.Add(childResponse);
+        }
+        return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+    }
+
     public async Task<BlogViewDTO> GetBlogById(int id)
     {
         var repo = _unitOfWork.GetRepo<Blog>();
