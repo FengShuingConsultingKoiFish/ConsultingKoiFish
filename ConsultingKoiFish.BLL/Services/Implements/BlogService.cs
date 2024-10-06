@@ -5,6 +5,7 @@ using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
+using ConsultingKoiFish.DAL.Enums;
 using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
@@ -58,6 +59,7 @@ public class BlogService : IBlogService
                 createdBlog.UserId = userId;
                 createdBlog.IsActive = true;
                 createdBlog.CreatedDate = DateTime.Now;
+                createdBlog.Status = (int)BlogStatus.Pending;
                 await repo.CreateAsync(createdBlog);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -96,12 +98,13 @@ public class BlogService : IBlogService
         }
     }
 
+    //thằng này get hết blog đã được chấp thuận của hệ thống
     public async Task<PaginatedList<BlogViewDTO>> GetAllBlogs(int pageIndex, int pageSize)
     {
         var repo = _unitOfWork.GetRepo<Blog>();
         var imageRepo = _unitOfWork.GetRepo<Image>();
         var loadedRecords = repo.Get(new QueryBuilder<Blog>()
-            .WithPredicate(x => x.IsActive == true)
+            .WithPredicate(x => x.IsActive == true && x.Status == (int)BlogStatus.Approved)
             .WithTracking(false)
             .WithInclude(x => x.User, r => r.BlogImages)
             .Build());
@@ -118,6 +121,7 @@ public class BlogService : IBlogService
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
     }
 
+    //thằng này get hết blog của th user
     public async Task<PaginatedList<BlogViewDTO>> GetAllBlogsByUserId(string userId, int pageIndex, int pageSize)
     {
         var repo = _unitOfWork.GetRepo<Blog>();
@@ -140,7 +144,61 @@ public class BlogService : IBlogService
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
     }
 
+    //thằng này get hết blog của thằng user nhưng filter với status
+    public async Task<PaginatedList<BlogViewDTO>> GetAllBlogsByUserIdWithStatus(BlogStatus? status, string userId, int pageIndex, int pageSize)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var imageRepo = _unitOfWork.GetRepo<Image>();
+        var loadedRecords = repo.Get(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.IsActive == true && x.UserId.Equals(userId))
+            .WithTracking(false)
+            .WithInclude(x => x.User, r => r.BlogImages)
+            .Build());
+        if (status.HasValue)
+        {
+            loadedRecords = loadedRecords.Where(x => x.Status == (int)status);
+        }
+        var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, pageIndex, pageSize);
+        var response = new List<BlogViewDTO>();
+        foreach (var blog in pagedRecords)
+        {
+            var childResponse = _mapper.Map<BlogViewDTO>(blog);
+            childResponse.UserName = blog.User.UserName;
+            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
+            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            response.Add(childResponse);
+        }
+        return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+    }
+
+    //thằng này để tra cứu blog theo title ở homepage
     public async Task<PaginatedList<BlogViewDTO>> GetAllBlogsByTitle(string? title, int pageIndex, int pageSize)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var imageRepo = _unitOfWork.GetRepo<Image>();
+        var loadedRecords = repo.Get(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.IsActive == true && x.Status == (int)BlogStatus.Approved)
+            .WithTracking(false)
+            .WithInclude(x => x.User, r => r.BlogImages)
+            .Build());
+        if (!string.IsNullOrEmpty(title))
+        {
+            loadedRecords = loadedRecords.Where(x => x.Title.Contains(title));
+        }
+        var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, pageIndex, pageSize);
+        var response = new List<BlogViewDTO>();
+        foreach (var blog in pagedRecords)
+        {
+            var childResponse = _mapper.Map<BlogViewDTO>(blog);
+            childResponse.UserName = blog.User.UserName;
+            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
+            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            response.Add(childResponse);
+        }
+        return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+    }
+
+    public async Task<PaginatedList<BlogViewDTO>> GetAllBlogsForAdmin(int pageIndex, int pageSize)
     {
         var repo = _unitOfWork.GetRepo<Blog>();
         var imageRepo = _unitOfWork.GetRepo<Image>();
@@ -149,7 +207,55 @@ public class BlogService : IBlogService
             .WithTracking(false)
             .WithInclude(x => x.User, r => r.BlogImages)
             .Build());
-        if (!string.IsNullOrEmpty(title))
+        var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, pageIndex, pageSize);
+        var response = new List<BlogViewDTO>();
+        foreach (var blog in pagedRecords)
+        {
+            var childResponse = _mapper.Map<BlogViewDTO>(blog);
+            childResponse.UserName = blog.User.UserName;
+            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
+            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            response.Add(childResponse);
+        }
+        return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+    }
+
+    public async Task<PaginatedList<BlogViewDTO>> GetAllBlogsForAdminWithStatus(BlogStatus? status, int pageIndex, int pageSize)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var imageRepo = _unitOfWork.GetRepo<Image>();
+        var loadedRecords = repo.Get(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.IsActive == true)
+            .WithTracking(false)
+            .WithInclude(x => x.User, r => r.BlogImages)
+            .Build());
+        if (status.HasValue)
+        {
+            loadedRecords = loadedRecords.Where(x => x.Status == (int)status);
+        }
+        var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, pageIndex, pageSize);
+        var response = new List<BlogViewDTO>();
+        foreach (var blog in pagedRecords)
+        {
+            var childResponse = _mapper.Map<BlogViewDTO>(blog);
+            childResponse.UserName = blog.User.UserName;
+            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
+            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            response.Add(childResponse);
+        }
+        return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+    }
+
+    public async Task<PaginatedList<BlogViewDTO>> GetAllBlogsForAdminWithTitle(string? title, int pageIndex, int pageSize)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var imageRepo = _unitOfWork.GetRepo<Image>();
+        var loadedRecords = repo.Get(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.IsActive == true)
+            .WithTracking(false)
+            .WithInclude(x => x.User, r => r.BlogImages)
+            .Build());
+        if (string.IsNullOrEmpty(title))
         {
             loadedRecords = loadedRecords.Where(x => x.Title.Contains(title));
         }
@@ -209,6 +315,8 @@ public class BlogService : IBlogService
         
     }
 
+    
+    
     #region Private
 
     private async Task<List<ImageViewDTO>> ConvertToImageViews(ICollection<BlogImage> blogImages)
