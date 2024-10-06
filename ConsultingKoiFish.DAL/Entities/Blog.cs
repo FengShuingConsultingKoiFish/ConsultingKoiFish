@@ -13,6 +13,7 @@ namespace ConsultingKoiFish.DAL.Entities
 		public string Content { get; set; } = null!;
 		public string UserId { get; set; }
 		public DateTime CreatedDate { get; set; }
+		public int Status { get; set; }
 		public bool IsActive { get; set; } = true;
 
 		public virtual ApplicationUser User { get; set; }

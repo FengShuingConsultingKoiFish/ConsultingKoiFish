@@ -232,6 +232,12 @@ namespace ConsultingKoiFish.DAL
 					.WithMany(u => u.Advertisements)
 					.HasForeignKey(ad => ad.UserId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
+				
+				// Configure relationship with ApplicationUser
+				entity.HasOne(ad => ad.PurchasedPackage)
+					.WithMany(pp => pp.Advertisements)
+					.HasForeignKey(ad => ad.PurchasedPackageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
 			modelBuilder.Entity<BlogImage>(entity =>
