@@ -28,11 +28,6 @@ namespace ConsultingKoiFish.API.Controllers
             try
             {
                 if (!ModelState.IsValid) return ModelInvalid();
-                if (!dto.IsStatusValid())
-                {
-                    ModelState.AddModelError("Status", "Status của blog không hợp lệ,");
-                    return ModelInvalid();
-                }
                 var response = await _blogService.CreateUpdateBlog(dto, UserId);
                 if (!response.IsSuccess) return SaveError(response);
                 return SaveSuccess(response);
@@ -146,7 +141,7 @@ namespace ConsultingKoiFish.API.Controllers
 
         [Authorize(Roles = "Member")]
         [HttpGet]
-        [Route("filter-all-blogs-by-userId-with-status/{pageIndex}/{pageSize}")]
+        [Route("filter-all-blogs-by-userId-with-status/{pageIndex}/{pageSize}/{status}")]
         public async Task<IActionResult> GetAllBlogsByUserIdWithStatus([FromRoute] BlogStatus? status,
             [FromRoute] int pageIndex, [FromRoute] int pageSize)
         {
@@ -181,7 +176,7 @@ namespace ConsultingKoiFish.API.Controllers
         
         #region Admin
         
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         [Route("get-all-blogs-for-admin/{pageIndex}/{pageSize}")]
         public async Task<IActionResult> GetAllBlogsForAdmin([FromRoute] int pageIndex, [FromRoute] int pageSize)
@@ -212,9 +207,9 @@ namespace ConsultingKoiFish.API.Controllers
             }
         }
         
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
-        [Route("filter-all-blogs-for-admin-with-status/{pageIndex}/{pageSize}")]
+        [Route("filter-all-blogs-for-admin-with-status/{pageIndex}/{pageSize}/{status}")]
         public async Task<IActionResult> GetAllBlogsForAdminWithStatus([FromRoute] BlogStatus? status,
             [FromRoute] int pageIndex, [FromRoute] int pageSize)
         {
@@ -244,10 +239,10 @@ namespace ConsultingKoiFish.API.Controllers
             }
         }
         
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = "Admin")]
         [HttpGet]
-        [Route("filter-all-blogs-for-admin-by-title/{pageIndex}/{pageSize}")]
-        public async Task<IActionResult> GetAllBlogsForAdminWithTitle(string? title, [FromRoute] int pageIndex,
+        [Route("filter-all-blogs-for-admin-by-title/{pageIndex}/{pageSize}/{title}")]
+        public async Task<IActionResult> GetAllBlogsForAdminWithTitle([FromRoute]string? title, [FromRoute] int pageIndex,
             [FromRoute] int pageSize)
         {
             try
@@ -266,6 +261,31 @@ namespace ConsultingKoiFish.API.Controllers
                 var response = new PagingDTO<BlogViewDTO>(data);
                 if (response == null) return GetError();
                 return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
+                return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+            }
+        }
+        
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [Route("update-status-blogs")]
+        public async Task<IActionResult> UpdateStatusBlog(BlogUpdateStatusDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+                if (!dto.IsStatusValid())
+                {
+                    ModelState.AddModelError("Status", "Status không hợp lệ");
+                }
+                var response = await _blogService.UpdateStatusBlog(dto);
+                if (!response.IsSuccess) return SaveError(response);
+                return SaveSuccess(response);
             }
             catch (Exception ex)
             {
@@ -297,7 +317,7 @@ namespace ConsultingKoiFish.API.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = "Member")]
         [HttpPost]
         [Route("delete-blog/{id}")]
         public async Task<IActionResult> DeleteImage(int id)

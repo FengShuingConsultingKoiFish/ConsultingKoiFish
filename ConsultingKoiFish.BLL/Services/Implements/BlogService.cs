@@ -243,7 +243,7 @@ public class BlogService : IBlogService
             .WithTracking(false)
             .WithInclude(x => x.User, r => r.BlogImages)
             .Build());
-        if (string.IsNullOrEmpty(title))
+        if (!string.IsNullOrEmpty(title))
         {
             loadedRecords = loadedRecords.Where(x => x.Title.Contains(title));
         }
@@ -256,6 +256,31 @@ public class BlogService : IBlogService
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+    }
+
+    public async Task<BaseResponse> UpdateStatusBlog(BlogUpdateStatusDTO dto)
+    {
+        var repo = _unitOfWork.GetRepo<Blog>();
+        var any = await repo.AnyAsync(new QueryBuilder<Blog>()
+            .WithPredicate(x => x.Id == dto.Id)
+            .Build());
+        if (any)
+        {
+            var blog = await repo.GetSingleAsync(new QueryBuilder<Blog>()
+                .WithPredicate(x => x.Id == dto.Id)
+                .WithTracking(false)
+                .WithInclude(x => x.User)
+                .Build());
+            blog.Status = (int)dto.Status;
+            await repo.UpdateAsync(blog);
+            var saver = await _unitOfWork.SaveAsync();
+            if (!saver)
+            {
+                return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu không thành công." };
+            }
+            return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+        }
+        return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
     }
 
     public async Task<BlogViewDTO> GetBlogById(int id)

@@ -11,12 +11,6 @@ public class BlogRequestDTO
     public string Title { get; set; } = null!;
     [Required(ErrorMessage = "Nội dung không được để trống.")]
     public string Content { get; set; } = null!;
-
-    public BlogStatus Status { get; set; }
     public List<int>? ImageIds { get; set; }
-
-    public bool IsStatusValid()
-    {
-        return Enum.IsDefined(typeof(BlogStatus), Status);
-    }
+    
 }
