@@ -21,7 +21,7 @@ public class BlogService : IBlogService
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
-    public async Task<BaseResponse> CraeteUpdateBlog(BlogRequestDTO dto, string userId)
+    public async Task<BaseResponse> CreateUpdateBlog(BlogRequestDTO dto, string userId)
     {
         try
         {

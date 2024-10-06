@@ -26,7 +26,7 @@ namespace ConsultingKoiFish.API.Controllers
         {
             try
             {
-                var response = await _blogService.CraeteUpdateBlog(dto, UserId);
+                var response = await _blogService.CreateUpdateBlog(dto, UserId);
                 if (!response.IsSuccess) return SaveError(response);
                 return SaveSuccess(response);
             }

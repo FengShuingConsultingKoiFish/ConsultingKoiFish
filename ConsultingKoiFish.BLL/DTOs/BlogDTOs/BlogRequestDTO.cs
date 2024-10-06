@@ -10,5 +10,7 @@ public class BlogRequestDTO
     public string Title { get; set; } = null!;
     [Required(ErrorMessage = "Nội dung không được để trống.")]
     public string Content { get; set; } = null!;
+
+    public int Status { get; set; }
     public List<int>? ImageIds { get; set; }
 }
