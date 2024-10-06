@@ -112,10 +112,8 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var childResponse = _mapper.Map<BlogViewDTO>(blog);
-            childResponse.UserName = blog.User.UserName;
-            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
@@ -135,10 +133,8 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var childResponse = _mapper.Map<BlogViewDTO>(blog);
-            childResponse.UserName = blog.User.UserName;
-            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
@@ -162,10 +158,8 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var childResponse = _mapper.Map<BlogViewDTO>(blog);
-            childResponse.UserName = blog.User.UserName;
-            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
@@ -189,10 +183,8 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var childResponse = _mapper.Map<BlogViewDTO>(blog);
-            childResponse.UserName = blog.User.UserName;
-            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
@@ -211,10 +203,8 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var childResponse = _mapper.Map<BlogViewDTO>(blog);
-            childResponse.UserName = blog.User.UserName;
-            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
@@ -237,10 +227,8 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var childResponse = _mapper.Map<BlogViewDTO>(blog);
-            childResponse.UserName = blog.User.UserName;
-            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
@@ -263,10 +251,8 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var childResponse = _mapper.Map<BlogViewDTO>(blog);
-            childResponse.UserName = blog.User.UserName;
-            childResponse.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-            childResponse.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
         return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
@@ -281,10 +267,8 @@ public class BlogService : IBlogService
             .WithInclude(x => x.User, r => r.BlogImages)
             .Build());
         if (blog == null) return null;
-        var response = _mapper.Map<BlogViewDTO>(blog);
-        response.UserName = blog.User.UserName;
-        response.CreatedDate = blog.CreatedDate.ToString("dd/MM/yyyy");
-        response.ImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+        var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+        var response = new BlogViewDTO(blog, blogImageViewDtos);
         return response;
     }
 
