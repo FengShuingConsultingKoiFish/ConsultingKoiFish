@@ -41,6 +41,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<Comment> Comments { get; set; }
 		public virtual DbSet<AdvertisementPackage> AdvertisementPackages { get; set; }
 		public virtual DbSet<PurchasedPackage> PurchasedPackages { get; set; }
+		public virtual DbSet<PackageImage> PackageImages { get; set; }
 		public virtual DbSet<Payment> Payments { get; set; }
 
 		#endregion
@@ -69,6 +70,24 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserLogin<string>>(entity => { entity.ToTable(name: "UserLogin"); });
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
+
+			modelBuilder.Entity<PackageImage>(entity =>
+			{
+				entity.HasKey(p => p.Id);
+				entity.Property(p => p.AdvertisementPackageId).IsRequired();
+				entity.Property(p => p.ImageId).IsRequired();
+
+				entity.HasOne(p => p.Image)
+					.WithMany(i => i.PackageImages)
+					.HasForeignKey(p => p.ImageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with AdvertisementPackage
+				entity.HasOne(p => p.AdvertisementPackage)
+					.WithMany(ap => ap.PackageImages)
+					.HasForeignKey(p => p.AdvertisementPackageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
 			modelBuilder.Entity<Payment>(entity =>
 			{

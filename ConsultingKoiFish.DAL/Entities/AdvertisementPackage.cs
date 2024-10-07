@@ -18,6 +18,7 @@ namespace ConsultingKoiFish.DAL.Entities
         public bool IsActive { get; set; } = true;
 
         public virtual ICollection<PurchasedPackage> PurchasedPackages { get; set; } = new List<PurchasedPackage>();
+        public virtual ICollection<PackageImage> PackageImages { get; set; } = new List<PackageImage>();
 		public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 	}
 }
