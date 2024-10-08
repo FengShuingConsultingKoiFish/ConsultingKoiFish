@@ -49,21 +49,6 @@ public class AdvertisementPackageService : IAdvertisementPackageService
                     LimitAd = dto.LimitAd
                 };
                 var updatePackage = _mapper.Map(updatePackageDto, adPackage);
-                if (dto.ImageIds != null || dto.ImageIds.Any())
-                {
-                    await packageImageRepo.DeleteAllAsync(updatePackage.PackageImages.ToList());
-                    await _unitOfWork.SaveChangesAsync();
-                    foreach (var image in dto.ImageIds)
-                    {
-                        var createdPackageImageDto = new PackageImageCreateDTO
-                        {
-                            AdvertisementPackageId = updatePackage.Id,
-                            ImageId = image
-                        };
-                        var createdPackageImage = _mapper.Map<PackageImage>(createdPackageImageDto);
-                        await packageImageRepo.CreateAsync(createdPackageImage);
-                    }
-                }
                 await repo.UpdateAsync(updatePackage);
             }
             else
@@ -86,6 +71,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 
                 if (dto.ImageIds != null || dto.ImageIds.Any())
                 {
+                    var createdPackageImageDTOs = new List<PackageImageCreateDTO>();
                     foreach (var image in dto.ImageIds)
                     {
                         var createdPackageImageDto = new PackageImageCreateDTO
@@ -93,9 +79,10 @@ public class AdvertisementPackageService : IAdvertisementPackageService
                             AdvertisementPackageId = createdPackage.Id,
                             ImageId = image
                         };
-                        var createdPackageImage = _mapper.Map<PackageImage>(createdPackageImageDto);
-                        await packageImageRepo.CreateAsync(createdPackageImage);
+                        createdPackageImageDTOs.Add(createdPackageImageDto);
                     }
+                    var createdPackageImages = _mapper.Map<List<PackageImage>>(createdPackageImageDTOs);
+                    await packageImageRepo.CreateAllAsync(createdPackageImages);
                 }
             }
 
