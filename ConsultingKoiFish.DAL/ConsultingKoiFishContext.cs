@@ -154,9 +154,6 @@ namespace ConsultingKoiFish.DAL
 
 				entity.Property(ap => ap.Description)
 					.HasColumnType("nvarchar(max)");
-
-				entity.Property(ap => ap.Limit)
-					.IsRequired();
 			});
 
 			modelBuilder.Entity<Comment>(entity =>
