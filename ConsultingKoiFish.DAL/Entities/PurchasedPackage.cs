@@ -13,6 +13,7 @@ namespace ConsultingKoiFish.DAL.Entities
 		public int AdvertisementPackageId { get; set; }
 		public int MornitoredQuantity { get; set; }
 		public int Status { get; set; }
+		public DateTime CreatedDate { get; set; }
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<Advertisement> Advertisements { get; set; } = new List<Advertisement>();

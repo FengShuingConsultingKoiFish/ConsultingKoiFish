@@ -1,5 +1,6 @@
 using ConsultingKoiFish.BLL.DTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
+using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Enums;
@@ -161,6 +162,49 @@ namespace ConsultingKoiFish.API.Controllers
                 var response = new PagingDTO<BlogViewDTO>(data);
                 if (response == null) return GetError();
                 return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
+                return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+            }
+        }
+        
+        [Authorize]
+        [HttpPost]
+        [Route("add-images-to-blogs")]
+        public async Task<IActionResult> AddImagesToBlog(BlogImageRequestDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+                var response = await _blogService.AddImagesToBlog(dto);
+                if (!response.IsSuccess) return SaveError(response);
+                return SaveSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message);
+                Console.ResetColor();
+                return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+            }
+        }
+        
+        
+        [Authorize]
+        [HttpPost]
+        [Route("delete-images-from-blog")]
+        public async Task<IActionResult> DeleteImagesFromBlog(BlogImageDeleteDTO dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid) return ModelInvalid();
+                var response = await _blogService.DeleteImagesFromBlog(dto);
+                if (!response.IsSuccess) return SaveError(response);
+                return SaveSuccess(response);
             }
             catch (Exception ex)
             {

@@ -20,7 +20,9 @@ namespace ConsultingKoiFish.DAL.Entities
 		public int? LimitContent { get; set; }
 		[AllowNull]
 		public int? LimitImage { get; set; }
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string CreatedBy { get; set; } = null!;
 
         public virtual ICollection<PurchasedPackage> PurchasedPackages { get; set; } = new List<PurchasedPackage>();
         public virtual ICollection<PackageImage> PackageImages { get; set; } = new List<PackageImage>();

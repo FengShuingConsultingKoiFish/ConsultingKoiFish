@@ -65,6 +65,7 @@ public class BlogService : IBlogService
 
                 if (dto.ImageIds != null || dto.ImageIds.Any())
                 {
+                    var createdBlogImageDTOs = new List<BlogImageCreateDTO>();
                     foreach (var image in dto.ImageIds)
                     {
                         var createdBlogImageDto = new BlogImageCreateDTO
@@ -72,9 +73,10 @@ public class BlogService : IBlogService
                             BlogId = createdBlog.Id,
                             ImageId = image
                         };
-                        var createdBlogImage = _mapper.Map<BlogImage>(createdBlogImageDto);
-                        await blogImageRepo.CreateAsync(createdBlogImage);
+                        createdBlogImageDTOs.Add(createdBlogImageDto);
                     }
+                    var createdBlogImages = _mapper.Map<List<BlogImage>>(createdBlogImageDTOs);
+                    await blogImageRepo.CreateAllAsync(createdBlogImages);
                 }
             }
 
@@ -281,6 +283,83 @@ public class BlogService : IBlogService
             return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
         }
         return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
+    }
+
+    public async Task<BaseResponse> AddImagesToBlog(BlogImageRequestDTO dto)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            var repo = _unitOfWork.GetRepo<BlogImage>();
+            var createdBlogImageDTOs = new List<BlogImageCreateDTO>();
+            foreach (var image in dto.ImagesId)
+            {
+                var any = await repo.AnyAsync(new QueryBuilder<BlogImage>()
+                    .WithPredicate(x => x.ImageId == image && x.BlogId == dto.BlogId)
+                    .WithTracking(false)
+                    .Build());
+
+                if (any) return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} đã tổn tại trong Blog." };
+                var createdBlogImageDTO = new BlogImageCreateDTO()
+                {
+                    BlogId = dto.BlogId,
+                    ImageId = image
+                };
+                createdBlogImageDTOs.Add(createdBlogImageDTO);
+            }
+            var blogImages = _mapper.Map<List<BlogImage>>(createdBlogImageDTOs);
+            await repo.CreateAllAsync(blogImages);
+            var saver = await _unitOfWork.SaveAsync();
+            await _unitOfWork.CommitTransactionAsync();
+            if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu thất bại" };
+            return new BaseResponse { IsSuccess = true, Message = "Lưu thành công." };
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollBackAsync();
+            throw;
+        }
+    }
+
+    public async Task<BaseResponse> DeleteImagesFromBlog(BlogImageDeleteDTO dto)
+    {
+        try
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            var repo = _unitOfWork.GetRepo<BlogImage>();
+            var blogRepo = _unitOfWork.GetRepo<Blog>();
+            var deletedBlogImages = new List<BlogImage>();
+            var any = await blogRepo.AnyAsync(new QueryBuilder<Blog>()
+                .WithPredicate(x => x.Id == dto.BlogId)
+                .WithTracking(false)
+                .Build());
+            if (any)
+            {
+                foreach (var blogImageId in dto.BlogImageIds)
+                {
+                    var deleteBlogImage = await repo.GetSingleAsync(new QueryBuilder<BlogImage>()
+                        .WithPredicate(x => x.Id == blogImageId)
+                        .WithTracking(false)
+                        .Build());
+                    if (deleteBlogImage == null)
+                        return new BaseResponse
+                            { IsSuccess = false, Message = $"Ảnh {blogImageId} không tồn tại trong Blog" };
+                    deletedBlogImages.Add(deleteBlogImage);
+                }
+
+                await repo.DeleteAllAsync(deletedBlogImages);
+                var saver = await _unitOfWork.SaveAsync();
+                await _unitOfWork.CommitTransactionAsync();
+                if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu thất bại" };
+                return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+            }
+            return new BaseResponse { IsSuccess = false, Message = "Blog không tồn tại." };
+        }
+        catch (Exception)
+        {
+            await _unitOfWork.RollBackAsync();
+            throw;
+        }
     }
 
     public async Task<BlogViewDTO> GetBlogById(int id)
