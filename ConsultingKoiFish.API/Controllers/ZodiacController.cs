@@ -19,7 +19,7 @@ namespace ConsultingKoiFish.API.Controllers
         }
 
         // POST api/zodiac
-        [HttpPost]
+        [HttpPost("Add-Zodiac")]
         public async Task<IActionResult> AddZodiac([FromBody] ZodiacRequestDTO zodiacRequestDto)
         {
             if (!ModelState.IsValid)
@@ -38,7 +38,7 @@ namespace ConsultingKoiFish.API.Controllers
         }
 
         // GET api/zodiac
-        [HttpGet]
+        [HttpGet("Get-All-Zodiac")]
         public async Task<IActionResult> GetAllZodiacs()
         {
             var result = await _zodiacService.GetAllZodiacs();
@@ -82,8 +82,10 @@ namespace ConsultingKoiFish.API.Controllers
 
             return BadRequest(result);
         }
-        [Authorize]
-        [HttpGet("birthdate")]
+
+        // GET api/zodiac/Get-Zodiac-Sign
+        //[Authorize]
+        [HttpGet("Get-Zodiac-Sign")]
         public async Task<IActionResult> GetZodiacByBirthDate([FromQuery] DateTime birthDate)
         {
             var result = await _zodiacService.GetZodiacByBirthDate(birthDate, UserId);
