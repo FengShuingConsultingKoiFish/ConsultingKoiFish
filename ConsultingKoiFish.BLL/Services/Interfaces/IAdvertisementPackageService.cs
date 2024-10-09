@@ -10,4 +10,5 @@ public interface IAdvertisementPackageService
     Task<BaseResponse> AddImagesToPackage(PackageImageRequestDTO dto);
     Task<BaseResponse> DeleteImagesFromPackage(PackageImageDeleteDTO dto);
     Task<BaseResponse> DeletePackage(int id, string userName);
+    Task<AdvertisementPackageViewDTO> GetPackageById(int id);
 }

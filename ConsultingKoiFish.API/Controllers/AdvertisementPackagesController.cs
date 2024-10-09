@@ -109,5 +109,24 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
 			}
 		}
+
+		[HttpGet]
+		[Route("get-package-by-id/{id}")]
+		public async Task<IActionResult> GetPackageById([FromRoute] int id)
+		{
+			try
+			{
+				var response = await _advertisementPackageService.GetPackageById(id);
+				if (response == null) return GetError("Gói này không tồn tại.");
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
 	}
 }

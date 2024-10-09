@@ -2,6 +2,7 @@ using AutoMapper;
 using ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
+using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.PackageImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
@@ -213,4 +214,42 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		}
 		return new BaseResponse { IsSuccess = false, Message = "Gói không tồn tại." };
 	}
+
+	public async Task<AdvertisementPackageViewDTO> GetPackageById(int id)
+	{
+		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
+		var package = await repo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
+			.WithPredicate(x => x.Id == id && x.IsActive == true)
+			.WithTracking(false)
+			.WithInclude(r => r.PackageImages)
+			.Build());
+		if (package == null) return null;
+		var packageImageViewDtos = await ConvertToImageViews(package.PackageImages);
+		var response = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
+		return response;
+	}
+
+	#region Private
+
+	private async Task<List<ImageViewDTO>> ConvertToImageViews(ICollection<PackageImage> packageImages)
+	{
+		var imageRepo = _unitOfWork.GetRepo<Image>();
+		var repsonseImages = new List<ImageViewDTO>();
+		foreach (var packageImage in packageImages)
+		{
+			var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
+				.WithPredicate(x => x.Id == packageImage.ImageId)
+				.WithInclude(x => x.User)
+				.WithTracking(false)
+				.Build());
+			var childResponseImage = _mapper.Map<ImageViewDTO>(image);
+			childResponseImage.UserName = image.User.UserName;
+			childResponseImage.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
+			repsonseImages.Add(childResponseImage);
+		}
+
+		return repsonseImages;
+	}
+
+	#endregion
 }
