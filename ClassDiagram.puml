@@ -1,0 +1,273 @@
+@startuml
+
+' Class ApplicationUser
+class ApplicationUser {
+  + int Id
+  + string UserName
+  + string Email
+}
+
+' Class UserDetail
+class UserDetail {
+  + int Id
+  + int UserId
+  + string Address
+  + string PhoneNumber
+}
+
+' Class Image
+class Image {
+  + int Id
+  + string FilePath
+  + string AltText
+  + DateTime CreatedDate
+}
+
+' Class Blog
+class Blog {
+  + int Id
+  + string Title
+  + string Content
+  + int UserId
+  + DateTime CreatedDate
+}
+
+' Class BlogImage
+class BlogImage {
+  + int Id
+  + int BlogId
+  + int ImageId
+}
+
+' Class AdvertisementPackage
+class AdvertisementPackage {
+  + int Id
+  + string Name
+  + double Price
+  + string Description
+  + int Limit
+}
+
+' Class PackageImage
+class PackageImage {
+  + int Id
+  + int AdvertisementPackageId
+  + int ImageId
+}
+
+' Class Payment
+class Payment {
+  + int Id
+  + int UserId
+  + int AdvertisementPackageId
+  + long TransactionId
+  + string Content
+  + DateTime CreatedDate
+}
+
+' Class PurchasedPackage
+class PurchasedPackage {
+  + int Id
+  + int UserId
+  + int AdvertisementPackageId
+  + int Status
+}
+
+' Class Advertisement
+class Advertisement {
+  + int Id
+  + string Title
+  + double Price
+  + string Description
+}
+
+' Class AdImage
+class AdImage {
+  + int Id
+  + int AdvertisementId
+  + int ImageId
+}
+
+' Class Comment
+class Comment {
+  + int Id
+  + string Content
+  + DateTime CreatedDate
+}
+
+' Interfaces and Services
+interface IAccountService {
+  + ApplicationUser GetUserById(int id)
+  + void Register(ApplicationUser user)
+}
+class AccountService implements IAccountService {
+  + ApplicationUser GetUserById(int id)
+  + void Register(ApplicationUser user)
+}
+class AccountsController {
+  + IActionResult Login()
+  + IActionResult Register(ApplicationUser user)
+}
+
+interface IUserDetailService {
+  + UserDetail GetUserDetailById(int id)
+  + void CreateUserDetail(UserDetail detail)
+}
+class UserDetailService implements IUserDetailService {
+  + UserDetail GetUserDetailById(int id)
+  + void CreateUserDetail(UserDetail detail)
+}
+class UserDetailsController {
+  + IActionResult Index()
+  + IActionResult Create(UserDetail detail)
+}
+
+interface IImageService {
+  + Image GetImageById(int id)
+  + void UploadImage(Image image)
+}
+class ImageService implements IImageService {
+  + Image GetImageById(int id)
+  + void UploadImage(Image image)
+}
+class ImagesController {
+  + IActionResult Index()
+  + IActionResult Upload(Image image)
+}
+
+interface IBlogService {
+  + Blog GetBlogById(int id)
+  + void CreateBlog(Blog blog)
+}
+class BlogService implements IBlogService {
+  + Blog GetBlogById(int id)
+  + void CreateBlog(Blog blog)
+}
+class BlogsController {
+  + IActionResult Index()
+  + IActionResult Create(Blog blog)
+}
+
+interface IAdvertisementPackageService {
+  + AdvertisementPackage GetPackageById(int id)
+  + void CreatePackage(AdvertisementPackage package)
+}
+class AdvertisementPackageService implements IAdvertisementPackageService {
+  + AdvertisementPackage GetPackageById(int id)
+  + void CreatePackage(AdvertisementPackage package)
+}
+class AdvertisementPackagesController {
+  + IActionResult Index()
+  + IActionResult Create(AdvertisementPackage package)
+}
+
+interface IPaymentService {
+  + Payment GetPaymentById(int id)
+  + void ProcessPayment(Payment payment)
+}
+class PaymentService implements IPaymentService {
+  + Payment GetPaymentById(int id)
+  + void ProcessPayment(Payment payment)
+}
+class PaymentsController {
+  + IActionResult Index()
+  + IActionResult Process(Payment payment)
+}
+
+interface IPurchasedPackageService {
+  + PurchasedPackage GetPurchasedPackageById(int id)
+  + void CreatePurchasedPackage(PurchasedPackage package)
+}
+class PurchasedPackageService implements IPurchasedPackageService {
+  + PurchasedPackage GetPurchasedPackageById(int id)
+  + void CreatePurchasedPackage(PurchasedPackage package)
+}
+class PurchasedPackagesController {
+  + IActionResult Index()
+  + IActionResult Create(PurchasedPackage package)
+}
+
+interface IAdvertisementService {
+  + Advertisement GetAdvertisementById(int id)
+  + void CreateAdvertisement(Advertisement ad)
+}
+class AdvertisementService implements IAdvertisementService {
+  + Advertisement GetAdvertisementById(int id)
+  + void CreateAdvertisement(Advertisement ad)
+}
+class AdvertisementsController {
+  + IActionResult Index()
+  + IActionResult Create(Advertisement ad)
+}
+
+interface ICommentService {
+  + Comment GetCommentById(int id)
+  + void CreateComment(Comment comment)
+}
+class CommentService implements ICommentService {
+  + Comment GetCommentById(int id)
+  + void CreateComment(Comment comment)
+}
+class CommentsController {
+  + IActionResult Index()
+  + IActionResult Create(Comment comment)
+}
+
+' Relationships
+ApplicationUser --> IAccountService
+IAccountService --> AccountService
+AccountService --> AccountsController
+
+UserDetail --> IUserDetailService
+IUserDetailService --> UserDetailService
+UserDetailService --> UserDetailsController
+
+Image --> IImageService
+IImageService --> ImageService
+ImageService --> ImagesController
+
+Blog --> IBlogService
+IBlogService --> BlogService
+BlogService --> BlogsController
+
+BlogImage --> Blog
+
+AdvertisementPackage --> IAdvertisementPackageService
+IAdvertisementPackageService --> AdvertisementPackageService
+AdvertisementPackageService --> AdvertisementPackagesController
+
+PackageImage --> AdvertisementPackage
+
+Payment --> IPaymentService
+IPaymentService --> PaymentService
+PaymentService --> PaymentsController
+
+PurchasedPackage --> IPurchasedPackageService
+IPurchasedPackageService --> PurchasedPackageService
+PurchasedPackageService --> PurchasedPackagesController
+
+Advertisement --> IAdvertisementService
+IAdvertisementService --> AdvertisementService
+AdvertisementService --> AdvertisementsController
+
+AdImage --> Advertisement
+
+Comment --> ICommentService
+ICommentService --> CommentService
+CommentService --> CommentsController
+
+' Entity relationships
+ApplicationUser --> UserDetail : "1-to-1"
+ApplicationUser --> Blog : "1-to-many"
+ApplicationUser --> Comment : "1-to-many"
+ApplicationUser --> Payment : "1-to-many"
+ApplicationUser --> PurchasedPackage : "1-to-many"
+
+Blog --> Comment : "1-to-many"
+Blog --> BlogImage : "1-to-many"
+Advertisement --> AdImage : "1-to-many"
+Advertisement --> Comment : "1-to-many"
+AdvertisementPackage --> PackageImage : "1-to-many"
+AdvertisementPackage --> Payment : "1-to-many"
+
+@enduml
