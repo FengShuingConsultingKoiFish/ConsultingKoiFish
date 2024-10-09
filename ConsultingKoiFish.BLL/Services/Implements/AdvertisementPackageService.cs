@@ -22,7 +22,44 @@ public class AdvertisementPackageService : IAdvertisementPackageService
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
-    public async Task<BaseResponse> CreateUpdateAdvertisementPackage(AdvertisementPackageRequestDTO dto, string userName)
+
+	public async Task<BaseResponse> AddImagesToPackage(PackageImageRequestDTO dto)
+	{
+		try
+		{
+			await _unitOfWork.BeginTransactionAsync();
+			var repo = _unitOfWork.GetRepo<PackageImage>();
+			var createdPackageImageDTOs = new List<PackageImageCreateDTO>();
+			foreach (var image in dto.ImagesId)
+			{
+				var any = await repo.AnyAsync(new QueryBuilder<PackageImage>()
+					.WithPredicate(x => x.ImageId == image && x.AdvertisementPackageId == dto.AdvertisementPackageId)
+					.WithTracking(false)
+					.Build());
+
+				if (any) return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} đã tổn tại trong gói." };
+				var createdPackageImageDTO = new PackageImageCreateDTO()
+				{
+					AdvertisementPackageId = dto.AdvertisementPackageId,
+					ImageId = image
+				};
+				createdPackageImageDTOs.Add(createdPackageImageDTO);
+			}
+			var packageImages = _mapper.Map<List<PackageImage>>(createdPackageImageDTOs);
+			await repo.CreateAllAsync(packageImages);
+			var saver = await _unitOfWork.SaveAsync();
+			await _unitOfWork.CommitTransactionAsync();
+			if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu thất bại" };
+			return new BaseResponse { IsSuccess = true, Message = "Lưu thành công." };
+		}
+		catch (Exception)
+		{
+			await _unitOfWork.RollBackAsync();
+			throw;
+		}
+	}
+
+	public async Task<BaseResponse> CreateUpdateAdvertisementPackage(AdvertisementPackageRequestDTO dto, string userName)
     {
         try
         {
@@ -74,6 +111,11 @@ public class AdvertisementPackageService : IAdvertisementPackageService
                     var createdPackageImageDTOs = new List<PackageImageCreateDTO>();
                     foreach (var image in dto.ImageIds)
                     {
+                        var existedImage = await _unitOfWork.GetRepo<Image>().GetSingleAsync(new QueryBuilder<Image>()
+                                                                                             .WithPredicate(x => x.Id == image)
+                                                                                             .WithTracking(false)
+                                                                                             .Build());
+                        if(existedImage == null)  return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} không tồn tại."};
                         var createdPackageImageDto = new PackageImageCreateDTO
                         {
                             AdvertisementPackageId = createdPackage.Id,

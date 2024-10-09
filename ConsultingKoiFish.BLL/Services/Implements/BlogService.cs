@@ -68,7 +68,12 @@ public class BlogService : IBlogService
                     var createdBlogImageDTOs = new List<BlogImageCreateDTO>();
                     foreach (var image in dto.ImageIds)
                     {
-                        var createdBlogImageDto = new BlogImageCreateDTO
+						var existedImage = await _unitOfWork.GetRepo<Image>().GetSingleAsync(new QueryBuilder<Image>()
+																							.WithPredicate(x => x.Id == image)
+																							.WithTracking(false)
+																							.Build());
+						if (existedImage == null) return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} không tồn tại." };
+						var createdBlogImageDto = new BlogImageCreateDTO
                         {
                             BlogId = createdBlog.Id,
                             ImageId = image
