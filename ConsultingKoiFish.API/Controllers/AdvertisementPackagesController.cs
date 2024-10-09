@@ -77,7 +77,27 @@ namespace ConsultingKoiFish.API.Controllers
 			try
 			{
 				if (!ModelState.IsValid) return ModelInvalid();
-				var response = await _advertisementPackageService.DeleteImagesFromoPackage(dto);
+				var response = await _advertisementPackageService.DeleteImagesFromPackage(dto);
+				if (!response.IsSuccess) return SaveError(response);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		[Authorize(Roles = "Admin")]
+		[HttpPost]
+		[Route("delete-package/{id}")]
+		public async Task<IActionResult> DeletePackage(int id)
+		{
+			try
+			{
+				var response = await _advertisementPackageService.DeletePackage(id, UserName);
 				if (!response.IsSuccess) return SaveError(response);
 				return SaveSuccess(response);
 			}

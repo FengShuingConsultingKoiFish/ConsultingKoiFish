@@ -148,7 +148,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
         }
     }
 
-	public async Task<BaseResponse> DeleteImagesFromoPackage(PackageImageDeleteDTO dto)
+	public async Task<BaseResponse> DeleteImagesFromPackage(PackageImageDeleteDTO dto)
 	{
 		try
 		{
@@ -187,5 +187,30 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 			await _unitOfWork.RollBackAsync();
 			throw;
 		}
+	}
+
+	public async Task<BaseResponse> DeletePackage(int id, string userName)
+	{
+		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
+		var any = await repo.AnyAsync(new QueryBuilder<AdvertisementPackage>()
+			.WithPredicate(x => x.Id == id)
+			.Build());
+		if (any)
+		{
+			var package = await repo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
+				.WithPredicate(x => x.Id == id)
+				.WithTracking(false)
+				.Build());
+			if (!package.CreatedBy.Equals(userName)) return new BaseResponse { IsSuccess = false, Message = "Gói không thuộc sở hữu người dùng." };
+			package.IsActive = false;
+			await repo.UpdateAsync(package);
+			var saver = await _unitOfWork.SaveAsync();
+			if (!saver)
+			{
+				return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu không thành công." };
+			}
+			return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+		}
+		return new BaseResponse { IsSuccess = false, Message = "Gói không tồn tại." };
 	}
 }

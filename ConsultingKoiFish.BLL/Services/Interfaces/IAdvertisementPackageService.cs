@@ -8,5 +8,6 @@ public interface IAdvertisementPackageService
 {
     Task<BaseResponse> CreateUpdateAdvertisementPackage(AdvertisementPackageRequestDTO dto, string userName);
     Task<BaseResponse> AddImagesToPackage(PackageImageRequestDTO dto);
-    Task<BaseResponse> DeleteImagesFromoPackage(PackageImageDeleteDTO dto);
+    Task<BaseResponse> DeleteImagesFromPackage(PackageImageDeleteDTO dto);
+    Task<BaseResponse> DeletePackage(int id, string userName);
 }

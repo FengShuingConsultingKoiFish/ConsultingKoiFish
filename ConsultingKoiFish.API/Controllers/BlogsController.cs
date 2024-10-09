@@ -364,7 +364,7 @@ namespace ConsultingKoiFish.API.Controllers
         [Authorize(Roles = "Member")]
         [HttpPost]
         [Route("delete-blog/{id}")]
-        public async Task<IActionResult> DeleteImage(int id)
+        public async Task<IActionResult> DeleteBlog(int id)
         {
             try
             {
