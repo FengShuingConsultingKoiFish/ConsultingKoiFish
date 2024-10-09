@@ -8,6 +8,7 @@ using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Enums;
+using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
 
@@ -213,6 +214,26 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 			return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
 		}
 		return new BaseResponse { IsSuccess = false, Message = "Gói không tồn tại." };
+	}
+
+	public async Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackages(int pageIndex, int pageSize)
+	{
+		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
+		var imageRepo = _unitOfWork.GetRepo<Image>();
+		var loadedRecords = repo.Get(new QueryBuilder<AdvertisementPackage>()
+			.WithPredicate(x => x.IsActive == true)
+			.WithTracking(false)
+			.WithInclude(r => r.PackageImages)
+			.Build());
+		var pagedRecords = await PaginatedList<AdvertisementPackage>.CreateAsync(loadedRecords, pageIndex, pageSize);
+		var response = new List<AdvertisementPackageViewDTO>();
+		foreach (var package in pagedRecords)
+		{
+			var packageImageViewDtos = await ConvertToImageViews(package.PackageImages);
+			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
+			response.Add(childResponse);
+		}
+		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
 	}
 
 	public async Task<AdvertisementPackageViewDTO> GetPackageById(int id)

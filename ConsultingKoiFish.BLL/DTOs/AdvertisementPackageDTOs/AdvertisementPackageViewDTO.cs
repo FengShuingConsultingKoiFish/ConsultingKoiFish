@@ -19,7 +19,7 @@ namespace ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs
 		public int? LimitContent { get; set; }
 		public int? LimitImage { get; set; }
 		public bool IsActive { get; set; }
-		public DateTime CreatedDate { get; set; }
+		public string CreatedDate { get; set; }
 		public string CreatedBy { get; set; } = null!;
         public List<ImageViewDTO> ImageViewDTOs { get; set; } = new List<ImageViewDTO>();
 
@@ -33,7 +33,7 @@ namespace ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs
 			LimitContent = package.LimitContent;
 			LimitImage = package.LimitImage;
 			IsActive = package.IsActive;
-			CreatedDate = package.CreatedDate;
+			CreatedDate = package.CreatedDate.ToString("dd/MM/yyyy");
 			CreatedBy = package.CreatedBy;
 			ImageViewDTOs = packageImageViewDtos;
         }

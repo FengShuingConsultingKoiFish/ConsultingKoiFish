@@ -1,3 +1,4 @@
+using ConsultingKoiFish.BLL.DTOs;
 using ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
@@ -110,6 +111,8 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
+		#region Common
+
 		[HttpGet]
 		[Route("get-package-by-id/{id}")]
 		public async Task<IActionResult> GetPackageById([FromRoute] int id)
@@ -128,5 +131,37 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
 			}
 		}
+
+		[HttpGet]
+		[Route("get-all-packages/{pageIndex}/{pageSize}")]
+		public async Task<IActionResult> GetAllPackages([FromRoute] int pageIndex, [FromRoute] int pageSize)
+		{
+			try
+			{
+				if (pageIndex <= 0)
+				{
+					return GetError("Page Index phải là số nguyên dương.");
+				}
+
+				if (pageSize <= 0)
+				{
+					return GetError("Page Size phải là số nguyên dương.");
+				}
+
+				var data = await _advertisementPackageService.GetAllPackages(pageIndex, pageSize);
+				var response = new PagingDTO<AdvertisementPackageViewDTO>(data);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		#endregion
 	}
 }
