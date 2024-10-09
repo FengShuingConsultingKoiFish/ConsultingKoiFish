@@ -22,7 +22,7 @@ namespace ConsultingKoiFish.API.Controllers
             _advertisementPackageService = advertisementPackageService;
         }
         
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [Route("create-update-advertisement-package")]
         public async Task<IActionResult> CreateUpdateAdvertisementPackage(AdvertisementPackageRequestDTO dto)
@@ -48,7 +48,7 @@ namespace ConsultingKoiFish.API.Controllers
             }
         }
 
-		[Authorize]
+		[Authorize(Roles = "Admin")]
 		[HttpPost]
 		[Route("add-images-to-packages")]
 		public async Task<IActionResult> AddImagesToPackage(PackageImageRequestDTO dto)
@@ -57,6 +57,27 @@ namespace ConsultingKoiFish.API.Controllers
 			{
 				if (!ModelState.IsValid) return ModelInvalid();
 				var response = await _advertisementPackageService.AddImagesToPackage(dto);
+				if (!response.IsSuccess) return SaveError(response);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		[Authorize(Roles = "Admin")]
+		[HttpPost]
+		[Route("delete-images-from-package")]
+		public async Task<IActionResult> DeleteImagesFromBlog(PackageImageDeleteDTO dto)
+		{
+			try
+			{
+				if (!ModelState.IsValid) return ModelInvalid();
+				var response = await _advertisementPackageService.DeleteImagesFromoPackage(dto);
 				if (!response.IsSuccess) return SaveError(response);
 				return SaveSuccess(response);
 			}

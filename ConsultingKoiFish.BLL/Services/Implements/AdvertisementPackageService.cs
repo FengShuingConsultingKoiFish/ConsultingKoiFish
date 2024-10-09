@@ -147,4 +147,45 @@ public class AdvertisementPackageService : IAdvertisementPackageService
             throw;
         }
     }
+
+	public async Task<BaseResponse> DeleteImagesFromoPackage(PackageImageDeleteDTO dto)
+	{
+		try
+		{
+			await _unitOfWork.BeginTransactionAsync();
+			var repo = _unitOfWork.GetRepo<PackageImage>();
+			var packageRepo = _unitOfWork.GetRepo<AdvertisementPackage>();
+			var deletedPackageImages = new List<PackageImage>();
+			var any = await packageRepo.AnyAsync(new QueryBuilder<AdvertisementPackage>()
+				.WithPredicate(x => x.Id == dto.AdvertisementPackageId)
+				.WithTracking(false)
+				.Build());
+			if (any)
+			{
+				foreach (var packageImageId in dto.PackageImageIds)
+				{
+					var deletePackageImage = await repo.GetSingleAsync(new QueryBuilder<PackageImage>()
+						.WithPredicate(x => x.Id == packageImageId && x.AdvertisementPackageId == dto.AdvertisementPackageId)
+						.WithTracking(false)
+						.Build());
+					if (deletePackageImage == null)
+						return new BaseResponse
+						{ IsSuccess = false, Message = $"Ảnh {packageImageId} không tồn tại trong gói" };
+					deletedPackageImages.Add(deletePackageImage);
+				}
+
+				await repo.DeleteAllAsync(deletedPackageImages);
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu thất bại" };
+				return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+			}
+			return new BaseResponse { IsSuccess = false, Message = "Gói không tồn tại." };
+		}
+		catch (Exception)
+		{
+			await _unitOfWork.RollBackAsync();
+			throw;
+		}
+	}
 }
