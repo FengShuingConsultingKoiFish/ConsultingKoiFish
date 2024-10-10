@@ -43,6 +43,82 @@ namespace ConsultingKoiFish.API.Controllers
 
 		#region Admin
 
+		/// <summary>
+		/// Get all payments for admin
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Admin")]
+		[HttpPost]
+		[Route("get-all-payments-for-admin")]
+		public async Task<IActionResult> GetAllPayments([FromBody] PaymentGetListDTO dto)
+		{
+			try
+			{
+				if (dto.PageIndex <= 0)
+				{
+					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương.");
+					return ModelInvalid();
+				}
+
+				if (dto.PageSize <= 0)
+				{
+					ModelState.AddModelError("PageSize", "PageSize phải là số nguyên dương.");
+					return ModelInvalid();
+				}
+
+				var data = await _paymentService.GetAllPayments(dto);
+				var response = new PagingDTO<PaymentViewDTO>(data);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+
+		/// <summary>
+		/// Get all payments and filter with date for admin
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Admin")]
+		[HttpPost]
+		[Route("filter-all-payments-with-date-for-admin")]
+		public async Task<IActionResult> GetAllPaymentsWithDate([FromBody] PaymentGetListDTO dto)
+		{
+			try
+			{
+				if (dto.PageIndex <= 0)
+				{
+					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương.");
+					return ModelInvalid();
+				}
+
+				if (dto.PageSize <= 0)
+				{
+					ModelState.AddModelError("PageSize", "PageSize phải là số nguyên dương.");
+					return ModelInvalid();
+				}
+
+				var data = await _paymentService.GetAllPaymentsWithDate(dto);
+				var response = new PagingDTO<PaymentViewDTO>(data);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
 
 		#endregion
 

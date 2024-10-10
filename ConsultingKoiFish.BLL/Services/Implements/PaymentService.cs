@@ -67,6 +67,55 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			}
 		}
 
+		#region Admin
+
+		public async Task<PaginatedList<PaymentViewDTO>> GetAllPayments(PaymentGetListDTO dto)
+		{
+			var repo = _unitOfWork.GetRepo<Payment>();
+			var imageRepo = _unitOfWork.GetRepo<Image>();
+			var loadedRecords = repo.Get(new QueryBuilder<Payment>()
+				.WithTracking(false)
+				.WithInclude(x => x.User, r => r.AdvertisementPackage)
+				.Build());
+			var pagedRecords = await PaginatedList<Payment>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
+			var response = new List<PaymentViewDTO>();
+			foreach (var payment in pagedRecords)
+			{
+				var childResponse = new PaymentViewDTO(payment);
+				response.Add(childResponse);
+			}
+			return new PaginatedList<PaymentViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
+		}
+
+		public async Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsWithDate(PaymentGetListDTO dto)
+		{
+			var repo = _unitOfWork.GetRepo<Payment>();
+			var imageRepo = _unitOfWork.GetRepo<Image>();
+			var loadedRecords = repo.Get(new QueryBuilder<Payment>()
+				.WithTracking(false)
+				.WithInclude(x => x.User, r => r.AdvertisementPackage)
+				.Build());
+			if (dto.FromDate.HasValue)
+			{
+				loadedRecords = loadedRecords.Where(x => x.CreatedDate >= dto.FromDate.Value);
+			}
+
+			if (dto.ToDate.HasValue)
+			{
+				loadedRecords = loadedRecords.Where(x => x.CreatedDate <= dto.ToDate.Value);
+			}
+			var pagedRecords = await PaginatedList<Payment>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
+			var response = new List<PaymentViewDTO>();
+			foreach (var payment in pagedRecords)
+			{
+				var childResponse = new PaymentViewDTO(payment);
+				response.Add(childResponse);
+			}
+			return new PaginatedList<PaymentViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
+		}
+
+		#endregion
+
 		#region Member
 
 		public async Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsByUserId(PaymentGetListDTO dto, string userId)

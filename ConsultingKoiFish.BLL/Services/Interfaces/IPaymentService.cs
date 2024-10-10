@@ -14,5 +14,7 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		Task<BaseResponse> CreatePayment(PaymentCreateDTO dto);
 		Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsByUserId(PaymentGetListDTO dto, string userId);
 		Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsByUserIdWithDate(PaymentGetListDTO dto, string userId);
+		Task<PaginatedList<PaymentViewDTO>> GetAllPayments(PaymentGetListDTO dto);
+		Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsWithDate(PaymentGetListDTO dto);
 	}
 }
