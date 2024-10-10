@@ -1,6 +1,7 @@
 using ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs;
 using ConsultingKoiFish.BLL.DTOs.PackageImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
+using ConsultingKoiFish.BLL.Helpers.Fillters;
 using ConsultingKoiFish.DAL.Paging;
 
 namespace ConsultingKoiFish.BLL.Services.Interfaces;
@@ -14,4 +15,5 @@ public interface IAdvertisementPackageService
     Task<AdvertisementPackageViewDTO> GetPackageById(int id);
     Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackages(int pageIndex, int pageSize);
     Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackagesByName(string? name, int pageIndex, int pageSize);
+    Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackagesByPrice(PriceFilter? priceFilter, int pageIndex, int pageSize);
 }

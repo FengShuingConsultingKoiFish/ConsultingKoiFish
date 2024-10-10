@@ -5,6 +5,7 @@ using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.PackageImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
+using ConsultingKoiFish.BLL.Helpers.Fillters;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Enums;
@@ -248,6 +249,31 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		if(!string.IsNullOrEmpty(name))
 		{
 			loadedRecords = loadedRecords.Where(x => x.Name.Contains(name));
+		}
+		var pagedRecords = await PaginatedList<AdvertisementPackage>.CreateAsync(loadedRecords, pageIndex, pageSize);
+		var response = new List<AdvertisementPackageViewDTO>();
+		foreach (var package in pagedRecords)
+		{
+			var packageImageViewDtos = await ConvertToImageViews(package.PackageImages);
+			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
+			response.Add(childResponse);
+		}
+		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+	}
+
+	public async Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackagesByPrice(PriceFilter? priceFilter, int pageIndex, int pageSize)
+	{
+		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
+		var imageRepo = _unitOfWork.GetRepo<Image>();
+		var loadedRecords = repo.Get(new QueryBuilder<AdvertisementPackage>()
+			.WithPredicate(x => x.IsActive == true)
+			.WithTracking(false)
+			.WithInclude(r => r.PackageImages)
+			.Build());
+		if(priceFilter.HasValue)
+		{
+			var priceRange = PriceRangeHelper.GetPriceRange(priceFilter.Value);
+			loadedRecords = loadedRecords.Where(x => x.Price >= priceRange.min && x.Price <= priceRange.max);
 		}
 		var pagedRecords = await PaginatedList<AdvertisementPackage>.CreateAsync(loadedRecords, pageIndex, pageSize);
 		var response = new List<AdvertisementPackageViewDTO>();
