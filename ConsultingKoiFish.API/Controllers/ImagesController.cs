@@ -44,7 +44,7 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			try
 			{
-				var response = await _imageService.GetImageById(id);
+				var response = await _imageService.GetImageById(id, UserId);
 				if (response == null) return GetError("Ảnh này không tồn tại.");
 				return GetSuccess(response);
 			}

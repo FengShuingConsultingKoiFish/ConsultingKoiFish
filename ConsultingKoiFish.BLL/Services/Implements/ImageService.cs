@@ -97,11 +97,11 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
 		}
 
-		public async Task<ImageViewDTO> GetImageById(int id)
+		public async Task<ImageViewDTO> GetImageById(int id, string userId)
 		{
 			var repo = _unitOfWork.GetRepo<Image>();
 			var image = await repo.GetSingleAsync(new QueryBuilder<Image>()
-													.WithPredicate(x => x.Id == id && x.IsActive == true)
+													.WithPredicate(x => x.Id == id && x.IsActive == true && x.UserId.Equals(userId))
 													.WithTracking(false)
 													.WithInclude(x => x.User)
 													.Build());
