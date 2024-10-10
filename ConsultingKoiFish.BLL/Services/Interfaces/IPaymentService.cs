@@ -1,5 +1,6 @@
 ﻿using ConsultingKoiFish.BLL.DTOs.PaymentDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
+using ConsultingKoiFish.DAL.Paging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,7 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 	public interface IPaymentService
 	{
 		Task<BaseResponse> CreatePayment(PaymentCreateDTO dto);
+		Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsByUserId(PaymentGetListDTO dto, string userId);
+		Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsByUserIdWithDate(PaymentGetListDTO dto, string userId);
 	}
 }

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Drawing.Printing;
 using System.Net.Http;
+using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 
 namespace ConsultingKoiFish.API.Controllers
 {
@@ -43,6 +44,7 @@ namespace ConsultingKoiFish.API.Controllers
 
 
 		#region Member
+
 		[Authorize(Roles = "Member")]
 		[HttpPost]
 		[Route("purchase-package")]
@@ -71,6 +73,77 @@ namespace ConsultingKoiFish.API.Controllers
 			return GetSuccess(paymentUrl.Url);
 		}
 
+		/// <summary>
+		/// Get all payment follow userId
+		/// </summary>
+		/// <param name="userId"></param>
+		/// <returns></returns>
+
+		[Authorize(Roles = "Member")]
+		[HttpPost]
+		[Route("get-all-payments-by-userId")]
+		public async Task<IActionResult> GetAllPaymentsByUserId([FromBody] PaymentGetListDTO dto)
+		{
+			try
+			{
+				if (dto.PageIndex <= 0)
+				{
+					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương.");
+					return ModelInvalid();
+				}
+
+				if (dto.PageSize <= 0)
+				{
+					ModelState.AddModelError("PageSize", "PageSize phải là số nguyên dương.");
+					return ModelInvalid();
+				}
+
+				var data = await _paymentService.GetAllPaymentsByUserId(dto, UserId);
+				var response = new PagingDTO<PaymentViewDTO>(data);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		[Authorize(Roles = "Member")]
+		[HttpPost]
+		[Route("filter-all-payments-by-userId-with-date")]
+		public async Task<IActionResult> GetAllPaymentsByUserIdWithDate([FromBody] PaymentGetListDTO dto)
+		{
+			try
+			{
+				if (dto.PageIndex <= 0)
+				{
+					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương.");
+					return ModelInvalid();
+				}
+
+				if (dto.PageSize <= 0)
+				{
+					ModelState.AddModelError("PageSize", "PageSize phải là số nguyên dương.");
+					return ModelInvalid();
+				}
+
+				var data = await _paymentService.GetAllPaymentsByUserIdWithDate(dto, UserId);
+				var response = new PagingDTO<PaymentViewDTO>(data);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
 		#endregion
 
 
