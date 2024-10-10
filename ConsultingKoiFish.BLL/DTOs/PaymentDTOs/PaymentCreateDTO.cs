@@ -5,19 +5,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsultingKoiFish.DAL.Entities
+namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
 {
-	public partial class Payment
+	public class PaymentCreateDTO
 	{
 		public int Id { get; set; }
 		public string UserId { get; set; }
 		public int AdvertisementPackageId { get; set; }
 		public long TransactionId { get; set; }
-		[AllowNull]
 		public string? Content { get; set; }
 		public DateTime CreatedDate { get; set; }
-
-		public virtual ApplicationUser User { get; set; }
-		public virtual AdvertisementPackage AdvertisementPackage { get; set; }
 	}
 }

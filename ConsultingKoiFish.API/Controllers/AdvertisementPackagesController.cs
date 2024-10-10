@@ -3,6 +3,9 @@ using ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.PackageImageDTOs;
+using ConsultingKoiFish.BLL.DTOs.PaymentDTOs;
+using ConsultingKoiFish.BLL.DTOs.VnPayDTOs;
+using ConsultingKoiFish.BLL.Helpers.Config;
 using ConsultingKoiFish.BLL.Helpers.Fillters;
 using ConsultingKoiFish.BLL.Services.Implements;
 using ConsultingKoiFish.BLL.Services.Interfaces;
@@ -18,11 +21,20 @@ namespace ConsultingKoiFish.API.Controllers
     public class AdvertisementPackagesController : BaseAPIController
     {
         private readonly IAdvertisementPackageService _advertisementPackageService;
+		private readonly IUserDetailService _userDetailService;
+		private readonly IHttpClientFactory _httpClientFactory;
+		private readonly IConfiguration _configuration;
 
-        public AdvertisementPackagesController(IAdvertisementPackageService advertisementPackageService)
+		public AdvertisementPackagesController(IAdvertisementPackageService advertisementPackageService,
+												IUserDetailService userDetailService,
+												IHttpClientFactory httpClientFactory,
+												IConfiguration configuration)
         {
             _advertisementPackageService = advertisementPackageService;
-        }
+			this._userDetailService = userDetailService;
+			this._httpClientFactory = httpClientFactory;
+			this._configuration = configuration;
+		}
         
         [Authorize(Roles = "Admin")]
         [HttpPost]
@@ -224,5 +236,7 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 		#endregion
+
+		
 	}
 }

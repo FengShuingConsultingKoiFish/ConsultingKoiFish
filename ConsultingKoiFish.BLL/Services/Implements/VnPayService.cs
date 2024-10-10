@@ -21,7 +21,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 
 		public string CreatePaymentUrl(HttpContext context, VnPayRequestDTO vnPayRequest)
 		{
-			vnPayRequest.OrderId = DateTime.Now.Ticks;
+			var tick = DateTime.Now.Ticks;
 			var vnpay = new VnPayLibrary();
 
 			vnpay.AddRequestData("vnp_Version", _vnPayConfig.Version);
@@ -41,10 +41,10 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			vnpay.AddRequestData("vnp_IpAddr", Utils.GetIpAddress(context));
 			vnpay.AddRequestData("vnp_Locale", _vnPayConfig.Locale);
 
-			vnpay.AddRequestData("vnp_OrderInfo", "Thanh toán cho đơn hàng: " + vnPayRequest.OrderId);
+			vnpay.AddRequestData("vnp_OrderInfo", vnPayRequest.Description);
 			vnpay.AddRequestData("vnp_OrderType", "other"); //default value: other
 			vnpay.AddRequestData("vnp_ReturnUrl", _vnPayConfig.ReturnUrl);
-			vnpay.AddRequestData("vnp_TxnRef", vnPayRequest.OrderId.ToString());
+			vnpay.AddRequestData("vnp_TxnRef", tick.ToString()); //mã tham chiếu
 
 			var paymentUrl = vnpay.CreateRequestUrl(_vnPayConfig.PaymentUrl, _vnPayConfig.HashSecret);
 

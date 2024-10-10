@@ -127,6 +127,9 @@ namespace ConsultingKoiFish.API
 			// API Behavior
 			builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 
+			//Add HttpClient
+			builder.Services.AddHttpClient();
+
 			var app = builder.Build();
 
 			// Seed data when the application starts
