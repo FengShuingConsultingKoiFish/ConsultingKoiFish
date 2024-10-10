@@ -67,6 +67,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			}
 		}
 
+
 		#region Admin
 
 		public async Task<PaginatedList<PaymentViewDTO>> GetAllPayments(PaymentGetListDTO dto)
@@ -114,6 +115,19 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return new PaginatedList<PaymentViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 		}
 
+
+		public async Task<PaymentViewDTO> GetPaymentByIdForAdmin(int id)
+		{
+			var repo = _unitOfWork.GetRepo<Payment>();
+			var payment = await repo.GetSingleAsync(new QueryBuilder<Payment>()
+				.WithPredicate(x => x.Id == id)
+				.WithTracking(false)
+				.WithInclude(x => x.User, r => r.AdvertisementPackage)
+				.Build());
+			if (payment == null) return null;
+			var response = new PaymentViewDTO(payment);
+			return response;
+		}
 		#endregion
 
 		#region Member
@@ -163,6 +177,19 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				response.Add(childResponse);
 			}
 			return new PaginatedList<PaymentViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
+		}
+
+		public async Task<PaymentViewDTO> GetPaymentByIdForMember(int id, string userId)
+		{
+			var repo = _unitOfWork.GetRepo<Payment>();
+			var payment = await repo.GetSingleAsync(new QueryBuilder<Payment>()
+				.WithPredicate(x => x.Id == id && x.UserId.Equals(userId))
+				.WithTracking(false)
+				.WithInclude(x => x.User, r => r.AdvertisementPackage)
+				.Build());
+			if (payment == null) return null;
+			var response = new PaymentViewDTO(payment);
+			return response;
 		}
 
 		#endregion

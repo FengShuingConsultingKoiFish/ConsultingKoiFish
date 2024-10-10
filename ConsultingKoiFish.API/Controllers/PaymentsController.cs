@@ -120,6 +120,31 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Get payment detail for admin
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Admin")]
+		[HttpGet]
+		[Route("get-payment-by-id-for-admin/{id}")]
+		public async Task<IActionResult> GetPaymentByIdForAdmin([FromRoute] int id)
+		{
+			try
+			{
+				var response = await _paymentService.GetPaymentByIdForAdmin(id);
+				if (response == null) return GetError("Payment này không tồn tại.");
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
 		#endregion
 
 		#region Member
@@ -228,6 +253,33 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
 			}
 		}
+
+
+		/// <summary>
+		/// Get payment detail for member
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Member")]
+		[HttpGet]
+		[Route("get-payment-by-id-for-member/{id}")]
+		public async Task<IActionResult> GetPaymentByIdForMember([FromRoute] int id)
+		{
+			try
+			{
+				var response = await _paymentService.GetPaymentByIdForMember(id, UserId);
+				if (response == null) return GetError("Payment này không tồn tại.");
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
 		#endregion
 
 
