@@ -236,6 +236,30 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
 	}
 
+	public async Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackagesByName(string? name, int pageIndex, int pageSize)
+	{
+		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
+		var imageRepo = _unitOfWork.GetRepo<Image>();
+		var loadedRecords = repo.Get(new QueryBuilder<AdvertisementPackage>()
+			.WithPredicate(x => x.IsActive == true)
+			.WithTracking(false)
+			.WithInclude(r => r.PackageImages)
+			.Build());
+		if(!string.IsNullOrEmpty(name))
+		{
+			loadedRecords = loadedRecords.Where(x => x.Name.Contains(name));
+		}
+		var pagedRecords = await PaginatedList<AdvertisementPackage>.CreateAsync(loadedRecords, pageIndex, pageSize);
+		var response = new List<AdvertisementPackageViewDTO>();
+		foreach (var package in pagedRecords)
+		{
+			var packageImageViewDtos = await ConvertToImageViews(package.PackageImages);
+			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
+			response.Add(childResponse);
+		}
+		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+	}
+
 	public async Task<AdvertisementPackageViewDTO> GetPackageById(int id)
 	{
 		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();

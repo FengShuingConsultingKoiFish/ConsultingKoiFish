@@ -13,4 +13,5 @@ public interface IAdvertisementPackageService
     Task<BaseResponse> DeletePackage(int id, string userName);
     Task<AdvertisementPackageViewDTO> GetPackageById(int id);
     Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackages(int pageIndex, int pageSize);
+    Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackagesByName(string? name, int pageIndex, int pageSize);
 }
