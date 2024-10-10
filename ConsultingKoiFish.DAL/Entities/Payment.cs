@@ -15,7 +15,8 @@ namespace ConsultingKoiFish.DAL.Entities
 		public long TransactionId { get; set; }
 		[AllowNull]
 		public string? Content { get; set; }
-		public DateTime CreatedDate { get; set; }
+        public double Amount { get; set; }
+        public DateTime CreatedDate { get; set; }
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual AdvertisementPackage AdvertisementPackage { get; set; }

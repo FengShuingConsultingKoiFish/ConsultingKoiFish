@@ -15,7 +15,8 @@ namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
         public string PackageName { get; set; } = null!;
         public long TransactionId { get; set; }
 		public string? Content { get; set; }
-		public DateTime CreatedDate { get; set; }
+        public double Amount { get; set; }
+        public DateTime CreatedDate { get; set; }
 
         public PaymentViewDTO(Payment payment)
         {
@@ -23,6 +24,7 @@ namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
 			PackageName = payment.AdvertisementPackage.Name;
 			TransactionId = payment.TransactionId;
 			Content = payment.Content;
+            Amount = payment.Amount;
 			CreatedDate = payment.CreatedDate;
         }
     }

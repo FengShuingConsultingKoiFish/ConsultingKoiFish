@@ -41,7 +41,10 @@ namespace ConsultingKoiFish.API.Controllers
 			this._configuration = configuration;
 		}
 
+		#region Admin
 
+
+		#endregion
 
 		#region Member
 
@@ -112,6 +115,11 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
+		/// <summary>
+		/// Get all payments follow userId and filter with date
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
 		[Authorize(Roles = "Member")]
 		[HttpPost]
 		[Route("filter-all-payments-by-userId-with-date")]
@@ -179,6 +187,7 @@ namespace ConsultingKoiFish.API.Controllers
 					AdvertisementPackageId = Convert.ToInt32(packageId),
 					TransactionId = vnPayResponse.TransactionId,
 					Content = vnPayResponse.OrderDescription,
+					Amount = vnPayResponse.Amount,
 					CreatedDate = DateTime.Now,
 				};
 

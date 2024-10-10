@@ -14,6 +14,7 @@ namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
 		public int AdvertisementPackageId { get; set; }
 		public long TransactionId { get; set; }
 		public string? Content { get; set; }
-		public DateTime CreatedDate { get; set; }
+        public double Amount { get; set; }
+        public DateTime CreatedDate { get; set; }
 	}
 }
