@@ -16,12 +16,14 @@ public class BlogService : IBlogService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+	private readonly IImageService _imageService;
 
-    public BlogService(IUnitOfWork unitOfWork, IMapper mapper)
+	public BlogService(IUnitOfWork unitOfWork, IMapper mapper, IImageService imageService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-    }
+		this._imageService = imageService;
+	}
     public async Task<BaseResponse> CreateUpdateBlog(BlogRequestDTO dto, string userId)
     {
         try
@@ -119,7 +121,7 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
             var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
@@ -140,7 +142,7 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
             var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
@@ -165,7 +167,7 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
             var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
@@ -190,7 +192,7 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
             var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
@@ -210,7 +212,7 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
             var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
@@ -234,7 +236,7 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
             var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
@@ -258,7 +260,7 @@ public class BlogService : IBlogService
         var response = new List<BlogViewDTO>();
         foreach (var blog in pagedRecords)
         {
-            var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+            var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
             var childResponse = new BlogViewDTO(blog, blogImageViewDtos);
             response.Add(childResponse);
         }
@@ -376,7 +378,7 @@ public class BlogService : IBlogService
             .WithInclude(x => x.User, r => r.BlogImages)
             .Build());
         if (blog == null) return null;
-        var blogImageViewDtos = await ConvertToImageViews(blog.BlogImages);
+        var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
         var response = new BlogViewDTO(blog, blogImageViewDtos);
         return response;
     }
@@ -408,29 +410,16 @@ public class BlogService : IBlogService
         
     }
 
-    
-    
-    #region Private
+	#region Private
 
-    private async Task<List<ImageViewDTO>> ConvertToImageViews(ICollection<BlogImage> blogImages)
-    {
-        var imageRepo = _unitOfWork.GetRepo<Image>();
-        var repsonseImages = new List<ImageViewDTO>();
-        foreach (var blogImage in blogImages)
-        {
-            var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
-                .WithPredicate(x => x.Id == blogImage.ImageId)
-                .WithInclude(x => x.User)
-                .WithTracking(false)
-                .Build());
-            var childResponseImage = _mapper.Map<ImageViewDTO>(image);
-            childResponseImage.UserName = image.User.UserName;
-            childResponseImage.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
-            repsonseImages.Add(childResponseImage);
-        }
-
-        return repsonseImages;
-    }
-
-    #endregion
+    /// <summary>
+    /// This is used to convert blog images to imageViewDTOs
+    /// </summary>
+    /// <param name="blogImages"></param>
+    /// <returns></returns>
+	private Task<List<ImageViewDTO>> ConvertBlogImagesToImageViews(ICollection<BlogImage> blogImages)
+	{
+		return  _imageService.ConvertSpeciedImageToImageViews(blogImages, blogImage => blogImage.ImageId);
+	}
+	#endregion
 }

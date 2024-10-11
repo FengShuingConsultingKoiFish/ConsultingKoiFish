@@ -180,13 +180,13 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(c => c.Blog)
 					.WithMany(b => b.Comments)
 					.HasForeignKey(c => c.BlogId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with Advertisement
 				entity.HasOne(c => c.Advertisement)
 					.WithMany(ad => ad.Comments)
 					.HasForeignKey(c => c.AdvertisementId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
 			modelBuilder.Entity<AdImage>(entity =>

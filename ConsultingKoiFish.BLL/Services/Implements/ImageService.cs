@@ -106,9 +106,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 													.WithInclude(x => x.User)
 													.Build());
 			if (image == null) return null;
-			var response = _mapper.Map<ImageViewDTO>(image);
-			response.UserName = image.User.UserName;
-			response.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
+			var response = new ImageViewDTO(image);
 			return response;
 		}
 
@@ -126,14 +124,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			}
 
 			var pagedRecords = await PaginatedList<Image>.CreateAsync(loadedRecords, pageIndex, pageSize);
-			var response = new List<ImageViewDTO>();
-			foreach (var image in pagedRecords)
-			{
-				var childResponse = _mapper.Map<ImageViewDTO>(image);
-				childResponse.UserName = image.User.UserName;
-				childResponse.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
-				response.Add(childResponse);
-			}
+			var response = ConvertToImageViews(pagedRecords);
 			return new PaginatedList<ImageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
 		}
 
@@ -146,16 +137,60 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 												.WithInclude(x => x.User)
 												.Build());
 			var pagedRecords = await PaginatedList<Image>.CreateAsync(loadedRecords, pageIndex, pageSize);
-			var response = new List<ImageViewDTO>();
-			foreach (var image in pagedRecords)
-			{
-				var childResponse = _mapper.Map<ImageViewDTO>(image);
-				childResponse.UserName = image.User.UserName;
-				childResponse.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
-				response.Add(childResponse);
-			}
+			var response = ConvertToImageViews(pagedRecords);
 			return new PaginatedList<ImageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
 		}
+
+		#region Convert
+		/// <summary>
+		/// This is used to convert a collection of any image type (BlogImage, PackageImage, etc.) 
+		/// to a collection of ImageViewDTOs.
+		/// </summary>
+		/// <typeparam name="TImage">The type of image collection (e.g., BlogImage, PackageImage)</typeparam>
+		/// <param name="images">The collection of images</param>
+		/// <param name="getImageId">A function to extract the ImageId from each image object</param>
+		/// <returns>A list of ImageViewDTOs</returns>
+		public async Task<List<ImageViewDTO>> ConvertSpeciedImageToImageViews<TImage>(ICollection<TImage> images, Func<TImage, int> getImageId)
+		{
+			var imageRepo = _unitOfWork.GetRepo<Image>();
+			var responseImages = new List<ImageViewDTO>();
+
+			foreach (var imageItem in images)
+			{
+				var imageId = getImageId(imageItem);
+				var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
+					.WithPredicate(x => x.Id == imageId)
+					.WithInclude(x => x.User)
+					.WithTracking(false)
+					.Build());
+
+				var childResponseImage = new ImageViewDTO(image);
+				responseImages.Add(childResponseImage);
+			}
+
+			return responseImages;
+		}
+
+		/// <summary>
+		/// This is used to convert a collection of Image to a collection of imageViewDTOs
+		/// </summary>
+		/// <param name="images"></param>
+		/// <returns></returns>
+		public List<ImageViewDTO> ConvertToImageViews(ICollection<Image> images)
+		{
+			var imageRepo = _unitOfWork.GetRepo<Image>();
+			var responseImages = new List<ImageViewDTO>();
+
+			foreach (var imageItem in images)
+			{
+				var childResponseImage = new ImageViewDTO(imageItem);
+				responseImages.Add(childResponseImage);
+			}
+
+			return responseImages;
+		}
+
+		#endregion
 	}
 }
 

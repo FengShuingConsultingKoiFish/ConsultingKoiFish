@@ -18,7 +18,7 @@ namespace ConsultingKoiFish.API.Controllers
 			this._imageService = imageService;
 		}
 
-		[Authorize()]
+		[Authorize]
 		[HttpPost]
 		[Route("create-update-image")]
 		public async Task<IActionResult> CreateUpdateImage(ImageRequestDTO dto)
@@ -57,7 +57,7 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
-		[Authorize()]
+		[Authorize]
 		[HttpGet]
 		[Route("get-images-by-userid/{pageIndex}/{pageSize}")]
 		public async Task<IActionResult> GetListImageByUserId([FromRoute] int pageIndex, [FromRoute] int pageSize)
@@ -88,7 +88,7 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
-		[Authorize()]
+		[Authorize]
 		[HttpGet]
 		[Route("get-images-by-alt-text/{pageIndex}/{pageSize}")]
 		public async Task<IActionResult> GetListImageByUserId(string? name, [FromRoute] int pageIndex, [FromRoute] int pageSize)
@@ -119,7 +119,7 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
-		[Authorize()]
+		[Authorize]
 		[HttpPost]
 		[Route("delete-image/{id}")]
 		public async Task<IActionResult> DeleteImage(int id)

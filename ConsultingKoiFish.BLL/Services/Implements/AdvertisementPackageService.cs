@@ -19,12 +19,14 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+	private readonly IImageService _imageService;
 
-    public AdvertisementPackageService(IUnitOfWork unitOfWork, IMapper mapper)
+	public AdvertisementPackageService(IUnitOfWork unitOfWork, IMapper mapper, IImageService imageService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-    }
+		this._imageService = imageService;
+	}
 
 	public async Task<BaseResponse> AddImagesToPackage(PackageImageRequestDTO dto)
 	{
@@ -230,7 +232,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		var response = new List<AdvertisementPackageViewDTO>();
 		foreach (var package in pagedRecords)
 		{
-			var packageImageViewDtos = await ConvertToImageViews(package.PackageImages);
+			var packageImageViewDtos = await ConvertPackageImagesToImageViews(package.PackageImages);
 			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
 			response.Add(childResponse);
 		}
@@ -254,7 +256,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		var response = new List<AdvertisementPackageViewDTO>();
 		foreach (var package in pagedRecords)
 		{
-			var packageImageViewDtos = await ConvertToImageViews(package.PackageImages);
+			var packageImageViewDtos = await ConvertPackageImagesToImageViews(package.PackageImages);
 			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
 			response.Add(childResponse);
 		}
@@ -279,7 +281,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		var response = new List<AdvertisementPackageViewDTO>();
 		foreach (var package in pagedRecords)
 		{
-			var packageImageViewDtos = await ConvertToImageViews(package.PackageImages);
+			var packageImageViewDtos = await ConvertPackageImagesToImageViews(package.PackageImages);
 			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
 			response.Add(childResponse);
 		}
@@ -295,32 +297,20 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 			.WithInclude(r => r.PackageImages)
 			.Build());
 		if (package == null) return null;
-		var packageImageViewDtos = await ConvertToImageViews(package.PackageImages);
+		var packageImageViewDtos = await ConvertPackageImagesToImageViews(package.PackageImages);
 		var response = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
 		return response;
 	}
 
 	#region Private
-
-	private async Task<List<ImageViewDTO>> ConvertToImageViews(ICollection<PackageImage> packageImages)
+	/// <summary>
+	/// This is used to convert a collection image of package to a collection imageViewDTOs
+	/// </summary>
+	/// <param name="packageImages"></param>
+	/// <returns></returns>
+	private Task<List<ImageViewDTO>> ConvertPackageImagesToImageViews(ICollection<PackageImage> packageImages)
 	{
-		var imageRepo = _unitOfWork.GetRepo<Image>();
-		var repsonseImages = new List<ImageViewDTO>();
-		foreach (var packageImage in packageImages)
-		{
-			var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
-				.WithPredicate(x => x.Id == packageImage.ImageId)
-				.WithInclude(x => x.User)
-				.WithTracking(false)
-				.Build());
-			var childResponseImage = _mapper.Map<ImageViewDTO>(image);
-			childResponseImage.UserName = image.User.UserName;
-			childResponseImage.CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
-			repsonseImages.Add(childResponseImage);
-		}
-
-		return repsonseImages;
+		return _imageService.ConvertSpeciedImageToImageViews(packageImages, packageImage => packageImage.ImageId);
 	}
-
 	#endregion
 }

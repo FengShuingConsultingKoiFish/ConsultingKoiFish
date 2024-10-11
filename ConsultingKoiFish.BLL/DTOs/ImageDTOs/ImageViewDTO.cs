@@ -1,4 +1,8 @@
-﻿using System;
+﻿using AutoMapper;
+using ConsultingKoiFish.DAL.Entities;
+using ConsultingKoiFish.DAL.Queries;
+using ConsultingKoiFish.DAL.UnitOfWork;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
@@ -17,5 +21,15 @@ namespace ConsultingKoiFish.BLL.DTOs.ImageDTOs
 		public string? UserName { get; set; }
 		[DataType(DataType.Date)]
 		public string? CreatedDate { get; set; }
-	}
+
+        public ImageViewDTO(Image image)
+        {
+            Id = image.Id;
+			FilePath = image.FilePath;
+			AltText = image.AltText;
+			UserId = image.UserId;
+			UserName = image.User.UserName;
+			CreatedDate = image.CreatedDate.ToString("dd/MM/yyyyy");
+        }
+    }
 }
