@@ -1,5 +1,6 @@
 ﻿using ConsultingKoiFish.BLL.DTOs.AdImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs;
+using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.DAL.Enums;
@@ -20,5 +21,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		Task<PaginatedList<AdvertisementViewDTO>> GetAllAdvertisements(AdvertisementGetListDTO dto);
 		Task<AdvertisementViewDTO> GetAdvertisementById(int id, OrderComment? orderComment, OrderImage? orderImage);
 		Task<PaginatedList<AdvertisementViewDTO>> GetAllAdvertisementsForUser(string userId, AdvertisementGetListDTO dto);
+		Task<PaginatedList<AdvertisementViewDTO>> GetAllBlogsForAdmin(AdvertisementGetListDTO dto);
 	}
 }

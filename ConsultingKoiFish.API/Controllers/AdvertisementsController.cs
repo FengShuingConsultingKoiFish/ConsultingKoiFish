@@ -255,5 +255,66 @@ namespace ConsultingKoiFish.API.Controllers
 		}
 
 		#endregion
+
+		#region Admin
+
+		[HttpPost]
+		[Route("get-all-advertisements-for-admin")]
+		public async Task<IActionResult> GetAllAdvertisementsForAdmin(AdvertisementGetListDTO dto)
+		{
+			try
+			{
+				if (!ModelState.IsValid) return ModelInvalid();
+				if (dto.PageIndex <= 0)
+				{
+					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương");
+					return ModelInvalid();
+				}
+
+				if (dto.PageSize <= 0)
+				{
+					ModelState.AddModelError("PageSize", "PageIndex phải là số nguyên dương");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidAdvertisementStatus())
+				{
+					ModelState.AddModelError("AdvertisementStatus", "Status không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderAdvertisement())
+				{
+					ModelState.AddModelError("OrderAdvertisement", "OrderBlog không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderImage())
+				{
+					ModelState.AddModelError("OrderImage", "OrderImage không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderComment())
+				{
+					ModelState.AddModelError("OrderComment", "OrderComment không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				var data = await _advertisementService.GetAllBlogsForAdmin(dto);
+				var response = new PagingDTO<AdvertisementViewDTO>(data);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		#endregion
 	}
 }

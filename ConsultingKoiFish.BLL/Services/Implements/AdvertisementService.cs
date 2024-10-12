@@ -274,13 +274,45 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return response;
 		}
 
-
 		public async Task<PaginatedList<AdvertisementViewDTO>> GetAllAdvertisementsForUser(string userId, AdvertisementGetListDTO dto)
 		{
 			var repo = _unitOfWork.GetRepo<Advertisement>();
 			var imageRepo = _unitOfWork.GetRepo<Image>();
 			var loadedRecords = repo.Get(new QueryBuilder<Advertisement>()
 				.WithPredicate(x => x.IsActive == true && x.UserId.Equals(userId))
+				.WithTracking(false)
+				.WithInclude(x => x.User)
+				.Build());
+
+			if (dto.Title != null)
+			{
+				loadedRecords = loadedRecords.Where(x => x.Title.Contains(dto.Title));
+			}
+
+			if (dto.AdvertisementStatus.HasValue)
+			{
+				loadedRecords = loadedRecords.Where(x => x.Status == (int)dto.AdvertisementStatus);
+			}
+
+			if (dto.OrderAdvertisement.HasValue)
+			{
+				switch ((int)dto.OrderAdvertisement)
+				{
+					case 1: loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate); break;
+					case 2: loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate); break;
+				}
+			}
+			var pagedRecords = await PaginatedList<Advertisement>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
+			var response = await ConvertAdsToAdViews(pagedRecords, dto.OrderComment, dto.OrderImage);
+			return new PaginatedList<AdvertisementViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
+		}
+
+		public async Task<PaginatedList<AdvertisementViewDTO>> GetAllBlogsForAdmin(AdvertisementGetListDTO dto)
+		{
+			var repo = _unitOfWork.GetRepo<Advertisement>();
+			var imageRepo = _unitOfWork.GetRepo<Image>();
+			var loadedRecords = repo.Get(new QueryBuilder<Advertisement>()
+				.WithPredicate(x => x.IsActive == true)
 				.WithTracking(false)
 				.WithInclude(x => x.User)
 				.Build());
