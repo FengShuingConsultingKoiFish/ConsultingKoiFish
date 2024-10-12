@@ -5,7 +5,7 @@ namespace ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 
 public class BlogRequestDTO
 {
-    [Required(ErrorMessage = "Id không được để trống.")]
+    [Required(ErrorMessage = "CommentId không được để trống.")]
     public int Id { get; set; }
     [Required(ErrorMessage = "Tựa đề không được để trống.")]
     public string Title { get; set; } = null!;

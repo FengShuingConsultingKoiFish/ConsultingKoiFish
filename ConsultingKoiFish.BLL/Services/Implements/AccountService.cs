@@ -47,7 +47,7 @@ public class AccountService : IAccountService
 			{
 				new Claim("Email", user.Email),
 				new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-				new Claim("Id", user.Id),
+				new Claim("CommentId", user.Id),
 				new Claim("Name", user.UserName)
 			};
 

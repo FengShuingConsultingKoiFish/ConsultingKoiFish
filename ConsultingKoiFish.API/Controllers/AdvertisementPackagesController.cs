@@ -46,7 +46,7 @@ namespace ConsultingKoiFish.API.Controllers
                 if (!ModelState.IsValid) return ModelInvalid();
                 if(dto.ImageIds.Contains(0))
                 {
-                    ModelState.AddModelError("ImageIds", "Id ảnh phải là số nguyên dương.");
+                    ModelState.AddModelError("ImageIds", "CommentId ảnh phải là số nguyên dương.");
                     return ModelInvalid();
                 }
                 var response = await _advertisementPackageService.CreateUpdateAdvertisementPackage(dto, UserName);

@@ -22,29 +22,29 @@ namespace ConsultingKoiFish.API.Controllers
 		#region Common
 
 		/// <summary>
-		/// This is used to create or update a comment
+		/// This is used to create or update a comment for blog
 		/// </summary>
 		/// <param name="dto"></param>
 		/// <returns></returns>
-		//[Authorize]
-		//[HttpPost]
-		//[Route("create-update-comment")]
-		//public async Task<IActionResult> CreateUpdateComment(CommentRequestDTO dto)
-		//{
-		//	try
-		//	{
-		//		var response = await _commentService.CreateUpdateComment(dto, UserId);
-		//		if (!response.IsSuccess) return SaveError(response);
-		//		return SaveSuccess(response);
-		//	}
-		//	catch (Exception ex)
-		//	{
-		//		Console.ForegroundColor = ConsoleColor.Red;
-		//		Console.WriteLine(ex.Message);
-		//		Console.ResetColor();
-		//		return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
-		//	}
-		//}
+		[Authorize]
+		[HttpPost]
+		[Route("create-update-comment-for-blog")]
+		public async Task<IActionResult> CreateUpdateCommentForBlog(CommentForBlogRequestDTO dto)
+		{
+			try
+			{
+				var response = await _commentService.CreateUpdateCommentForBlog(dto, UserId);
+				if (!response.IsSuccess) return SaveError(response);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
 
 		#endregion
 	}

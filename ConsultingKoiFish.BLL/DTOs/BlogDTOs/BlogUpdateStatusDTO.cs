@@ -5,7 +5,7 @@ namespace ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 
 public class BlogUpdateStatusDTO
 {
-    [Required(ErrorMessage = "Id không được để trống.")]
+    [Required(ErrorMessage = "CommentId không được để trống.")]
     public int Id { get; set; }
     [Required(ErrorMessage = "Status không được để trống.")]
     public BlogStatus? Status { get; set; }

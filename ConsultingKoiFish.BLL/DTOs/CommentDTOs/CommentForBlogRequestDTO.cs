@@ -9,12 +9,11 @@ using System.Threading.Tasks;
 
 namespace ConsultingKoiFish.BLL.DTOs.CommentDTOs
 {
-	public class CommentRequestDTO
+	public class CommentForBlogRequestDTO
 	{
-		public int Id { get; set; }
-		[Required(ErrorMessage = "Hãy lựa chọn bình luận cho loại nào. Blog = 1/Ad = 2")]
-		public int? BlogId { get; set; }
-		public int? AdvertisementId { get; set; }
+		public int CommentId { get; set; }
+		[Required(ErrorMessage = "Blog không được để trống.")]
+		public int BlogId { get; set; }
 		public string Content { get; set; } = null!;
 	}
 }

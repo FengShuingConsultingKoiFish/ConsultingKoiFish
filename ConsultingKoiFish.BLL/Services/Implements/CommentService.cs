@@ -26,57 +26,60 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			this._mapper = mapper;
 		}
 
-		//public async Task<BaseResponse> CreateUpdateComment(CommentRequestDTO dto, string userId)
-		//{
-		//	try
-		//	{
-		//		await _unitOfWork.BeginTransactionAsync();
-		//		var repo = _unitOfWork.GetRepo<Comment>();
+		public async Task<BaseResponse> CreateUpdateCommentForBlog(CommentForBlogRequestDTO dto, string userId)
+		{
+			try
+			{
+				await _unitOfWork.BeginTransactionAsync();
+				var repo = _unitOfWork.GetRepo<Comment>();
+				var blogCommentRepo = _unitOfWork.GetRepo<BlogComment>();
+				var any = await repo.AnyAsync(new QueryBuilder<Comment>()
+										.WithPredicate(x => x.Id == dto.CommentId)
+										.Build());
+				if (any)
+				{
+					var blogComment = await blogCommentRepo.GetSingleAsync(new QueryBuilder<BlogComment>()
+															.WithPredicate(x => x.CommentId == dto.CommentId && x.BlogId == dto.BlogId)
+															.WithInclude(x => x.Comment)
+															.Build());
+					if(blogComment == null) return new BaseResponse { IsSuccess = false, Message = "Comment không thuộc về blog."};
+					if (!blogComment.Comment.UserId.Equals(userId))
+						return new BaseResponse { IsSuccess = false, Message = "Comment không thuộc sở hữu người dùng." };
+					var comment = await repo.GetSingleAsync(new QueryBuilder<Comment>()
+															.WithPredicate(x => x.Id == dto.CommentId)
+															.Build());
+					var updatedCommentDTO = new CommentUpdateDTO { Content = dto.Content };
+					var updatedComment = _mapper.Map(updatedCommentDTO, comment);
+					await repo.UpdateAsync(updatedComment);
+				}
+				else
+				{
+					var createdCommentDto = new CommentCreateForBlogDTO(dto);
+					var createdComment = _mapper.Map<Comment>(createdCommentDto);
+					createdComment.UserId = userId;
+					await repo.CreateAsync(createdComment);
+					await _unitOfWork.SaveChangesAsync();
 
-		//		var any = await repo.AnyAsync(new QueryBuilder<Comment>()
-		//								.WithPredicate(x => x.Id == dto.Id)
-		//								.Build());
-		//		if (any)
-		//		{
-		//			Comment comment = new Comment();
-		//			var blogComment = await repo.GetSingleAsync(new QueryBuilder<Comment>()
-		//			.WithPredicate(x => x.Id == dto.Id && x.BlogId == dto.BlogId)
-		//			.Build());
-		//			if (blogComment == null)
-		//			{
-		//				comment = await repo.GetSingleAsync(new QueryBuilder<Comment>()
-		//			.WithPredicate(x => x.Id == dto.Id && x.AdvertisementId == dto.AdvertisementId)
-		//			.Build());
-		//			}
-		//			else
-		//			{
-		//				comment = blogComment;
-		//			}
-		//			if (!comment.UserId.Equals(userId)) return new BaseResponse { IsSuccess = false, Message = "Bình luận không phải của người dùng." };
-		//			var updatedCommentDto = new CommentUpdateDTO { Content = comment.Content };
-		//			var updatedComment = _mapper.Map(updatedCommentDto, comment);
-		//			await repo.UpdateAsync(updatedComment);
-		//		}
-		//		else
-		//		{
-		//			var createdCommentDto = new CommentCreateDTO(dto);
-		//			var createdComment = _mapper.Map<Comment>(createdCommentDto);
-		//			createdComment.UserId = userId;
-		//			await repo.CreateAsync(createdImage);
-		//		}
-		//		var saver = await _unitOfWork.SaveAsync();
-		//		await _unitOfWork.CommitTransactionAsync();
-		//		if (!saver)
-		//		{
-		//			return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu không thành công." };
-		//		}
-		//		return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
-		//	}
-		//	catch (Exception)
-		//	{
-		//		await _unitOfWork.RollBackAsync();
-		//		throw;
-		//	}
-		//}
+					var createdBlogComment = new BlogComment
+					{
+						BlogId = dto.BlogId,
+						CommentId = createdComment.Id,
+					};
+					await blogCommentRepo.CreateAsync(createdBlogComment);
+				}
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver)
+				{
+					return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu không thành công." };
+				}
+				return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+			}
+			catch (Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
 	}
 }

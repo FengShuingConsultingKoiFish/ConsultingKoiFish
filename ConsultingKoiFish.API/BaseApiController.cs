@@ -142,7 +142,7 @@ namespace ConsultingKoiFish.API
 		{
 			get
 			{
-				var id = User.FindFirst("Id")?.Value;
+				var id = User.FindFirst("CommentId")?.Value;
 				return id;
 			}
 		}
