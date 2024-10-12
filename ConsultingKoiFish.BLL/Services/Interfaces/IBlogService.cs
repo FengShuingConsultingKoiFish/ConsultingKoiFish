@@ -15,6 +15,6 @@ public interface IBlogService
     Task<PaginatedList<BlogViewDTO>> GetAllBlogs(BlogGetListDTO dto);
     Task<PaginatedList<BlogViewDTO>> GetAllBlogsByUserId(string userId, BlogGetListDTO dto);
     Task<PaginatedList<BlogViewDTO>> GetAllBlogsForAdmin(BlogGetListDTO dto);
-    Task<BlogViewDTO> GetBlogById(int id, OrderComment? orderComment);
+    Task<BlogViewDTO> GetBlogById(int id, OrderComment? orderComment, OrderImage? orderImage);
     Task<BaseResponse> DeleteBlog(int id, string userId);
 }

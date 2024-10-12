@@ -135,7 +135,7 @@ public class BlogService : IBlogService
 			}
 		}
 		var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
-		var response = await ConvertBlogsToBlogViews(pagedRecords, dto.OrderComment);
+		var response = await ConvertBlogsToBlogViews(pagedRecords, dto.OrderComment, dto.OrderImage);
 		return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 	}
 
@@ -169,7 +169,7 @@ public class BlogService : IBlogService
 			}
 		}
 		var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
-		var response = await ConvertBlogsToBlogViews(pagedRecords, dto.OrderComment);
+		var response = await ConvertBlogsToBlogViews(pagedRecords, dto.OrderComment, dto.OrderImage);
 		return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 	}
 
@@ -202,7 +202,7 @@ public class BlogService : IBlogService
 			}
 		}
 		var pagedRecords = await PaginatedList<Blog>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
-		var response = await ConvertBlogsToBlogViews(pagedRecords, dto.OrderComment);
+		var response = await ConvertBlogsToBlogViews(pagedRecords, dto.OrderComment, dto.OrderImage);
 		return new PaginatedList<BlogViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 	}
 
@@ -308,7 +308,7 @@ public class BlogService : IBlogService
 		}
 	}
 
-	public async Task<BlogViewDTO> GetBlogById(int id, OrderComment? orderComment)
+	public async Task<BlogViewDTO> GetBlogById(int id, OrderComment? orderComment, OrderImage? orderImage)
 	{
 		var repo = _unitOfWork.GetRepo<Blog>();
 		var blog = await repo.GetSingleAsync(new QueryBuilder<Blog>()
@@ -317,7 +317,7 @@ public class BlogService : IBlogService
 			.WithInclude(x => x.User, r => r.BlogImages, z => z.BlogComments)
 			.Build());
 		if (blog == null) return null;
-		var response = await ConvertBlogToBlogView(blog, orderComment);
+		var response = await ConvertBlogToBlogView(blog, orderComment, orderImage);
 		return response;
 	}
 
@@ -348,7 +348,32 @@ public class BlogService : IBlogService
 
 	}
 
-	#region Private
+	#region PRIVATE
+
+	/// <summary>
+	/// This is used to get blog images for each blog
+	/// </summary>
+	/// <param name="blog"></param>
+	/// <param name="orderImage"></param>
+	/// <returns></returns>
+	private async Task<List<BlogImage>> GetBlogImagesForEachBlog(Blog blog, OrderImage? orderImage)
+	{
+		var blogImageRepo = _unitOfWork.GetRepo<BlogImage>();
+		var blogImages = blogImageRepo.Get(new QueryBuilder<BlogImage>()
+												.WithPredicate(x => x.BlogId == blog.Id)
+												.WithTracking(false)
+												.Build());
+		if (orderImage.HasValue)
+		{
+			switch ((int)orderImage)
+			{
+				case 1: blogImages = blogImages.OrderByDescending(x => x.Id); break;
+				case 2: blogImages = blogImages.OrderBy(x => x.Id); break;
+			}
+		}
+		return await blogImages.ToListAsync();
+	}
+
 
 	/// <summary>
 	/// This is used to convert blog images to imageViewDTOs
@@ -400,12 +425,12 @@ public class BlogService : IBlogService
 	/// </summary>
 	/// <param name="blogs"></param>
 	/// <returns></returns>
-	private async Task<List<BlogViewDTO>> ConvertBlogsToBlogViews(List<Blog> blogs, OrderComment? orderComment)
+	private async Task<List<BlogViewDTO>> ConvertBlogsToBlogViews(List<Blog> blogs, OrderComment? orderComment, OrderImage? orderImage)
 	{
 		var response = new List<BlogViewDTO>();
 		foreach (var blog in blogs)
 		{
-			var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
+			var blogImageViewDtos = await ConvertBlogImagesToImageViews(await GetBlogImagesForEachBlog(blog, orderImage));
 			var blogCommentViewDtos = await ConvertBlogCommentsToCommentViews(await GetBlogCommentsForEachBlog(blog, orderComment));
 			var childResponse = new BlogViewDTO(blog, blogImageViewDtos, blogCommentViewDtos);
 			response.Add(childResponse);
@@ -418,9 +443,9 @@ public class BlogService : IBlogService
 	/// </summary>
 	/// <param name="blog"></param>
 	/// <returns></returns>
-	private async Task<BlogViewDTO> ConvertBlogToBlogView(Blog blog, OrderComment? orderComment)
+	private async Task<BlogViewDTO> ConvertBlogToBlogView(Blog blog, OrderComment? orderComment, OrderImage? orderImage)
 	{
-		var blogImageViewDtos = await ConvertBlogImagesToImageViews(blog.BlogImages);
+		var blogImageViewDtos = await ConvertBlogImagesToImageViews(await GetBlogImagesForEachBlog(blog, orderImage));
 		var blogCommentViewDtos = await ConvertBlogCommentsToCommentViews(await GetBlogCommentsForEachBlog(blog, orderComment));
 		var response = new BlogViewDTO(blog, blogImageViewDtos, blogCommentViewDtos);
 		return response;

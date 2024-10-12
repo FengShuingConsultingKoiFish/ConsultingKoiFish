@@ -18,6 +18,7 @@ namespace ConsultingKoiFish.BLL.DTOs.BlogDTOs
         public BlogStatus? BlogStatus { get; set; }
         public OrderBlog? OrderBlog { get; set; }
         public OrderComment? OrderComment { get; set; }
+        public OrderImage? OrderImage { get; set; }
 
         public bool IsValidBlogStatus()
         {
@@ -33,5 +34,10 @@ namespace ConsultingKoiFish.BLL.DTOs.BlogDTOs
         {
 			return Enum.IsDefined(typeof(OrderComment), OrderComment);
 		}
+
+        public bool IsValidOrderImage()
+        {
+            return Enum.IsDefined(typeof(OrderImage), OrderImage);
+        }
 	}
 }

@@ -8,6 +8,7 @@ namespace ConsultingKoiFish.DAL.Enums
 {
 	public enum OrderImage
 	{
-		DatetimeDescending
+		DatetimeDescending = 1,
+		DatetimeIncreasing = 2,
 	}
 }

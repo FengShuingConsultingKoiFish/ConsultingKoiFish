@@ -7,6 +7,7 @@ using ConsultingKoiFish.DAL.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace ConsultingKoiFish.API.Controllers
 {
@@ -52,6 +53,7 @@ namespace ConsultingKoiFish.API.Controllers
         {
             try
             {
+				if (!ModelState.IsValid) return ModelInvalid();
 				if (dto.PageIndex <= 0)
 				{
 					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương");
@@ -61,6 +63,30 @@ namespace ConsultingKoiFish.API.Controllers
 				if (dto.PageSize <= 0)
 				{
 					ModelState.AddModelError("PageSize", "PageIndex phải là số nguyên dương");
+					return ModelInvalid();
+				}
+
+				if(!dto.IsValidBlogStatus())
+				{
+					ModelState.AddModelError("BlogStatus", "Status không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if(!dto.IsValidOrderBlog())
+				{
+					ModelState.AddModelError("OrderBlog", "OrderBlog không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderImage())
+				{
+					ModelState.AddModelError("OrderImage", "OrderImage không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderComment())
+				{
+					ModelState.AddModelError("OrderComment", "OrderComment không hợp lệ.");
 					return ModelInvalid();
 				}
 
@@ -79,12 +105,12 @@ namespace ConsultingKoiFish.API.Controllers
         }
 
 		[HttpGet]
-		[Route("get-blog-by-id/{id}/{orderComment}")]
-		public async Task<IActionResult> GetBlogById([FromRoute] int id, [FromRoute] OrderComment? orderComment)
+		[Route("get-blog-by-id/{id}/{orderComment}/{orderImage}")]
+		public async Task<IActionResult> GetBlogById([FromRoute] int id, [FromRoute] OrderComment? orderComment, [FromRoute] OrderImage? orderImage)
 		{
 			try
 			{
-				var response = await _blogService.GetBlogById(id, orderComment);
+				var response = await _blogService.GetBlogById(id, orderComment, orderImage);
 				if (response == null) return GetError("Blog này không tồn tại.");
 				return GetSuccess(response);
 			}
@@ -172,6 +198,7 @@ namespace ConsultingKoiFish.API.Controllers
         {
             try
             {
+				if (!ModelState.IsValid) return ModelInvalid();
                 if (dto.PageIndex <= 0)
                 {
                     ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương");
@@ -184,7 +211,31 @@ namespace ConsultingKoiFish.API.Controllers
 					return ModelInvalid();
 				}
 
-                var data = await _blogService.GetAllBlogsByUserId(UserId, dto);
+				if (!dto.IsValidBlogStatus())
+				{
+					ModelState.AddModelError("BlogStatus", "Status không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderBlog())
+				{
+					ModelState.AddModelError("OrderBlog", "OrderBlog không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderImage())
+				{
+					ModelState.AddModelError("OrderImage", "OrderImage không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderComment())
+				{
+					ModelState.AddModelError("OrderComment", "OrderComment không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				var data = await _blogService.GetAllBlogsByUserId(UserId, dto);
                 var response = new PagingDTO<BlogViewDTO>(data);
                 if (response == null) return GetError();
                 return GetSuccess(response);
@@ -210,6 +261,7 @@ namespace ConsultingKoiFish.API.Controllers
         {
             try
             {
+				if(!ModelState.IsValid) return ModelInvalid();
 				if (dto.PageIndex <= 0)
 				{
 					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương");
@@ -219,6 +271,30 @@ namespace ConsultingKoiFish.API.Controllers
 				if (dto.PageSize <= 0)
 				{
 					ModelState.AddModelError("PageSize", "PageIndex phải là số nguyên dương");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidBlogStatus())
+				{
+					ModelState.AddModelError("BlogStatus", "Status không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderBlog())
+				{
+					ModelState.AddModelError("OrderBlog", "OrderBlog không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderImage())
+				{
+					ModelState.AddModelError("OrderImage", "OrderImage không hợp lệ.");
+					return ModelInvalid();
+				}
+
+				if (!dto.IsValidOrderComment())
+				{
+					ModelState.AddModelError("OrderComment", "OrderComment không hợp lệ.");
 					return ModelInvalid();
 				}
 
