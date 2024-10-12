@@ -39,6 +39,8 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<AdAttribute> AdAttributes { get; set; }
 		public virtual DbSet<AdImage> AdImages { get; set; }
 		public virtual DbSet<Comment> Comments { get; set; }
+		public virtual DbSet<BlogComment> BlogComments { get; set; }
+		public virtual DbSet<AdComment> AdComments { get; set; }
 		public virtual DbSet<AdvertisementPackage> AdvertisementPackages { get; set; }
 		public virtual DbSet<PurchasedPackage> PurchasedPackages { get; set; }
 		public virtual DbSet<PackageImage> PackageImages { get; set; }
@@ -109,7 +111,7 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(p => p.User)
 					.WithMany(u => u.Payments)
 					.HasForeignKey(p => p.UserId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with AdvertisementPackage
 				entity.HasOne(p => p.AdvertisementPackage)
@@ -132,13 +134,13 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(pp => pp.User)
 					.WithMany(u => u.PurchasedPackages)
 					.HasForeignKey(pp => pp.UserId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with AdvertisementPackage
 				entity.HasOne(pp => pp.AdvertisementPackage)
 					.WithMany(ap => ap.PurchasedPackages)
 					.HasForeignKey(pp => pp.AdvertisementPackageId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
 			modelBuilder.Entity<AdvertisementPackage>(entity =>
@@ -174,18 +176,42 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(c => c.User)
 					.WithMany(u => u.Comments)
 					.HasForeignKey(c => c.UserId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
-				// Relationship with Blog
-				entity.HasOne(c => c.Blog)
-					.WithMany(b => b.Comments)
-					.HasForeignKey(c => c.BlogId)
+
+			modelBuilder.Entity<BlogComment>(entity =>
+			{
+				entity.HasKey(c => c.Id);
+
+				// Relationship with Comment
+				entity.HasOne(bc => bc.Comment)
+					.WithMany(c => c.BlogComments)
+					.HasForeignKey(bc => bc.CommentId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
 
-				// Relationship with Advertisement
-				entity.HasOne(c => c.Advertisement)
-					.WithMany(ad => ad.Comments)
-					.HasForeignKey(c => c.AdvertisementId)
+				// Relationship with Blog
+				entity.HasOne(bc => bc.Blog)
+					.WithMany(b => b.BlogComments)
+					.HasForeignKey(bc => bc.BlogId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
+
+
+			modelBuilder.Entity<AdComment>(entity =>
+			{
+				entity.HasKey(c => c.Id);
+
+				// Relationship with Comment
+				entity.HasOne(ac => ac.Comment)
+					.WithMany(a => a.AdComments)
+					.HasForeignKey(ac => ac.CommentId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with Ad
+				entity.HasOne(ac => ac.Advertisement)
+					.WithMany(a => a.AdComments)
+					.HasForeignKey(ac => ac.AdvertisementId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 

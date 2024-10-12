@@ -18,6 +18,6 @@ namespace ConsultingKoiFish.DAL.Entities
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<BlogImage> BlogImages { get; set; } = new List<BlogImage>();
-		public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+		public virtual ICollection<BlogComment> BlogComments { get; set; } = new List<BlogComment>();
 	}
 }

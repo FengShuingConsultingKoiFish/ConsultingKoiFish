@@ -25,6 +25,6 @@ namespace ConsultingKoiFish.DAL.Entities
         public virtual PurchasedPackage PurchasedPackage { get; set; }
 		public virtual ICollection<AdAttribute> AdAttributes { get; set; } = new List<AdAttribute>();
 		public virtual ICollection<AdImage> AdImages { get; set; } = new List<AdImage>();
-		public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+		public virtual ICollection<AdComment> AdComments { get; set; } = new List<AdComment>();
 	}
 }
