@@ -22,5 +22,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		Task<AdvertisementViewDTO> GetAdvertisementById(int id, OrderComment? orderComment, OrderImage? orderImage);
 		Task<PaginatedList<AdvertisementViewDTO>> GetAllAdvertisementsForUser(string userId, AdvertisementGetListDTO dto);
 		Task<PaginatedList<AdvertisementViewDTO>> GetAllBlogsForAdmin(AdvertisementGetListDTO dto);
+		Task<BaseResponse> UpdateStatusAdvertisement(AdvertisementUpdateStatusDTO dto);
 	}
 }

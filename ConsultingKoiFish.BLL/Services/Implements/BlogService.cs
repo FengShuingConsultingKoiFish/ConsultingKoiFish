@@ -228,7 +228,7 @@ public class BlogService : IBlogService
 			}
 			return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
 		}
-		return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
+		return new BaseResponse { IsSuccess = false, Message = "Blog không tồn tại." };
 	}
 
 	public async Task<BaseResponse> AddImagesToBlog(BlogImageRequestDTO dto)

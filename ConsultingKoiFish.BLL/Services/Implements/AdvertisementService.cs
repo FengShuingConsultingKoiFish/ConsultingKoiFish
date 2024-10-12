@@ -30,7 +30,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		private readonly ICommentService _commentService;
 
 		public AdvertisementService(IUnitOfWork unitOfWork, IMapper mapper, IImageService imageService, ICommentService commentService)
-        {
+		{
 			this._unitOfWork = unitOfWork;
 			this._mapper = mapper;
 			this._imageService = imageService;
@@ -72,11 +72,11 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 																							.WithTracking(false)
 																							.Build());
 					//<===Check valid của gói===>
-					if(selectedPurchasedPackage == null || selectedPurchasedPackage.Status == (int)PurchasedPackageStatus.Unavailable)
-						return new BaseResponse { IsSuccess = false, Message = "Gói bạn chọn không khả dụng."};
+					if (selectedPurchasedPackage == null || selectedPurchasedPackage.Status == (int)PurchasedPackageStatus.Unavailable)
+						return new BaseResponse { IsSuccess = false, Message = "Gói bạn chọn không khả dụng." };
 
-					if(dto.Description.Length > selectedPurchasedPackage.AdvertisementPackage.LimitContent)
-						return new BaseResponse { IsSuccess = false, Message = "Số kí tự trong phần mô tả đã vượt quá giới hạn cho phép của gói quảng cáo."};
+					if (dto.Description.Length > selectedPurchasedPackage.AdvertisementPackage.LimitContent)
+						return new BaseResponse { IsSuccess = false, Message = "Số kí tự trong phần mô tả đã vượt quá giới hạn cho phép của gói quảng cáo." };
 
 					//<===Thực hiện việc tạo mới ad===>
 					var createdAdDto = new AdvertisementCreateDTO(dto, userId);
@@ -86,7 +86,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 
 					//<===Kiểm trá và cập nhật số lượng sau khi create===>
 					selectedPurchasedPackage.MornitoredQuantity += 1;
-					if(selectedPurchasedPackage.MornitoredQuantity >= selectedPurchasedPackage.AdvertisementPackage.LimitAd)
+					if (selectedPurchasedPackage.MornitoredQuantity >= selectedPurchasedPackage.AdvertisementPackage.LimitAd)
 						selectedPurchasedPackage.Status = (int)PurchasedPackageStatus.Unavailable;
 					await purchasedPacakgeRepo.UpdateAsync(selectedPurchasedPackage);
 					await _unitOfWork.SaveChangesAsync();
@@ -156,10 +156,10 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 																.WithTracking(false)
 																.Build());
 
-				if(advertisement.AdImages.Count() + dto.ImagesId.Count() > adPackage.LimitImage)
+				if (advertisement.AdImages.Count() + dto.ImagesId.Count() > adPackage.LimitImage)
 				{
 					var availableImages = adPackage.LimitImage - advertisement.AdImages.Count();
-					return new BaseResponse { IsSuccess = false, Message = $"Bạn chỉ có thể thêm {availableImages} ảnh vào quảng cáo này nữa."};
+					return new BaseResponse { IsSuccess = false, Message = $"Bạn chỉ có thể thêm {availableImages} ảnh vào quảng cáo này nữa." };
 				}
 
 				var createdAdImageDTOs = new List<AdImageCreateDTO>();
@@ -340,6 +340,50 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return new PaginatedList<AdvertisementViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 		}
 
+		public async Task<BaseResponse> UpdateStatusAdvertisement(AdvertisementUpdateStatusDTO dto)
+		{
+			try
+			{
+				await _unitOfWork.BeginTransactionAsync();
+				var repo = _unitOfWork.GetRepo<Advertisement>();
+				var any = await repo.AnyAsync(new QueryBuilder<Advertisement>()
+					.WithPredicate(x => x.Id == dto.Id)
+					.Build());
+				if (any)
+				{
+					var advertisement = await repo.GetSingleAsync(new QueryBuilder<Advertisement>()
+						.WithPredicate(x => x.Id == dto.Id)
+						.WithTracking(false)
+						.WithInclude(x => x.User, x => x.PurchasedPackage)
+						.Build());
+
+					if ((int)dto.Status == 3)
+					{
+						advertisement.PurchasedPackage.MornitoredQuantity -= 1;
+						if (advertisement.PurchasedPackage.Status == (int)PurchasedPackageStatus.Unavailable)
+							advertisement.PurchasedPackage.Status = (int)PurchasedPackageStatus.Available;
+						await _unitOfWork.GetRepo<PurchasedPackage>().UpdateAsync(advertisement.PurchasedPackage);
+						await _unitOfWork.SaveChangesAsync();
+					}
+					advertisement.Status = (int)dto.Status;
+					await repo.UpdateAsync(advertisement);
+					await _unitOfWork.CommitTransactionAsync();
+					var saver = await _unitOfWork.SaveAsync();
+					if (!saver)
+					{
+						return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu không thành công." };
+					}
+					return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+				}
+				return new BaseResponse { IsSuccess = false, Message = "Quảng cáo không tồn tại." };
+			}
+			catch(Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
+
 		#region PRIVATE
 
 		/// <summary>
@@ -448,7 +492,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var adCommentViewDtos = await ConvertAdCommentsToCommentViews(await GetAdCommentsForEachAdvertisement(ad, orderComment));
 			var response = new AdvertisementViewDTO(ad, adImageViewDtos, adCommentViewDtos);
 			return response;
-		}		
+		}
 
 		#endregion
 	}

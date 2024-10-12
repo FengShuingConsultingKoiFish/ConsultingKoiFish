@@ -258,6 +258,12 @@ namespace ConsultingKoiFish.API.Controllers
 
 		#region Admin
 
+		/// <summary>
+		/// This is used to get all ads for admin
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Admin")]
 		[HttpPost]
 		[Route("get-all-advertisements-for-admin")]
 		public async Task<IActionResult> GetAllAdvertisementsForAdmin(AdvertisementGetListDTO dto)
@@ -305,6 +311,37 @@ namespace ConsultingKoiFish.API.Controllers
 				var response = new PagingDTO<AdvertisementViewDTO>(data);
 				if (response == null) return GetError();
 				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+
+		/// <summary>
+		/// this is used to update status of an ad
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Admin")]
+		[HttpPost]
+		[Route("update-status-advertisement")]
+		public async Task<IActionResult> UpdateStatusAdvertisement(AdvertisementUpdateStatusDTO dto)
+		{
+			try
+			{
+				if (!ModelState.IsValid) return ModelInvalid();
+				if (!dto.IsStatusValid())
+				{
+					ModelState.AddModelError("Status", "Status không hợp lệ");
+				}
+				var response = await _advertisementService.UpdateStatusAdvertisement(dto);
+				if (!response.IsSuccess) return SaveError(response);
+				return SaveSuccess(response);
 			}
 			catch (Exception ex)
 			{
