@@ -11,5 +11,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 	public interface ICommentService
 	{
 		Task<BaseResponse> CreateUpdateCommentForBlog(CommentForBlogRequestDTO dto, string userId);
+		Task<BaseResponse> CreateUpdateCommentForAd(CommentForAdRequestDTO dto, string userId);
 	}
 }

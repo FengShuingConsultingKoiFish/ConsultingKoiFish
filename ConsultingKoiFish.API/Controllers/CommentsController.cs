@@ -46,6 +46,32 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
+
+		/// <summary>
+		/// This is used to create or update a comment for advertisement
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize]
+		[HttpPost]
+		[Route("create-update-comment-for-advertisement")]
+		public async Task<IActionResult> CreateUpdateCommentForAdvertisement(CommentForAdRequestDTO dto)
+		{
+			try
+			{
+				var response = await _commentService.CreateUpdateCommentForAd(dto, UserId);
+				if (!response.IsSuccess) return SaveError(response);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
 		#endregion
 	}
 }
