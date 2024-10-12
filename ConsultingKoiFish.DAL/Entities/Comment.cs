@@ -15,7 +15,7 @@ namespace ConsultingKoiFish.DAL.Entities
 		public DateTime CreatedDate { get; set; }
 
 		public virtual ApplicationUser User { get; set; }
-		public virtual ICollection<BlogComment> BlogComments { get; set; } = new List<BlogComment>();
-		public virtual ICollection<AdComment> AdComments { get; set; } = new List<AdComment>();
+		public virtual BlogComment BlogComment { get; set; }
+		public virtual AdComment AdComment{ get; set; }
 	}
 }

@@ -12,5 +12,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 	{
 		Task<BaseResponse> CreateUpdateCommentForBlog(CommentForBlogRequestDTO dto, string userId);
 		Task<BaseResponse> CreateUpdateCommentForAd(CommentForAdRequestDTO dto, string userId);
+		Task<BaseResponse> DeleteComment(int commentId, string userId);
 	}
 }

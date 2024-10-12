@@ -29,7 +29,7 @@ namespace ConsultingKoiFish.API.Controllers
 		[Authorize]
 		[HttpPost]
 		[Route("create-update-comment-for-blog")]
-		public async Task<IActionResult> CreateUpdateCommentForBlog(CommentForBlogRequestDTO dto)
+		public async Task<IActionResult> CreateUpdateCommentForBlog([FromBody]CommentForBlogRequestDTO dto)
 		{
 			try
 			{
@@ -55,7 +55,7 @@ namespace ConsultingKoiFish.API.Controllers
 		[Authorize]
 		[HttpPost]
 		[Route("create-update-comment-for-advertisement")]
-		public async Task<IActionResult> CreateUpdateCommentForAdvertisement(CommentForAdRequestDTO dto)
+		public async Task<IActionResult> CreateUpdateCommentForAdvertisement([FromBody]CommentForAdRequestDTO dto)
 		{
 			try
 			{
@@ -72,6 +72,31 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
+
+		/// <summary>
+		/// This is used to delete a comment
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize]
+		[HttpDelete]
+		[Route("delete-comment/{commentId}")]
+		public async Task<IActionResult> DeleteComment([FromRoute]int commentId)
+		{
+			try
+			{
+				var response = await _commentService.DeleteComment(commentId, UserId);
+				if (!response.IsSuccess) return SaveError(response);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
 		#endregion
 	}
 }

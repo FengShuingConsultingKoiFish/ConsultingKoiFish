@@ -186,8 +186,8 @@ namespace ConsultingKoiFish.DAL
 
 				// Relationship with Comment
 				entity.HasOne(bc => bc.Comment)
-					.WithMany(c => c.BlogComments)
-					.HasForeignKey(bc => bc.CommentId)
+					.WithOne(c => c.BlogComment)
+					.HasForeignKey<BlogComment>(bc => bc.CommentId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with Blog
@@ -204,8 +204,8 @@ namespace ConsultingKoiFish.DAL
 
 				// Relationship with Comment
 				entity.HasOne(ac => ac.Comment)
-					.WithMany(a => a.AdComments)
-					.HasForeignKey(ac => ac.CommentId)
+					.WithOne(a => a.AdComment)
+					.HasForeignKey<AdComment>(ac => ac.CommentId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with Ad

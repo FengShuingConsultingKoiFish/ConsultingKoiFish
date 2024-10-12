@@ -137,5 +137,48 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				throw;
 			}
 		}
+
+		public async Task<BaseResponse> DeleteComment(int commentId, string userId)
+		{
+			try
+			{
+				await _unitOfWork.BeginTransactionAsync();
+				var repo = _unitOfWork.GetRepo<Comment>();
+				var any = await repo.AnyAsync(new QueryBuilder<Comment>()
+											.WithPredicate(x => x.Id == commentId)
+											.Build());
+				if (any)
+				{
+					var comment = await repo.GetSingleAsync(new QueryBuilder<Comment>()
+															.WithPredicate(x => x.Id == commentId)
+															.WithInclude(x => x.AdComment, r => r.BlogComment)
+															.WithTracking(false)
+															.Build());
+					if (!comment.UserId.Equals(userId)) return new BaseResponse { IsSuccess = false, Message = "Comment không thuộc sở hữu người dùng." };
+					if(comment.BlogComment != null)
+					{
+						await _unitOfWork.GetRepo<BlogComment>().DeleteAsync(comment.BlogComment);
+						await _unitOfWork.SaveChangesAsync();
+					}
+					if (comment.AdComment != null)
+					{
+						await _unitOfWork.GetRepo<AdComment>().DeleteAsync(comment.AdComment);
+						await _unitOfWork.SaveChangesAsync();
+					}
+
+					await repo.DeleteAsync(comment);
+					var saver = await _unitOfWork.SaveAsync();
+					await _unitOfWork.CommitTransactionAsync();
+					if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu thất bại." };
+					return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+				}
+				return new BaseResponse { IsSuccess = false, Message = "Comment không tồn tại." };
+			}
+			catch(Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
 	}
 }
