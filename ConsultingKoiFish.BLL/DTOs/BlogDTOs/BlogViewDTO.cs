@@ -1,3 +1,4 @@
+using ConsultingKoiFish.BLL.DTOs.CommentDTOs;
 using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Enums;
@@ -13,8 +14,9 @@ public class BlogViewDTO
     public string? CreatedDate { get; set; }
     public string? Status { get; set; }
     public List<ImageViewDTO> ImageViewDtos { get; set; } = new List<ImageViewDTO>();
+    public List<CommentViewDTO> CommentViewDtos { get; set; } = new List<CommentViewDTO>();
 
-    public BlogViewDTO(Blog blog, List<ImageViewDTO> blogImageViewDtos)
+    public BlogViewDTO(Blog blog, List<ImageViewDTO> blogImageViewDtos, List<CommentViewDTO> blogCommentViewDtos)
     {
         Id = blog.Id;
         Title = blog.Title;
@@ -24,6 +26,7 @@ public class BlogViewDTO
         var statusResponse = (BlogStatus)blog.Status;
         Status = statusResponse.ToString();
         ImageViewDtos = blogImageViewDtos;
+        CommentViewDtos = blogCommentViewDtos;
     }
 
 }

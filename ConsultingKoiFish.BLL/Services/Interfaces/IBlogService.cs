@@ -12,13 +12,9 @@ public interface IBlogService
     Task<BaseResponse> UpdateStatusBlog(BlogUpdateStatusDTO dto);
     Task<BaseResponse> AddImagesToBlog(BlogImageRequestDTO dto);
     Task<BaseResponse> DeleteImagesFromBlog(BlogImageDeleteDTO dto);
-    Task<PaginatedList<BlogViewDTO>> GetAllBlogs(int pageIndex, int pageSize);
-    Task<PaginatedList<BlogViewDTO>> GetAllBlogsByUserId(string userId, int pageIndex, int pageSize);
-    Task<PaginatedList<BlogViewDTO>> GetAllBlogsByUserIdWithStatus(BlogStatus? status, string userId, int pageIndex, int pageSize);
-    Task<PaginatedList<BlogViewDTO>> GetAllBlogsByTitle(string? title, int pageIndex, int pageSize);
-    Task<PaginatedList<BlogViewDTO>> GetAllBlogsForAdmin(int pageIndex, int pageSize);
-    Task<PaginatedList<BlogViewDTO>> GetAllBlogsForAdminWithStatus(BlogStatus? status, int pageIndex, int pageSize);
-    Task<PaginatedList<BlogViewDTO>> GetAllBlogsForAdminWithTitle(string? title, int pageIndex, int pageSize);
-    Task<BlogViewDTO> GetBlogById(int id);
+    Task<PaginatedList<BlogViewDTO>> GetAllBlogs(BlogGetListDTO dto);
+    Task<PaginatedList<BlogViewDTO>> GetAllBlogsByUserId(string userId, BlogGetListDTO dto);
+    Task<PaginatedList<BlogViewDTO>> GetAllBlogsForAdmin(BlogGetListDTO dto);
+    Task<BlogViewDTO> GetBlogById(int id, OrderComment? orderComment);
     Task<BaseResponse> DeleteBlog(int id, string userId);
 }

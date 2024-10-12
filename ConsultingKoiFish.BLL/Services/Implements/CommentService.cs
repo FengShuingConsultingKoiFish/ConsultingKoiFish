@@ -4,6 +4,7 @@ using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
+using ConsultingKoiFish.DAL.Enums;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
 using Mailjet.Client.Resources;
@@ -180,5 +181,56 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				throw;
 			}
 		}
+
+		#region Convert
+
+		/// <summary>
+		/// this is used to covert a collection of specified comment to CommentViewDTO
+		/// </summary>
+		/// <typeparam name="TComment"></typeparam>
+		/// <param name="comments"></param>
+		/// <param name="getCommentId"></param>
+		/// <returns></returns>
+		public async Task<List<CommentViewDTO>> ConvertSpeciedCommentToCommentViews<TComment>(ICollection<TComment> comments, Func<TComment, int> getCommentId)
+		{
+			var commentRepo = _unitOfWork.GetRepo<Comment>();
+			var responseComments = new List<CommentViewDTO>();
+
+			foreach (var commentItem in comments)
+			{
+				var commentId = getCommentId(commentItem);
+				var comment = await commentRepo.GetSingleAsync(new QueryBuilder<Comment>()
+					.WithPredicate(x => x.Id == commentId)
+					.WithInclude(x => x.User)
+					.WithTracking(false)
+					.Build());
+
+				var childResponseComment = new CommentViewDTO(comment);
+				responseComments.Add(childResponseComment);
+			}
+
+			return responseComments;
+		}
+
+		/// <summary>
+		/// this is used to convert a collection of Comment to a colection of CommentViewDTOs
+		/// </summary>
+		/// <param name="comments"></param>
+		/// <returns></returns>
+		public List<CommentViewDTO> ConvertToCommentViews(ICollection<Comment> comments)
+		{
+			var commentRepo = _unitOfWork.GetRepo<Comment>();
+			var responseComments = new List<CommentViewDTO>();
+
+			foreach (var commentItem in comments)
+			{
+				var childResponseComment = new CommentViewDTO(commentItem);
+				responseComments.Add(childResponseComment);
+			}
+
+			return responseComments;
+		}
+
+		#endregion
 	}
 }
