@@ -4,6 +4,7 @@ using ConsultingKoiFish.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsultingKoiFish.DAL.Migrations
 {
     [DbContext(typeof(ConsultingKoiFishContext))]
-    partial class ConsultingKoiFishContextModelSnapshot : ModelSnapshot
+    [Migration("20241012094430_resetRelationshipPurchasedAndPackage")]
+    partial class resetRelationshipPurchasedAndPackage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -651,9 +654,6 @@ namespace ConsultingKoiFish.DAL.Migrations
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<int>("MornitoredQuantity")
                         .HasColumnType("int");

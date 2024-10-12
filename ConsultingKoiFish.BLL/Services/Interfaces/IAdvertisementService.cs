@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs;
+using ConsultingKoiFish.BLL.DTOs.Response;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 {
 	public interface IAdvertisementService
 	{
+		Task<BaseResponse> CreateUpdateAdvertisement(AdvertisementRequestDTO dto, string userId);
 	}
 }

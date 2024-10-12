@@ -29,7 +29,7 @@ namespace ConsultingKoiFish.BLL.DTOs.ImageDTOs
 			AltText = image.AltText;
 			UserId = image.UserId;
 			UserName = image.User.UserName;
-			CreatedDate = image.CreatedDate.ToString("dd/MM/yyyyy");
+			CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
         }
     }
 }

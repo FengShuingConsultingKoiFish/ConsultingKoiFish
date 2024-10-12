@@ -14,8 +14,9 @@ namespace ConsultingKoiFish.DAL.Entities
 		public int MornitoredQuantity { get; set; }
 		public int Status { get; set; }
 		public DateTime CreatedDate { get; set; }
+        public bool IsActive { get; set; }
 
-		public virtual ApplicationUser User { get; set; }
+        public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<Advertisement> Advertisements { get; set; } = new List<Advertisement>();
 		public virtual AdvertisementPackage AdvertisementPackage { get; set; }
 	}

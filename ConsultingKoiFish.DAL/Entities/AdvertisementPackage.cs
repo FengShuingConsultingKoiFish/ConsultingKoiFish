@@ -24,7 +24,7 @@ namespace ConsultingKoiFish.DAL.Entities
         public DateTime CreatedDate { get; set; }
         public string CreatedBy { get; set; } = null!;
 
-        public virtual ICollection<PurchasedPackage> PurchasedPackages { get; set; } = new List<PurchasedPackage>();
+        public virtual PurchasedPackage PurchasedPackages { get; set; }
         public virtual ICollection<PackageImage> PackageImages { get; set; } = new List<PackageImage>();
 		public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 	}
