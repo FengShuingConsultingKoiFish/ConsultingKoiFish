@@ -2,6 +2,8 @@
 using ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
+using ConsultingKoiFish.DAL.Enums;
+using ConsultingKoiFish.DAL.Paging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,5 +17,7 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		Task<BaseResponse> CreateUpdateAdvertisement(AdvertisementRequestDTO dto, string userId);
 		Task<BaseResponse> AddImagesToAdvertisement(AdImageRequestDTO dto);
 		Task<BaseResponse> DeleteImagesFromAdvertisement(AdImageDeleteDTO dto);
+		Task<PaginatedList<AdvertisementViewDTO>> GetAllAdvertisements(AdvertisementGetListDTO dto);
+		Task<AdvertisementViewDTO> GetAdvertisementById(int id, OrderComment? orderComment, OrderImage? orderImage);
 	}
 }

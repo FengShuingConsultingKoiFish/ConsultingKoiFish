@@ -387,7 +387,7 @@ public class BlogService : IBlogService
 
 
 	/// <summary>
-	/// This is used to get an IQueryable<BlogComment> for each Blog
+	/// This is used to get an collection of BlogComment for each Blog
 	/// </summary>
 	/// <param name="blog"></param>
 	/// <returns></returns>

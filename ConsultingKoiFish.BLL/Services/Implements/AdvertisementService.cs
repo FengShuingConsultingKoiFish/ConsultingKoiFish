@@ -3,13 +3,17 @@ using ConsultingKoiFish.BLL.DTOs.AdImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
+using ConsultingKoiFish.BLL.DTOs.CommentDTOs;
+using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Enums;
+using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
 using Mailjet.Client.Resources;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,11 +26,15 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
+		private readonly IImageService _imageService;
+		private readonly ICommentService _commentService;
 
-		public AdvertisementService(IUnitOfWork unitOfWork, IMapper mapper)
+		public AdvertisementService(IUnitOfWork unitOfWork, IMapper mapper, IImageService imageService, ICommentService commentService)
         {
 			this._unitOfWork = unitOfWork;
 			this._mapper = mapper;
+			this._imageService = imageService;
+			this._commentService = commentService;
 		}
 
 		public async Task<BaseResponse> CreateUpdateAdvertisement(AdvertisementRequestDTO dto, string userId)
@@ -224,5 +232,158 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				throw;
 			}
 		}
+
+		public async Task<PaginatedList<AdvertisementViewDTO>> GetAllAdvertisements(AdvertisementGetListDTO dto)
+		{
+			var repo = _unitOfWork.GetRepo<Advertisement>();
+			var imageRepo = _unitOfWork.GetRepo<Advertisement>();
+			var loadedRecords = repo.Get(new QueryBuilder<Advertisement>()
+				.WithPredicate(x => x.IsActive == true && x.Status == (int)AdvertisementStatus.Approved)
+				.WithTracking(false)
+				.WithInclude(x => x.User)
+				.Build());
+			if (dto.Title != null)
+			{
+				loadedRecords = loadedRecords.Where(x => x.Title.Contains(dto.Title));
+			}
+
+			if (dto.OrderAdvertisement.HasValue)
+			{
+				switch ((int)dto.OrderAdvertisement)
+				{
+					case 1: loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate); break;
+					case 2: loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate); break;
+				}
+			}
+			var pagedRecords = await PaginatedList<Advertisement>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
+			var response = await ConvertAdsToAdViews(pagedRecords, dto.OrderComment, dto.OrderImage);
+			return new PaginatedList<AdvertisementViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
+		}
+
+
+		public async Task<AdvertisementViewDTO> GetAdvertisementById(int id, OrderComment? orderComment, OrderImage? orderImage)
+		{
+			var repo = _unitOfWork.GetRepo<Advertisement>();
+			var advertisement = await repo.GetSingleAsync(new QueryBuilder<Advertisement>()
+				.WithPredicate(x => x.Id == id && x.IsActive == true)
+				.WithTracking(false)
+				.WithInclude(x => x.User)
+				.Build());
+			if (advertisement == null) return null;
+			var response = await ConvertAdToAdView(advertisement, orderComment, orderImage);
+			return response;
+		}
+
+		#region PRIVATE
+
+		/// <summary>
+		/// This is used to get ad images for each Advertisement
+		/// </summary>
+		/// <param name="advertisement"></param>
+		/// <param name="orderImage"></param>
+		/// <returns></returns>
+		private async Task<List<AdImage>> GetAdImagesForEachAdvertisement(Advertisement advertisement, OrderImage? orderImage)
+		{
+			var adImageRepo = _unitOfWork.GetRepo<AdImage>();
+			var adImages = adImageRepo.Get(new QueryBuilder<AdImage>()
+													.WithPredicate(x => x.AdvertisementId == advertisement.Id)
+													.WithTracking(false)
+													.Build());
+			if (orderImage.HasValue)
+			{
+				switch ((int)orderImage)
+				{
+					case 1: adImages = adImages.OrderByDescending(x => x.Id); break;
+					case 2: adImages = adImages.OrderBy(x => x.Id); break;
+				}
+			}
+			return await adImages.ToListAsync();
+		}
+
+		/// <summary>
+		/// This is used to convert a collection of ad images to a collection of imageViewDTOs
+		/// </summary>
+		/// <param name="adImages"></param>
+		/// <returns></returns>
+		private Task<List<ImageViewDTO>> ConvertAdImagesToImageViews(ICollection<AdImage> adImages)
+		{
+			return _imageService.ConvertSpeciedImageToImageViews(adImages, adImage => adImage.ImageId);
+		}
+
+
+		/// <summary>
+		/// This is used to get an collection of AdComment for each Ad
+		/// </summary>
+		/// <param name="advertisement"></param>
+		/// <param name="orderComment"></param>
+		/// <returns></returns>
+		private async Task<List<AdComment>> GetAdCommentsForEachAdvertisement(Advertisement advertisement, OrderComment? orderComment)
+		{
+			var adCommentRepo = _unitOfWork.GetRepo<AdComment>();
+			var adComments = adCommentRepo.Get(new QueryBuilder<AdComment>()
+													.WithPredicate(x => x.AdvertisementId == advertisement.Id)
+													.WithTracking(false)
+													.Build());
+			if (orderComment.HasValue)
+			{
+				switch ((int)orderComment)
+				{
+					case 1: adComments = adComments.OrderByDescending(x => x.Id); break;
+					case 2: adComments = adComments.OrderBy(x => x.Id); break;
+				}
+			}
+			return await adComments.ToListAsync();
+		}
+
+
+		/// <summary>
+		/// this is used to convert ad comments to commentViewDTOs
+		/// </summary>
+		/// <param name="adComments"></param>
+		/// <returns></returns>
+		private Task<List<CommentViewDTO>> ConvertAdCommentsToCommentViews(ICollection<AdComment> adComments)
+		{
+			var commentViews = _commentService.ConvertSpeciedCommentToCommentViews(adComments, adComment => adComment.CommentId);
+			return commentViews;
+		}
+
+
+		/// <summary>
+		/// This is used to convert a collection of ads to a collection of adViewDtos
+		/// </summary>
+		/// <param name="ads"></param>
+		/// <param name="orderComment"></param>
+		/// <param name="orderImage"></param>
+		/// <returns></returns>
+		private async Task<List<AdvertisementViewDTO>> ConvertAdsToAdViews(List<Advertisement> ads, OrderComment? orderComment, OrderImage? orderImage)
+		{
+			var response = new List<AdvertisementViewDTO>();
+			foreach (var ad in ads)
+			{
+				var adImageViewDtos = await ConvertAdImagesToImageViews(await GetAdImagesForEachAdvertisement(ad, orderImage));
+				var adCommentViewDtos = await ConvertAdCommentsToCommentViews(await GetAdCommentsForEachAdvertisement(ad, orderComment));
+				var childResponse = new AdvertisementViewDTO(ad, adImageViewDtos, adCommentViewDtos);
+				response.Add(childResponse);
+			}
+			return response;
+		}
+
+
+		/// <summary>
+		/// This is used to convert an ad to adViewDto
+		/// </summary>
+		/// <param name="ad"></param>
+		/// <param name="orderComment"></param>
+		/// <param name="orderImage"></param>
+		/// <returns></returns>
+		private async Task<AdvertisementViewDTO> ConvertAdToAdView(Advertisement ad, OrderComment? orderComment, OrderImage? orderImage)
+		{
+			var adImageViewDtos = await ConvertAdImagesToImageViews(await GetAdImagesForEachAdvertisement(ad, orderImage));
+			var adCommentViewDtos = await ConvertAdCommentsToCommentViews(await GetAdCommentsForEachAdvertisement(ad, orderComment));
+			var response = new AdvertisementViewDTO(ad, adImageViewDtos, adCommentViewDtos);
+			return response;
+		}		
+
+		#endregion
 	}
 }
