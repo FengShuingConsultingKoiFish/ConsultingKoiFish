@@ -76,6 +76,32 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
+		/// <summary>
+		/// This is used to delete images from a advertisement
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Member")]
+		[HttpPost]
+		[Route("delete-images-from-advertisement")]
+		public async Task<IActionResult> DeleteImagesFromAdvertisement(AdImageDeleteDTO dto)
+		{
+			try
+			{
+				if (!ModelState.IsValid) return ModelInvalid();
+				var response = await _advertisementService.DeleteImagesFromAdvertisement(dto);
+				if (!response.IsSuccess) return SaveError(response);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
 		#endregion
 	}
 }

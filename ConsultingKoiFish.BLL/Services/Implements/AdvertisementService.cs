@@ -183,5 +183,46 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				throw;
 			}
 		}
+
+		public async Task<BaseResponse> DeleteImagesFromAdvertisement(AdImageDeleteDTO dto)
+		{
+			try
+			{
+				await _unitOfWork.BeginTransactionAsync();
+				var repo = _unitOfWork.GetRepo<AdImage>();
+				var adRepo = _unitOfWork.GetRepo<Advertisement>();
+				var deletedAdImages = new List<AdImage>();
+				var any = await adRepo.AnyAsync(new QueryBuilder<Advertisement>()
+					.WithPredicate(x => x.Id == dto.AdvertisementId)
+					.WithTracking(false)
+					.Build());
+				if (any)
+				{
+					foreach (var adImageId in dto.AdImageIds)
+					{
+						var deleteAdImage = await repo.GetSingleAsync(new QueryBuilder<AdImage>()
+							.WithPredicate(x => x.Id == adImageId && x.AdvertisementId == dto.AdvertisementId)
+							.WithTracking(false)
+							.Build());
+						if (deleteAdImage == null)
+							return new BaseResponse
+							{ IsSuccess = false, Message = $"Ảnh {adImageId} không tồn tại trong Blog" };
+						deletedAdImages.Add(deleteAdImage);
+					}
+
+					await repo.DeleteAllAsync(deletedAdImages);
+					var saver = await _unitOfWork.SaveAsync();
+					await _unitOfWork.CommitTransactionAsync();
+					if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu thất bại" };
+					return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+				}
+				return new BaseResponse { IsSuccess = false, Message = "Quảng cáo không tồn tại." };
+			}
+			catch (Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
 	}
 }
