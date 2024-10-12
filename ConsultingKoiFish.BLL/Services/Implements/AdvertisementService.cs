@@ -129,5 +129,59 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				throw;
 			}
 		}
+
+		public async Task<BaseResponse> AddImagesToAdvertisement(AdImageRequestDTO dto)
+		{
+			try
+			{
+				await _unitOfWork.BeginTransactionAsync();
+				var repo = _unitOfWork.GetRepo<AdImage>();
+				var adRepo = _unitOfWork.GetRepo<Advertisement>();
+				var adPackageRepo = _unitOfWork.GetRepo<AdvertisementPackage>();
+				var advertisement = await adRepo.GetSingleAsync(new QueryBuilder<Advertisement>()
+														.WithPredicate(x => x.Id == dto.AdvertisementId && x.IsActive == true)
+														.WithInclude(x => x.PurchasedPackage, x => x.AdImages)
+														.WithTracking(false)
+														.Build());
+				var adPackage = await adPackageRepo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
+																.WithPredicate(x => x.Id == advertisement.PurchasedPackage.AdvertisementPackageId)
+																.WithTracking(false)
+																.Build());
+
+				if(advertisement.AdImages.Count() + dto.ImagesId.Count() > adPackage.LimitImage)
+				{
+					var availableImages = adPackage.LimitImage - advertisement.AdImages.Count();
+					return new BaseResponse { IsSuccess = false, Message = $"Bạn chỉ có thể thêm {availableImages} vào quảng cáo này nữa."};
+				}
+
+				var createdAdImageDTOs = new List<AdImageCreateDTO>();
+				foreach (var image in dto.ImagesId)
+				{
+					var any = await repo.AnyAsync(new QueryBuilder<AdImage>()
+						.WithPredicate(x => x.ImageId == image && x.AdvertisementId == dto.AdvertisementId)
+						.WithTracking(false)
+						.Build());
+
+					if (any) return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} đã tổn tại trong Blog." };
+					var createdAdImageDTO = new AdImageCreateDTO()
+					{
+						AdvertisementId = dto.AdvertisementId,
+						ImageId = image
+					};
+					createdAdImageDTOs.Add(createdAdImageDTO);
+				}
+				var adImages = _mapper.Map<List<AdImage>>(createdAdImageDTOs);
+				await repo.CreateAllAsync(adImages);
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu thất bại" };
+				return new BaseResponse { IsSuccess = true, Message = "Lưu thành công." };
+			}
+			catch (Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
 	}
 }

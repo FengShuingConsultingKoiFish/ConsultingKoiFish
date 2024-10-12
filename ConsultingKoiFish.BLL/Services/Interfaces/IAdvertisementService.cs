@@ -1,4 +1,5 @@
-﻿using ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs;
+﻿using ConsultingKoiFish.BLL.DTOs.AdImageDTOs;
+using ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using System;
 using System.Collections.Generic;
@@ -11,5 +12,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 	public interface IAdvertisementService
 	{
 		Task<BaseResponse> CreateUpdateAdvertisement(AdvertisementRequestDTO dto, string userId);
+		Task<BaseResponse> AddImagesToAdvertisement(AdImageRequestDTO dto);
 	}
 }

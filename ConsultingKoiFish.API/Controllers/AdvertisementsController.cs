@@ -1,5 +1,7 @@
-﻿using ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs;
+﻿using ConsultingKoiFish.BLL.DTOs.AdImageDTOs;
+using ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
+using ConsultingKoiFish.BLL.DTOs.BlogImageDTOs;
 using ConsultingKoiFish.BLL.Services.Implements;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -36,6 +38,32 @@ namespace ConsultingKoiFish.API.Controllers
 			{
 				if (!ModelState.IsValid) return ModelInvalid();
 				var response = await _advertisementService.CreateUpdateAdvertisement(dto, UserId);
+				if (!response.IsSuccess) return SaveError(response);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+
+		/// <summary>
+		/// this is used to add images to current advertisement
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Member")]
+		[HttpPost]
+		[Route("add-images-to-advertisement")]
+		public async Task<IActionResult> AddImagesToAdvertisements(AdImageRequestDTO dto)
+		{
+			try
+			{
+				if (!ModelState.IsValid) return ModelInvalid();
+				var response = await _advertisementService.AddImagesToAdvertisement(dto);
 				if (!response.IsSuccess) return SaveError(response);
 				return SaveSuccess(response);
 			}
