@@ -19,5 +19,6 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		Task<BaseResponse> DeleteImagesFromAdvertisement(AdImageDeleteDTO dto);
 		Task<PaginatedList<AdvertisementViewDTO>> GetAllAdvertisements(AdvertisementGetListDTO dto);
 		Task<AdvertisementViewDTO> GetAdvertisementById(int id, OrderComment? orderComment, OrderImage? orderImage);
+		Task<PaginatedList<AdvertisementViewDTO>> GetAllAdvertisementsForUser(string userId, AdvertisementGetListDTO dto);
 	}
 }
