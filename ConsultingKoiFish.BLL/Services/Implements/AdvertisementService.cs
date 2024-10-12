@@ -151,7 +151,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				if(advertisement.AdImages.Count() + dto.ImagesId.Count() > adPackage.LimitImage)
 				{
 					var availableImages = adPackage.LimitImage - advertisement.AdImages.Count();
-					return new BaseResponse { IsSuccess = false, Message = $"Bạn chỉ có thể thêm {availableImages} vào quảng cáo này nữa."};
+					return new BaseResponse { IsSuccess = false, Message = $"Bạn chỉ có thể thêm {availableImages} ảnh vào quảng cáo này nữa."};
 				}
 
 				var createdAdImageDTOs = new List<AdImageCreateDTO>();
@@ -162,7 +162,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 						.WithTracking(false)
 						.Build());
 
-					if (any) return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} đã tổn tại trong Blog." };
+					if (any) return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} đã tổn tại trong quảng cáo." };
 					var createdAdImageDTO = new AdImageCreateDTO()
 					{
 						AdvertisementId = dto.AdvertisementId,
