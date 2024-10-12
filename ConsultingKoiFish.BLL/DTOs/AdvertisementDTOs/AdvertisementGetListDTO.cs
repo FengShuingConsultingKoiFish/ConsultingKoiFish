@@ -22,22 +22,30 @@ namespace ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs
 
 		public bool IsValidAdvertisementStatus()
 		{
-			return Enum.IsDefined(typeof(BlogStatus), AdvertisementStatus);
+			if (AdvertisementStatus.HasValue)
+				return Enum.IsDefined(typeof(BlogStatus), AdvertisementStatus);
+			return true;
 		}
 
 		public bool IsValidOrderAdvertisement()
 		{
-			return Enum.IsDefined(typeof(OrderAdvertisement), OrderAdvertisement);
+			if (OrderAdvertisement.HasValue)
+				return Enum.IsDefined(typeof(OrderAdvertisement), OrderAdvertisement);
+			return true;
 		}
 
 		public bool IsValidOrderComment()
 		{
-			return Enum.IsDefined(typeof(OrderComment), OrderComment);
+			if (OrderComment.HasValue)
+				return Enum.IsDefined(typeof(OrderComment), OrderComment);
+			return true;
 		}
 
 		public bool IsValidOrderImage()
 		{
-			return Enum.IsDefined(typeof(OrderImage), OrderImage);
+			if (OrderImage.HasValue)
+				return Enum.IsDefined(typeof(OrderImage), OrderImage);
+			return true;
 		}
 	}
 }

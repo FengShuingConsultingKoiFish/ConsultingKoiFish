@@ -20,24 +20,32 @@ namespace ConsultingKoiFish.BLL.DTOs.BlogDTOs
         public OrderComment? OrderComment { get; set; }
         public OrderImage? OrderImage { get; set; }
 
-        public bool IsValidBlogStatus()
-        {
-            return Enum.IsDefined(typeof(BlogStatus), BlogStatus);
-        }
+		public bool IsValidBlogStatus()
+		{
+			if (BlogStatus.HasValue)
+				return Enum.IsDefined(typeof(BlogStatus), BlogStatus);
+			return true;
+		}
 
 		public bool IsValidOrderBlog()
 		{
-			return Enum.IsDefined(typeof(OrderBlog), OrderBlog);
+			if (OrderBlog.HasValue)
+				return Enum.IsDefined(typeof(OrderAdvertisement), OrderBlog);
+			return true;
 		}
 
-        public bool IsValidOrderComment()
-        {
-			return Enum.IsDefined(typeof(OrderComment), OrderComment);
+		public bool IsValidOrderComment()
+		{
+			if (OrderComment.HasValue)
+				return Enum.IsDefined(typeof(OrderComment), OrderComment);
+			return true;
 		}
 
-        public bool IsValidOrderImage()
-        {
-            return Enum.IsDefined(typeof(OrderImage), OrderImage);
-        }
+		public bool IsValidOrderImage()
+		{
+			if (OrderImage.HasValue)
+				return Enum.IsDefined(typeof(OrderImage), OrderImage);
+			return true;
+		}
 	}
 }
