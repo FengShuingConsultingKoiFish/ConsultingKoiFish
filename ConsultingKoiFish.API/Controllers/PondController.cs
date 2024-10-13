@@ -146,5 +146,71 @@ namespace ConsultingKoiFish.API.Controllers
 
             return BadRequest(result);
         }
+        [HttpPost("Add-Pond-Zodiac")]
+        public async Task<IActionResult> AddPondZodiac([FromBody] ZodiacPondDTO zodiacPondDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _pondService.AddSuitablePondZodiac(zodiacPondDto);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // PUT api/zodiac/Update-Pond-Zodiac/{id}
+        [HttpPut("Update-Pond-Zodiac/{id}")]
+        public async Task<IActionResult> UpdatePondZodiac([FromBody] ZodiacPondDTO zodiacPondDto, int id)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _pondService.UpdatePondZodiac(zodiacPondDto, id);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // GET api/zodiac/Get-All-Pond-Zodiac
+        [HttpGet("Get-All-Pond-Zodiac")]
+        public async Task<IActionResult> GetAllPondZodiac()
+        {
+            var result = await _pondService.GetAllPondZodiac();
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // DELETE api/zodiac/Delete-Pond-Zodiac/{id}
+        [HttpDelete("Delete-Pond-Zodiac/{id}")]
+        public async Task<IActionResult> DeletePondZodiac(int id)
+        {
+            var result = await _pondService.DeletePondZodiac(id);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+        [HttpGet("Get-Suitable-Pond-For-User/{userId}")]
+        public async Task<IActionResult> GetSuitablePondForUser(string userId)
+        {
+            var result = await _pondService.GetSuitablePondForUser(userId);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
     }
 }

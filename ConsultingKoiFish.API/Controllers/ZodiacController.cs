@@ -84,11 +84,12 @@ namespace ConsultingKoiFish.API.Controllers
         }
 
         // GET api/zodiac/Get-Zodiac-Sign
-        //[Authorize]
+        [Authorize]
         [HttpGet("Get-Zodiac-Sign")]
         public async Task<IActionResult> GetZodiacByBirthDate([FromQuery] DateTime birthDate)
         {
-            var result = await _zodiacService.GetZodiacByBirthDate(birthDate, UserId);
+            var userId = UserId;
+            var result = await _zodiacService.GetZodiacByBirthDate(birthDate, userId);
             if (result.IsSuccess)
             {
                 return Ok(result);

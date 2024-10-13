@@ -6,6 +6,7 @@ using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
+using Mailjet.Client.Resources;
 
 namespace ConsultingKoiFish.BLL.Services.Implements;
 
@@ -140,19 +141,33 @@ public class ZodiacService : IZodiacService
 {
     try
     {
-        var year = birthDate.Year;
+        var userRepo = _unitOfWork.GetRepo<UserDetail>();
+        var user = await userRepo.GetSingleAsync(new QueryBuilder<UserDetail>()
+            .WithPredicate(x => x.UserId == userId)
+            .Build());
+        var birth = user.DateOfBirth;
+        if (birth == null)
+        {
+            return new ResponseApiDTO
+            {
+                StatusCode = HttpStatusCode.NotFound,
+                IsSuccess = false,
+                Message = $"Bạn cần update ngày tháng năm sinh trước khi tính"
+            };
+        }
+        var year = birth.Value.Year;
         
-        // Tính Thiên Can và Địa Chi chính xác
+       
         int thienCan = (year + 6) % 10;
         int diaChi = (year + 8) % 12;
     
-        // Bảng Thiên Can
+        
         string[] thienCanList = { "Giáp", "Ất", "Bính", "Đinh", "Mậu", "Kỷ", "Canh", "Tân", "Nhâm", "Quý" };
         
-        // Bảng Địa Chi
+       
         string[] diaChiList = { "Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ", "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi" };
         
-        // Bảng mệnh ngũ hành cho 60 năm (chu kỳ Lục Thập Hoa Giáp)
+       
         var canChiToMenh = new Dictionary<string, string>
         {
             { "Giáp Tý", "Kim" },
@@ -167,24 +182,24 @@ public class ZodiacService : IZodiacService
             { "Quý Dậu", "Kim" },
             { "Giáp Tuất", "Hỏa" },
             { "Ất Hợi", "Hỏa" },
-            { "Bính Tý", "Thủy" },
-            { "Đinh Sửu", "Thủy" },
+            { "Bính Tý", "Thuỷ" },
+            { "Đinh Sửu", "Thuỷ" },
             { "Mậu Dần", "Thổ" },
             { "Kỷ Mão", "Thổ" },
             { "Canh Thìn", "Kim" },
             { "Tân Tỵ", "Kim" },
             { "Nhâm Ngọ", "Mộc" },
             { "Quý Mùi", "Mộc" },
-            { "Giáp Thân", "Thủy" },
-            { "Ất Dậu", "Thủy" },
+            { "Giáp Thân", "Thuỷ" },
+            { "Ất Dậu", "Thuỷ" },
             { "Bính Tuất", "Thổ" },
             { "Đinh Hợi", "Thổ" },
             { "Mậu Tý", "Hỏa" },
             { "Kỷ Sửu", "Hỏa" },
             { "Canh Dần", "Thổ" },
             { "Tân Mão", "Thổ" },
-            { "Nhâm Thìn", "Thủy" },
-            { "Quý Tỵ", "Thủy" },
+            { "Nhâm Thìn", "Thuỷ" },
+            { "Quý Tỵ", "Thuỷ" },
             { "Giáp Ngọ", "Kim" },
             { "Ất Mùi", "Kim" },
             { "Bính Thân", "Hỏa" },
@@ -197,42 +212,100 @@ public class ZodiacService : IZodiacService
             { "Quý Mão", "Kim" },
             { "Giáp Thìn", "Hỏa" },
             { "Ất Tỵ", "Hỏa" },
-            { "Bính Ngọ", "Thủy" },
-            { "Đinh Mùi", "Thủy" },
+            { "Bính Ngọ", "Thuỷ" },
+            { "Đinh Mùi", "Thuỷ" },
             { "Mậu Thân", "Thổ" },
             { "Kỷ Dậu", "Thổ" },
             { "Canh Tuất", "Kim" },
             { "Tân Hợi", "Kim" },
             { "Nhâm Tý", "Mộc" },
             { "Quý Sửu", "Mộc" },
-            { "Giáp Dần", "Thủy" },
-            { "Ất Mão", "Thủy" },
+            { "Giáp Dần", "Thuỷ" },
+            { "Ất Mão", "Thuỷ" },
             { "Bính Thìn", "Thổ" },
             { "Đinh Tỵ", "Thổ" },
             { "Mậu Ngọ", "Hỏa" },
             { "Kỷ Mùi", "Hỏa" },
             { "Canh Thân", "Mộc" },
             { "Tân Dậu", "Mộc" },
-            { "Nhâm Tuất", "Thủy" },
-            { "Quý Hợi", "Thủy" },
+            { "Nhâm Tuất", "Thuỷ" },
+            { "Quý Hợi", "Thuỷ" },
         };
         
-        // Lấy Thiên Can và Địa Chi
+       
         string can = thienCanList[thienCan];
         string chi = diaChiList[diaChi];
         string canChi = $"{can} {chi}";
     
-        // Lấy mệnh từ bảng canChiToMenh
-        string menh;
-        if (canChiToMenh.TryGetValue(canChi, out menh))
+      
+        if (canChiToMenh.TryGetValue(canChi, out string menh))
         {
-            return new ResponseApiDTO
+            
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
             {
-                StatusCode = HttpStatusCode.OK,
-                IsSuccess = true,
-                Result = menh,
-                Message = $"Năm {year} là năm {canChi}, mệnh {menh}."
-            };
+               
+                var zodiacRepo = _unitOfWork.GetRepo<Zodiac>();
+                var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+
+               
+                var zodiac = await zodiacRepo.GetSingleAsync(new QueryBuilder<Zodiac>()
+                    .WithPredicate(x => x.ZodiacName == menh)
+                    .Build());
+
+                if (zodiac == null)
+                {
+                    return new ResponseApiDTO
+                    {
+                        StatusCode = HttpStatusCode.NotFound,
+                        IsSuccess = false,
+                        Message = $"Không tìm thấy mệnh {menh} trong cơ sở dữ liệu."
+                    };
+                }
+
+                
+                var existingUserZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+                    .WithPredicate(x => x.UserId == userId)
+                    .Build());
+
+                if (existingUserZodiac != null)
+                {
+                    
+                    existingUserZodiac.ZodiacId = zodiac.Id;
+                    await userZodiacRepo.UpdateAsync(existingUserZodiac);
+                }
+                else
+                {
+                    
+                    var userZodiac = new UserZodiac
+                    {
+                        UserId = userId,
+                        ZodiacId = zodiac.Id
+                    };
+                    await userZodiacRepo.CreateAsync(userZodiac);
+                }
+
+                
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                return new ResponseApiDTO
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    IsSuccess = true,
+                    Result = menh,
+                    Message = $"Năm {year} là năm {canChi}, mệnh {menh}. Đã cập nhật thông tin người dùng."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseApiDTO
+                {
+                    IsSuccess = false,
+                    Message = "Có lỗi xảy ra khi tính mệnh và lưu thông tin: " + ex.Message
+                };
+            }
         }
         else
         {

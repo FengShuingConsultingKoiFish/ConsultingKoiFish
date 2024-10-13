@@ -259,4 +259,162 @@ public class KoiService : IKoiService
             return new BaseResponse { IsSuccess = false, Message = "Có lỗi xảy ra khi xóa giống Koi." };
         }
     }
+
+    public async Task<BaseResponse> AddSuitableKoiZodiac(ZodiacKoiBreedDTO zodiacKoiBreedDto)
+    {
+        try
+        {
+            var repo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+            var zodiacKoiBreed = new KoiBreedZodiac
+            {
+                KoiBreedId = zodiacKoiBreedDto.KoiBreedId,
+                ZodiacId = zodiacKoiBreedDto.ZodiacId,
+               
+            };
+            
+            await repo.CreateAsync(zodiacKoiBreed);
+            await _unitOfWork.SaveChangesAsync();
+            
+            return new BaseResponse { IsSuccess = true, Message = "Thêm tương hợp cung hoàng đạo-Koi thành công" };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new BaseResponse { IsSuccess = false, Message = "Có lỗi xảy ra khi thêm tương hợp cung hoàng đạo-Koi" };
+        }
+    }
+
+    public async Task<BaseResponse> UpdateKoiZodiac(ZodiacKoiBreedDTO zodiacKoiBreedDto, int koiZodiacId)
+    {
+        try
+        {
+            var repo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+            
+            await _unitOfWork.BeginTransactionAsync();
+            
+            var zodiacExists = await repo.AnyAsync(new QueryBuilder<KoiBreedZodiac>()
+                .WithPredicate(x => x.Id.Equals(koiZodiacId))
+                .Build());
+
+            if (!zodiacExists)
+            {
+                return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy tương hợp cung hoàng đạo-Koi." };
+            }
+            
+            var zodiacKoiBreedDetail = await repo.GetSingleAsync(new QueryBuilder<KoiBreedZodiac>()
+                .WithPredicate(x => x.Id.Equals(koiZodiacId))
+                .Build());
+            
+            zodiacKoiBreedDetail.KoiBreedId = zodiacKoiBreedDto.KoiBreedId;
+            zodiacKoiBreedDetail.ZodiacId = zodiacKoiBreedDto.ZodiacId;
+            
+            await repo.UpdateAsync(zodiacKoiBreedDetail);
+            var isSaved = await _unitOfWork.SaveAsync();
+            
+            await _unitOfWork.CommitTransactionAsync();
+
+            if (!isSaved)
+            {
+                return new BaseResponse { IsSuccess = false, Message = "Cập nhật thông tin thất bại." };
+            }
+
+            return new BaseResponse { IsSuccess = true, Message = "Cập nhật thông tin thành công." };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new BaseResponse { IsSuccess = false, Message = "Có lỗi xảy ra trong quá trình cập nhật." };
+        }
+    }
+
+    public async Task<ResponseApiDTO> GetAllKoiZodiac()
+    {
+        try
+        {
+            var queryBuilder = new QueryBuilder<KoiBreedZodiac>()
+                .WithOrderBy(q => q.OrderBy(k => k.KoiBreedId))
+                .WithTracking(false);
+                
+            var repo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+            var zodiacKoiBreeds = await repo.GetAllAsync(queryBuilder.Build());
+
+            var zodiacKoiBreedDTOs = _mapper.Map<List<KoiBreedZodiac>>(zodiacKoiBreeds);
+            return new ResponseApiDTO { IsSuccess = true, Result = zodiacKoiBreedDTOs };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new ResponseApiDTO { IsSuccess = false, Message = "Không thể lấy danh sách tương hợp cung hoàng đạo-Koi." };
+        }
+    }
+
+    public async Task<BaseResponse> DeleteKoiZodiac(int koiZodiacId)
+    {
+        try
+        {
+            var repo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+            var zodiacKoiBreed = await repo.GetSingleAsync(new QueryBuilder<KoiBreedZodiac>()
+                .WithPredicate(x => x.Id == koiZodiacId)
+                .Build());
+
+            if (zodiacKoiBreed == null)
+            {
+                return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy tương hợp cung hoàng đạo-Koi." };
+            }
+
+            await repo.DeleteAsync(zodiacKoiBreed);
+            var isSaved = await _unitOfWork.SaveAsync();
+
+            if (!isSaved)
+            {
+                return new BaseResponse { IsSuccess = false, Message = "Xóa thất bại." };
+            }
+
+            return new BaseResponse { IsSuccess = true, Message = "Xóa thành công." };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new BaseResponse { IsSuccess = false, Message = "Có lỗi xảy ra khi xóa tương hợp cung hoàng đạo-Koi." };
+        }
+    }
+
+    public async Task<ResponseApiDTO> GetSuitableKoiForUser(string userId)
+    {
+        try
+        {
+            // Step 1: Retrieve user's zodiac sign from the UserZodiac repository
+            var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+            var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+                .WithPredicate(x => x.UserId.Equals(userId))
+                .Build());
+
+            if (userZodiac == null)
+            {
+                return new ResponseApiDTO { IsSuccess = false, Message = "Zodiac for the user not found." };
+            }
+
+            // Step 2: Retrieve matching Koi breeds for the user's zodiac
+            var koiZodiacRepo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+            var queryBuilder = new QueryBuilder<KoiBreedZodiac>()
+                .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match the ZodiacId from UserZodiac
+                .Build();
+
+            var suitableKoiBreeds = await koiZodiacRepo.GetAllAsync(queryBuilder);
+            if (suitableKoiBreeds == null || !suitableKoiBreeds.Any())
+            {
+                return new ResponseApiDTO { IsSuccess = false, Message = "No suitable Koi breeds found for the user's zodiac." };
+            }
+
+            // Step 3: Map the result to DTO (if necessary) and return
+            var suitableKoiBreedDTOs = _mapper.Map<List<KoiBreedZodiac>>(suitableKoiBreeds);
+            return new ResponseApiDTO { IsSuccess = true, Result = suitableKoiBreedDTOs, Message = "Suitable Koi breeds retrieved successfully." };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable Koi breeds." };
+        }
+    }
+
 }

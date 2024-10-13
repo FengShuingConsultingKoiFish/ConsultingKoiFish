@@ -13,4 +13,9 @@ public interface IPondService
     Task<BaseResponse> UpdatePondCharacteristic(PondCharacteristicDTO pondCharacteristicDto, int pondCharacteristicId);
     Task<ResponseApiDTO> GetAllPondCharacteristic();
     Task<BaseResponse> DeletePondCharacteristic(int pondCharacteristicId);
+    Task<BaseResponse> AddSuitablePondZodiac(ZodiacPondDTO zodiacPondDto);
+    Task<BaseResponse> UpdatePondZodiac(ZodiacPondDTO zodiacPondDto, int zodiacPondId);
+    Task<ResponseApiDTO> GetAllPondZodiac();
+    Task<BaseResponse> DeletePondZodiac(int zodiacPondId);
+    Task<ResponseApiDTO> GetSuitablePondForUser(string UserId);
 }

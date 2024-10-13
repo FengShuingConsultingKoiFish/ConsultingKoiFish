@@ -145,5 +145,71 @@ namespace ConsultingKoiFish.API.Controllers
 
             return BadRequest(result);
         }
+        [HttpPost("Add-Koi-Zodiac")]
+        public async Task<IActionResult> AddKoiZodiac([FromBody] ZodiacKoiBreedDTO zodiacKoiBreedDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _koiService.AddSuitableKoiZodiac(zodiacKoiBreedDto);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // PUT api/zodiac/Update-Koi-Zodiac/{id}
+        [HttpPut("Update-Koi-Zodiac/{id}")]
+        public async Task<IActionResult> UpdateKoiZodiac([FromBody] ZodiacKoiBreedDTO zodiacKoiBreedDto, int id)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await _koiService.UpdateKoiZodiac(zodiacKoiBreedDto, id);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // GET api/zodiac/Get-All-Koi-Zodiac
+        [HttpGet("Get-All-Koi-Zodiac")]
+        public async Task<IActionResult> GetAllKoiZodiac()
+        {
+            var result = await _koiService.GetAllKoiZodiac();
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+
+        // DELETE api/zodiac/Delete-Koi-Zodiac/{id}
+        [HttpDelete("Delete-Koi-Zodiac/{id}")]
+        public async Task<IActionResult> DeleteKoiZodiac(int id)
+        {
+            var result = await _koiService.DeleteKoiZodiac(id);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+        [HttpGet("Get-Suitable-Koi-For-User/{userId}")]
+        public async Task<IActionResult> GetSuitableKoiForUser(string userId)
+        {
+            var result = await _koiService.GetSuitableKoiForUser(userId);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
     }
 }

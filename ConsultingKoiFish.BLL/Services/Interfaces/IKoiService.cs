@@ -14,4 +14,9 @@ public interface IKoiService
     Task<BaseResponse> UpdateKoiBreed(KoiBreedDTO koiBreedDto, int koiBreedId);
     Task<ResponseApiDTO> GetAllKoiBreed();
     Task<BaseResponse> DeleteKoiBreed(int koiBreedId);
+    Task<BaseResponse> AddSuitableKoiZodiac(ZodiacKoiBreedDTO zodiacKoiBreedDto);
+    Task<BaseResponse> UpdateKoiZodiac(ZodiacKoiBreedDTO zodiacKoiBreedDto, int koiZodiacId);
+    Task<ResponseApiDTO> GetAllKoiZodiac();
+    Task<BaseResponse> DeleteKoiZodiac(int koiZodiacId);
+    Task<ResponseApiDTO> GetSuitableKoiForUser(string UserId);
 }

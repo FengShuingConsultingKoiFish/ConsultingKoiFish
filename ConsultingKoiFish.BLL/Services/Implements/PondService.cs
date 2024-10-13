@@ -257,5 +257,162 @@ namespace ConsultingKoiFish.BLL.Services.Implements
                 return new BaseResponse { IsSuccess = false, Message = "Error occurred while deleting pond characteristic." };
             }
         }
+
+        public async Task<BaseResponse> AddSuitablePondZodiac(ZodiacPondDTO zodiacPondDto)
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepo<PondZodiac>();
+                var zodiacPond = new PondZodiac
+                {
+                    PondId = zodiacPondDto.PondId,
+                    ZodiacId = zodiacPondDto.ZodiacId
+                };
+                
+                await repo.CreateAsync(zodiacPond);
+                await _unitOfWork.SaveChangesAsync();
+                
+                return new BaseResponse { IsSuccess = true, Message = "Thêm tương hợp cung hoàng đạo-Hồ thành công" };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new BaseResponse { IsSuccess = false, Message = "Có lỗi xảy ra khi thêm tương hợp cung hoàng đạo-Hồ" };
+            }
+        }
+
+        public async Task<BaseResponse> UpdatePondZodiac(ZodiacPondDTO zodiacPondDto, int zodiacPondId)
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepo<PondZodiac>();
+                
+                await _unitOfWork.BeginTransactionAsync();
+                
+                var zodiacExists = await repo.AnyAsync(new QueryBuilder<PondZodiac>()
+                    .WithPredicate(x => x.Id.Equals(zodiacPondId))
+                    .Build());
+
+                if (!zodiacExists)
+                {
+                    return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy tương hợp cung hoàng đạo-Hồ." };
+                }
+                
+                var zodiacPondDetail = await repo.GetSingleAsync(new QueryBuilder<PondZodiac>()
+                    .WithPredicate(x => x.Id.Equals(zodiacPondId))
+                    .Build());
+                
+                zodiacPondDetail.PondId = zodiacPondDto.PondId;
+                zodiacPondDetail.ZodiacId = zodiacPondDto.ZodiacId;
+                
+                await repo.UpdateAsync(zodiacPondDetail);
+                var isSaved = await _unitOfWork.SaveAsync();
+                
+                await _unitOfWork.CommitTransactionAsync();
+
+                if (!isSaved)
+                {
+                    return new BaseResponse { IsSuccess = false, Message = "Cập nhật thông tin thất bại." };
+                }
+
+                return new BaseResponse { IsSuccess = true, Message = "Cập nhật thông tin thành công." };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new BaseResponse { IsSuccess = false, Message = "Có lỗi xảy ra trong quá trình cập nhật." };
+            }
+        }
+
+        public async Task<ResponseApiDTO> GetAllPondZodiac()
+        {
+            try
+            {
+                var queryBuilder = new QueryBuilder<PondZodiac>()
+                    .WithOrderBy(q => q.OrderBy(p => p.PondId))
+                    .WithTracking(false);
+                    
+                var repo = _unitOfWork.GetRepo<PondZodiac>();
+                var zodiacPonds = await repo.GetAllAsync(queryBuilder.Build());
+
+                var zodiacPondDTOs = _mapper.Map<List<PondZodiac>>(zodiacPonds);
+                return new ResponseApiDTO { IsSuccess = true, Result = zodiacPondDTOs };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new ResponseApiDTO { IsSuccess = false, Message = "Không thể lấy danh sách tương hợp cung hoàng đạo-Hồ." };
+            }
+        }
+
+        public async Task<BaseResponse> DeletePondZodiac(int zodiacPondId)
+        {
+            try
+            {
+                var repo = _unitOfWork.GetRepo<PondZodiac>();
+                var zodiacPond = await repo.GetSingleAsync(new QueryBuilder<PondZodiac>()
+                    .WithPredicate(x => x.Id == zodiacPondId)
+                    .Build());
+
+                if (zodiacPond == null)
+                {
+                    return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy tương hợp cung hoàng đạo-Hồ." };
+                }
+
+                await repo.DeleteAsync(zodiacPond);
+                var isSaved = await _unitOfWork.SaveAsync();
+
+                if (!isSaved)
+                {
+                    return new BaseResponse { IsSuccess = false, Message = "Xóa thất bại." };
+                }
+
+                return new BaseResponse { IsSuccess = true, Message = "Xóa thành công." };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new BaseResponse { IsSuccess = false, Message = "Có lỗi xảy ra khi xóa tương hợp cung hoàng đạo-Hồ." };
+            }
+        }
+
+        public async Task<ResponseApiDTO> GetSuitablePondForUser(string userId)
+        {
+            try
+            {
+                // Retrieve user's zodiac sign from the UserZodiac repository
+                var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+                var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+                    .WithPredicate(x => x.UserId.Equals(userId))
+                    .Build());
+
+                if (userZodiac == null)
+                {
+                    return new ResponseApiDTO { IsSuccess = false, Message = "User's zodiac not found." };
+                }
+
+                // Retrieve matching ponds based on the user's zodiac sign
+                var pondZodiacRepo = _unitOfWork.GetRepo<PondZodiac>();
+                var queryBuilder = new QueryBuilder<PondZodiac>()
+                    .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match ZodiacId from PondZodiac
+                    .Build();
+        
+                var matchingPonds = await pondZodiacRepo.GetAllAsync(queryBuilder);
+                if (matchingPonds == null || matchingPonds.Count() == 0)
+                {
+                    return new ResponseApiDTO { IsSuccess = false, Message = "No suitable ponds found for the user's zodiac sign." };
+                }
+
+                // Map the result to a DTO (if needed) and return
+                var suitablePondDTOs = _mapper.Map<List<PondZodiac>>(matchingPonds);
+                return new ResponseApiDTO { IsSuccess = true, Result = suitablePondDTOs, Message = "Suitable ponds retrieved successfully." };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable ponds." };
+            }
+        }
+
     }
 }
