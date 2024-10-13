@@ -49,6 +49,30 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.ToTable("AdAttributes", "dbo");
                 });
 
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.AdComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AdvertisementId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CommentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdvertisementId");
+
+                    b.HasIndex("CommentId")
+                        .IsUnique();
+
+                    b.ToTable("AdComments", "dbo");
+                });
+
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.AdImage", b =>
                 {
                     b.Property<int>("Id")
@@ -92,6 +116,12 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.Property<double>("Price")
                         .HasColumnType("float");
 
+                    b.Property<int>("PurchasedPackageId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -102,6 +132,8 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PurchasedPackageId");
 
                     b.HasIndex("UserId");
 
@@ -116,13 +148,26 @@ namespace ConsultingKoiFish.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<int>("Limit")
+                    b.Property<int?>("LimitAd")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LimitContent")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LimitImage")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -221,6 +266,9 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -235,6 +283,30 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Blogs", "dbo");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.BlogComment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlogId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CommentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlogId");
+
+                    b.HasIndex("CommentId")
+                        .IsUnique();
+
+                    b.ToTable("BlogComments", "dbo");
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.BlogImage", b =>
@@ -268,12 +340,6 @@ namespace ConsultingKoiFish.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AdvertisementId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BlogId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -287,10 +353,6 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdvertisementId");
-
-                    b.HasIndex("BlogId");
 
                     b.HasIndex("UserId");
 
@@ -416,6 +478,52 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.ToTable("KoiCategories", "dbo");
                 });
 
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.KoiDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("KoiBreedId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserPondId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KoiBreedId");
+
+                    b.HasIndex("UserPondId");
+
+                    b.ToTable("KoiDetails", "dbo");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.PackageImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AdvertisementPackageId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ImageId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdvertisementPackageId");
+
+                    b.HasIndex("ImageId");
+
+                    b.ToTable("PackageImages", "dbo");
+                });
+
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Payment", b =>
                 {
                     b.Property<int>("Id")
@@ -426,6 +534,9 @@ namespace ConsultingKoiFish.DAL.Migrations
 
                     b.Property<int>("AdvertisementPackageId")
                         .HasColumnType("int");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
 
                     b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
@@ -507,9 +618,6 @@ namespace ConsultingKoiFish.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("KoiBreedId")
-                        .HasColumnType("int");
-
                     b.Property<int>("PondId")
                         .HasColumnType("int");
 
@@ -517,8 +625,6 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("KoiBreedId");
 
                     b.HasIndex("PondId");
 
@@ -561,6 +667,15 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.Property<int>("AdvertisementPackageId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MornitoredQuantity")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -571,7 +686,8 @@ namespace ConsultingKoiFish.DAL.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AdvertisementPackageId");
+                    b.HasIndex("AdvertisementPackageId")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -885,6 +1001,23 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.Navigation("Advertisement");
                 });
 
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.AdComment", b =>
+                {
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.Advertisement", "Advertisement")
+                        .WithMany("AdComments")
+                        .HasForeignKey("AdvertisementId")
+                        .IsRequired();
+
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.Comment", "Comment")
+                        .WithOne("AdComment")
+                        .HasForeignKey("ConsultingKoiFish.DAL.Entities.AdComment", "CommentId")
+                        .IsRequired();
+
+                    b.Navigation("Advertisement");
+
+                    b.Navigation("Comment");
+                });
+
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.AdImage", b =>
                 {
                     b.HasOne("ConsultingKoiFish.DAL.Entities.Advertisement", "Advertisement")
@@ -904,10 +1037,17 @@ namespace ConsultingKoiFish.DAL.Migrations
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Advertisement", b =>
                 {
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.PurchasedPackage", "PurchasedPackage")
+                        .WithMany("Advertisements")
+                        .HasForeignKey("PurchasedPackageId")
+                        .IsRequired();
+
                     b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", "User")
                         .WithMany("Advertisements")
                         .HasForeignKey("UserId")
                         .IsRequired();
+
+                    b.Navigation("PurchasedPackage");
 
                     b.Navigation("User");
                 });
@@ -920,6 +1060,23 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.BlogComment", b =>
+                {
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.Blog", "Blog")
+                        .WithMany("BlogComments")
+                        .HasForeignKey("BlogId")
+                        .IsRequired();
+
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.Comment", "Comment")
+                        .WithOne("BlogComment")
+                        .HasForeignKey("ConsultingKoiFish.DAL.Entities.BlogComment", "CommentId")
+                        .IsRequired();
+
+                    b.Navigation("Blog");
+
+                    b.Navigation("Comment");
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.BlogImage", b =>
@@ -941,27 +1098,10 @@ namespace ConsultingKoiFish.DAL.Migrations
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Comment", b =>
                 {
-                    b.HasOne("ConsultingKoiFish.DAL.Entities.Advertisement", "Advertisement")
-                        .WithMany("Comments")
-                        .HasForeignKey("AdvertisementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ConsultingKoiFish.DAL.Entities.Blog", "Blog")
-                        .WithMany("Comments")
-                        .HasForeignKey("BlogId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Advertisement");
-
-                    b.Navigation("Blog");
 
                     b.Navigation("User");
                 });
@@ -1003,6 +1143,40 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.Navigation("Zodiac");
                 });
 
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.KoiDetail", b =>
+                {
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.KoiBreed", "KoiBreed")
+                        .WithMany("KoiDetails")
+                        .HasForeignKey("KoiBreedId")
+                        .IsRequired();
+
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.UserPond", "UserPond")
+                        .WithMany("KoiDetails")
+                        .HasForeignKey("UserPondId")
+                        .IsRequired();
+
+                    b.Navigation("KoiBreed");
+
+                    b.Navigation("UserPond");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.PackageImage", b =>
+                {
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.AdvertisementPackage", "AdvertisementPackage")
+                        .WithMany("PackageImages")
+                        .HasForeignKey("AdvertisementPackageId")
+                        .IsRequired();
+
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.Image", "Image")
+                        .WithMany("PackageImages")
+                        .HasForeignKey("ImageId")
+                        .IsRequired();
+
+                    b.Navigation("AdvertisementPackage");
+
+                    b.Navigation("Image");
+                });
+
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Payment", b =>
                 {
                     b.HasOne("ConsultingKoiFish.DAL.Entities.AdvertisementPackage", "AdvertisementPackage")
@@ -1013,7 +1187,6 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", "User")
                         .WithMany("Payments")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AdvertisementPackage");
@@ -1033,11 +1206,6 @@ namespace ConsultingKoiFish.DAL.Migrations
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.PondDetail", b =>
                 {
-                    b.HasOne("ConsultingKoiFish.DAL.Entities.KoiBreed", "KoiBreed")
-                        .WithMany("PondDetails")
-                        .HasForeignKey("KoiBreedId")
-                        .IsRequired();
-
                     b.HasOne("ConsultingKoiFish.DAL.Entities.Pond", "Pond")
                         .WithMany("PondDetails")
                         .HasForeignKey("PondId")
@@ -1047,8 +1215,6 @@ namespace ConsultingKoiFish.DAL.Migrations
                         .WithMany("PondDetails")
                         .HasForeignKey("UserPondId")
                         .IsRequired();
-
-                    b.Navigation("KoiBreed");
 
                     b.Navigation("Pond");
 
@@ -1075,15 +1241,13 @@ namespace ConsultingKoiFish.DAL.Migrations
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.PurchasedPackage", b =>
                 {
                     b.HasOne("ConsultingKoiFish.DAL.Entities.AdvertisementPackage", "AdvertisementPackage")
-                        .WithMany("PurchasedPackages")
-                        .HasForeignKey("AdvertisementPackageId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithOne("PurchasedPackages")
+                        .HasForeignKey("ConsultingKoiFish.DAL.Entities.PurchasedPackage", "AdvertisementPackageId")
                         .IsRequired();
 
                     b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", "User")
                         .WithMany("PurchasedPackages")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AdvertisementPackage");
@@ -1195,16 +1359,19 @@ namespace ConsultingKoiFish.DAL.Migrations
                 {
                     b.Navigation("AdAttributes");
 
-                    b.Navigation("AdImages");
+                    b.Navigation("AdComments");
 
-                    b.Navigation("Comments");
+                    b.Navigation("AdImages");
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.AdvertisementPackage", b =>
                 {
+                    b.Navigation("PackageImages");
+
                     b.Navigation("Payments");
 
-                    b.Navigation("PurchasedPackages");
+                    b.Navigation("PurchasedPackages")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.ApplicationUser", b =>
@@ -1232,9 +1399,18 @@ namespace ConsultingKoiFish.DAL.Migrations
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Blog", b =>
                 {
-                    b.Navigation("BlogImages");
+                    b.Navigation("BlogComments");
 
-                    b.Navigation("Comments");
+                    b.Navigation("BlogImages");
+                });
+
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Comment", b =>
+                {
+                    b.Navigation("AdComment")
+                        .IsRequired();
+
+                    b.Navigation("BlogComment")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.Image", b =>
@@ -1242,13 +1418,15 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.Navigation("AdImages");
 
                     b.Navigation("BlogImages");
+
+                    b.Navigation("PackageImages");
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.KoiBreed", b =>
                 {
                     b.Navigation("KoiBreedZodiacs");
 
-                    b.Navigation("PondDetails");
+                    b.Navigation("KoiDetails");
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.KoiCategory", b =>
@@ -1268,8 +1446,15 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.Navigation("Ponds");
                 });
 
+            modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.PurchasedPackage", b =>
+                {
+                    b.Navigation("Advertisements");
+                });
+
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.UserPond", b =>
                 {
+                    b.Navigation("KoiDetails");
+
                     b.Navigation("PondDetails");
                 });
 

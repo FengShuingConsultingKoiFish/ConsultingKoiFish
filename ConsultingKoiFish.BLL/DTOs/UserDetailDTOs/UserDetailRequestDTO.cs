@@ -10,12 +10,13 @@ namespace ConsultingKoiFish.BLL.DTOs.UserDetailDTOs
 {
 	public class UserDetailRequestDTO
 	{
-        public string? FullName { get; set; }
+        [Required(ErrorMessage = "Tên không được để trống.")]
+        public string FullName { get; set; }
         [IdentityCardValid]
         public string? IdentityCard { get; set; }
         [DataType(DataType.Date)]
         public DateTime? DateOfBirth { get; set; }
         public string? Gender { get; set; }
-        public string? Avatar { get; set; }
+        public int? ImageId { get; set; }
     }
 }

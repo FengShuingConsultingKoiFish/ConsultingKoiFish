@@ -12,11 +12,12 @@ namespace ConsultingKoiFish.DAL.Entities
 		public string Title { get; set; } = null!;
 		public string Content { get; set; } = null!;
 		public string UserId { get; set; }
-		public DateTime CreatedDate { get; set; } = DateTime.Now;
+		public DateTime CreatedDate { get; set; }
+		public int Status { get; set; }
 		public bool IsActive { get; set; } = true;
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<BlogImage> BlogImages { get; set; } = new List<BlogImage>();
-		public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+		public virtual ICollection<BlogComment> BlogComments { get; set; } = new List<BlogComment>();
 	}
 }

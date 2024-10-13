@@ -86,6 +86,10 @@ namespace ConsultingKoiFish.API
 			//Add Email Config
 			var emailConfig = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
 			builder.Services.AddSingleton(emailConfig);
+			
+			//Add VnPay Config
+			var vnpConfig = builder.Configuration.GetSection("VnPayConfiguration").Get<VnPayConfiguration>();
+			builder.Services.AddSingleton(vnpConfig);
 
 			//Add config for Required Email
 			builder.Services.Configure<IdentityOptions>(opts =>
@@ -122,6 +126,9 @@ namespace ConsultingKoiFish.API
 
 			// API Behavior
 			builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
+
+			//Add HttpClient
+			builder.Services.AddHttpClient();
 
 			var app = builder.Build();
 

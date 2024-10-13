@@ -32,6 +32,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<PondZodiac> PondZodiacs { get; set; }
 		public virtual DbSet<UserPond> UserPonds { get; set; }
 		public virtual DbSet<PondDetail> PondDetails { get; set; }
+		public virtual DbSet<KoiDetail> KoiDetails { get; set; }
 		public virtual DbSet<Image> Images { get; set; }
 		public virtual DbSet<Blog> Blogs { get; set; }
 		public virtual DbSet<BlogImage> BlogImages { get; set; }
@@ -39,8 +40,11 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<AdAttribute> AdAttributes { get; set; }
 		public virtual DbSet<AdImage> AdImages { get; set; }
 		public virtual DbSet<Comment> Comments { get; set; }
+		public virtual DbSet<BlogComment> BlogComments { get; set; }
+		public virtual DbSet<AdComment> AdComments { get; set; }
 		public virtual DbSet<AdvertisementPackage> AdvertisementPackages { get; set; }
 		public virtual DbSet<PurchasedPackage> PurchasedPackages { get; set; }
+		public virtual DbSet<PackageImage> PackageImages { get; set; }
 		public virtual DbSet<Payment> Payments { get; set; }
 
 		#endregion
@@ -70,6 +74,24 @@ namespace ConsultingKoiFish.DAL
 			modelBuilder.Entity<IdentityUserToken<string>>(entity => { entity.ToTable(name: "UserToken"); });
 			modelBuilder.Entity<IdentityRoleClaim<string>>(entity => { entity.ToTable(name: "RoleClaim"); });
 
+			modelBuilder.Entity<PackageImage>(entity =>
+			{
+				entity.HasKey(p => p.Id);
+				entity.Property(p => p.AdvertisementPackageId).IsRequired();
+				entity.Property(p => p.ImageId).IsRequired();
+
+				entity.HasOne(p => p.Image)
+					.WithMany(i => i.PackageImages)
+					.HasForeignKey(p => p.ImageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with AdvertisementPackage
+				entity.HasOne(p => p.AdvertisementPackage)
+					.WithMany(ap => ap.PackageImages)
+					.HasForeignKey(p => p.AdvertisementPackageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
+
 			modelBuilder.Entity<Payment>(entity =>
 			{
 				entity.HasKey(p => p.Id);
@@ -90,7 +112,7 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(p => p.User)
 					.WithMany(u => u.Payments)
 					.HasForeignKey(p => p.UserId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with AdvertisementPackage
 				entity.HasOne(p => p.AdvertisementPackage)
@@ -113,13 +135,13 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(pp => pp.User)
 					.WithMany(u => u.PurchasedPackages)
 					.HasForeignKey(pp => pp.UserId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with AdvertisementPackage
 				entity.HasOne(pp => pp.AdvertisementPackage)
-					.WithMany(ap => ap.PurchasedPackages)
-					.HasForeignKey(pp => pp.AdvertisementPackageId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.WithOne(ap => ap.PurchasedPackages)
+					.HasForeignKey<PurchasedPackage>(pp => pp.AdvertisementPackageId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
 			modelBuilder.Entity<AdvertisementPackage>(entity =>
@@ -135,9 +157,6 @@ namespace ConsultingKoiFish.DAL
 
 				entity.Property(ap => ap.Description)
 					.HasColumnType("nvarchar(max)");
-
-				entity.Property(ap => ap.Limit)
-					.IsRequired();
 			});
 
 			modelBuilder.Entity<Comment>(entity =>
@@ -158,19 +177,43 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(c => c.User)
 					.WithMany(u => u.Comments)
 					.HasForeignKey(c => c.UserId)
-					.OnDelete(DeleteBehavior.Cascade);
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
+
+
+			modelBuilder.Entity<BlogComment>(entity =>
+			{
+				entity.HasKey(c => c.Id);
+
+				// Relationship with Comment
+				entity.HasOne(bc => bc.Comment)
+					.WithOne(c => c.BlogComment)
+					.HasForeignKey<BlogComment>(bc => bc.CommentId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with Blog
-				entity.HasOne(c => c.Blog)
-					.WithMany(b => b.Comments)
-					.HasForeignKey(c => c.BlogId)
-					.OnDelete(DeleteBehavior.Cascade);
+				entity.HasOne(bc => bc.Blog)
+					.WithMany(b => b.BlogComments)
+					.HasForeignKey(bc => bc.BlogId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
 
-				// Relationship with Advertisement
-				entity.HasOne(c => c.Advertisement)
-					.WithMany(ad => ad.Comments)
-					.HasForeignKey(c => c.AdvertisementId)
-					.OnDelete(DeleteBehavior.Cascade);
+
+			modelBuilder.Entity<AdComment>(entity =>
+			{
+				entity.HasKey(c => c.Id);
+
+				// Relationship with Comment
+				entity.HasOne(ac => ac.Comment)
+					.WithOne(a => a.AdComment)
+					.HasForeignKey<AdComment>(ac => ac.CommentId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with Ad
+				entity.HasOne(ac => ac.Advertisement)
+					.WithMany(a => a.AdComments)
+					.HasForeignKey(ac => ac.AdvertisementId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
 			modelBuilder.Entity<AdImage>(entity =>
@@ -231,6 +274,12 @@ namespace ConsultingKoiFish.DAL
 				entity.HasOne(ad => ad.User)
 					.WithMany(u => u.Advertisements)
 					.HasForeignKey(ad => ad.UserId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+				
+				// Configure relationship with ApplicationUser
+				entity.HasOne(ad => ad.PurchasedPackage)
+					.WithMany(pp => pp.Advertisements)
+					.HasForeignKey(ad => ad.PurchasedPackageId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
@@ -299,6 +348,24 @@ namespace ConsultingKoiFish.DAL
 					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
+
+			modelBuilder.Entity<KoiDetail>(entity =>
+			{
+				entity.HasKey(pd => pd.Id);
+
+				// Relationship with UserPond
+				entity.HasOne(pd => pd.UserPond)
+					.WithMany(p => p.KoiDetails)
+					.HasForeignKey(pd => pd.UserPondId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with KoiBreed
+				entity.HasOne(pd => pd.KoiBreed)
+					.WithMany(kb => kb.KoiDetails)
+					.HasForeignKey(pd => pd.KoiBreedId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
+
 			modelBuilder.Entity<PondDetail>(entity =>
 			{
 				entity.HasKey(pd => pd.Id);
@@ -310,14 +377,8 @@ namespace ConsultingKoiFish.DAL
 					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with KoiBreed
-				entity.HasOne(pd => pd.KoiBreed)
-					.WithMany(kb => kb.PondDetails)
-					.HasForeignKey(pd => pd.KoiBreedId)
-					.OnDelete(DeleteBehavior.ClientSetNull);
-
-				// Relationship with UserPond
 				entity.HasOne(pd => pd.UserPond)
-					.WithMany(up => up.PondDetails)
+					.WithMany(kb => kb.PondDetails)
 					.HasForeignKey(pd => pd.UserPondId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
 			});

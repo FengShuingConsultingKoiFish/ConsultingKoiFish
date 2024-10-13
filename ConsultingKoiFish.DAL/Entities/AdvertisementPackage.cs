@@ -14,10 +14,18 @@ namespace ConsultingKoiFish.DAL.Entities
 		public double Price { get; set; }
 		[AllowNull]
 		public string? Description { get; set; }
-		public int Limit { get; set; }
-        public bool IsActive { get; set; } = true;
+		[AllowNull]
+		public int? LimitAd { get; set; }
+		[AllowNull]
+		public int? LimitContent { get; set; }
+		[AllowNull]
+		public int? LimitImage { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public string CreatedBy { get; set; } = null!;
 
-        public virtual ICollection<PurchasedPackage> PurchasedPackages { get; set; } = new List<PurchasedPackage>();
+        public virtual PurchasedPackage PurchasedPackages { get; set; }
+        public virtual ICollection<PackageImage> PackageImages { get; set; } = new List<PackageImage>();
 		public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 	}
 }
