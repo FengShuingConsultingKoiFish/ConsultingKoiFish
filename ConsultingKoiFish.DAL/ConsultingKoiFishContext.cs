@@ -32,6 +32,7 @@ namespace ConsultingKoiFish.DAL
 		public virtual DbSet<PondZodiac> PondZodiacs { get; set; }
 		public virtual DbSet<UserPond> UserPonds { get; set; }
 		public virtual DbSet<PondDetail> PondDetails { get; set; }
+		public virtual DbSet<KoiDetail> KoiDetails { get; set; }
 		public virtual DbSet<Image> Images { get; set; }
 		public virtual DbSet<Blog> Blogs { get; set; }
 		public virtual DbSet<BlogImage> BlogImages { get; set; }
@@ -347,6 +348,24 @@ namespace ConsultingKoiFish.DAL
 					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
+
+			modelBuilder.Entity<KoiDetail>(entity =>
+			{
+				entity.HasKey(pd => pd.Id);
+
+				// Relationship with UserPond
+				entity.HasOne(pd => pd.UserPond)
+					.WithMany(p => p.KoiDetails)
+					.HasForeignKey(pd => pd.UserPondId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+
+				// Relationship with KoiBreed
+				entity.HasOne(pd => pd.KoiBreed)
+					.WithMany(kb => kb.KoiDetails)
+					.HasForeignKey(pd => pd.KoiBreedId)
+					.OnDelete(DeleteBehavior.ClientSetNull);
+			});
+
 			modelBuilder.Entity<PondDetail>(entity =>
 			{
 				entity.HasKey(pd => pd.Id);
@@ -358,14 +377,8 @@ namespace ConsultingKoiFish.DAL
 					.OnDelete(DeleteBehavior.ClientSetNull);
 
 				// Relationship with KoiBreed
-				entity.HasOne(pd => pd.KoiBreed)
-					.WithMany(kb => kb.PondDetails)
-					.HasForeignKey(pd => pd.KoiBreedId)
-					.OnDelete(DeleteBehavior.ClientSetNull);
-
-				// Relationship with UserPond
 				entity.HasOne(pd => pd.UserPond)
-					.WithMany(up => up.PondDetails)
+					.WithMany(kb => kb.PondDetails)
 					.HasForeignKey(pd => pd.UserPondId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
 			});

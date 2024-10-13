@@ -19,5 +19,6 @@ namespace ConsultingKoiFish.DAL.Entities
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<PondDetail> PondDetails { get; set; } = new List<PondDetail>();
+		public virtual ICollection<KoiDetail> KoiDetails { get; set; } = new List<KoiDetail>();
 	}
 }
