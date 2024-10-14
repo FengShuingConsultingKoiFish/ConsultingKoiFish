@@ -206,9 +206,19 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 			var package = await repo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
 				.WithPredicate(x => x.Id == id)
 				.WithTracking(false)
+				.WithInclude(x => x.PurchasedPackages)
 				.Build());
 			if (!package.CreatedBy.Equals(userName)) return new BaseResponse { IsSuccess = false, Message = "Gói không thuộc sở hữu người dùng." };
-			package.IsActive = false;
+			var inUsedPackage = new List<PurchasedPackage>();
+            foreach (var item in package.PurchasedPackages)
+            {
+                if(item.Status == (int)PurchasedPackageStatus.Available)
+				{
+					inUsedPackage.Add(item);
+				}
+            }
+			if (inUsedPackage.Any()) return new BaseResponse { IsSuccess = false, Message = $"Vẫn còn {inUsedPackage.Count} gói còn khả dụng của người dùng." };
+            package.IsActive = false;
 			await repo.UpdateAsync(package);
 			var saver = await _unitOfWork.SaveAsync();
 			if (!saver)

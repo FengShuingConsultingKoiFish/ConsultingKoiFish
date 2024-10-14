@@ -139,8 +139,8 @@ namespace ConsultingKoiFish.DAL
 
 				// Relationship with AdvertisementPackage
 				entity.HasOne(pp => pp.AdvertisementPackage)
-					.WithOne(ap => ap.PurchasedPackages)
-					.HasForeignKey<PurchasedPackage>(pp => pp.AdvertisementPackageId)
+					.WithMany(ap => ap.PurchasedPackages)
+					.HasForeignKey(pp => pp.AdvertisementPackageId)
 					.OnDelete(DeleteBehavior.ClientSetNull);
 			});
 
