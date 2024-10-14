@@ -189,7 +189,7 @@ namespace ConsultingKoiFish.API.Controllers
 
 		#endregion
 
-		#region User
+		#region Member
 
 		[Authorize(Roles = "Member")]
         [HttpPost]

@@ -269,7 +269,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		return response;
 	}
 
-	#region Private
+	#region CONVERT TO VIEW
 
 	/// <summary>
 	/// This is used to get package images for each pacakage
@@ -277,7 +277,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 	/// <param name="package"></param>
 	/// <param name="orderImage"></param>
 	/// <returns></returns>
-	private async Task<List<PackageImage>> GetPackageImagesForEachPackage(AdvertisementPackage package, OrderImage? orderImage)
+	public async Task<List<PackageImage>> GetPackageImagesForEachPackage(AdvertisementPackage package, OrderImage? orderImage)
 	{
 		var packageImageRepo = _unitOfWork.GetRepo<PackageImage>();
 		var packageImages = packageImageRepo.Get(new QueryBuilder<PackageImage>()
@@ -300,7 +300,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 	/// </summary>
 	/// <param name="packageImages"></param>
 	/// <returns></returns>
-	private Task<List<ImageViewDTO>> ConvertPackageImagesToImageViews(ICollection<PackageImage> packageImages)
+	public Task<List<ImageViewDTO>> ConvertPackageImagesToImageViews(ICollection<PackageImage> packageImages)
 	{
 		return _imageService.ConvertSpeciedImageToImageViews(packageImages, packageImage => packageImage.ImageId);
 	}
@@ -312,7 +312,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 	/// <param name="orderComment"></param>
 	/// <param name="orderImage"></param>
 	/// <returns></returns>
-	private async Task<List<AdvertisementPackageViewDTO>> ConvertPackagesToPackageViews(List<AdvertisementPackage> packages, OrderImage? orderImage)
+	public async Task<List<AdvertisementPackageViewDTO>> ConvertPackagesToPackageViews(List<AdvertisementPackage> packages, OrderImage? orderImage)
 	{
 		var response = new List<AdvertisementPackageViewDTO>();
 		foreach (var package in packages)
@@ -325,7 +325,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 	}
 
 
-	private async Task<AdvertisementPackageViewDTO> ConvertPackageToPackageView(AdvertisementPackage package, OrderImage? orderImage)
+	public async Task<AdvertisementPackageViewDTO> ConvertPackageToPackageView(AdvertisementPackage package, OrderImage? orderImage)
 	{
 		var packageImageViewDtos = await ConvertPackageImagesToImageViews(await GetPackageImagesForEachPackage(package, orderImage));
 		var response = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
