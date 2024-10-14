@@ -6,6 +6,7 @@ using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
+using Mailjet.Client.Resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,41 +98,88 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return new BaseResponse { IsSuccess = false, Message = "Không tồn tại người dùng." };
 		}
 
-		public async Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetails(int pageIndex, int pageSize)
+		public async Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetails(UserDetailGetListDTO dto)
 		{
 			var repo = _unitOfWork.GetRepo<UserDetail>();
 			var loadedRecords = repo.Get(new QueryBuilder<UserDetail>()
 										.WithPredicate(x => x.IsActive == true)
+										.WithInclude(x => x.User)
+										.WithTracking(false)
 										.Build());
-			var pagedRecords = await PaginatedList<UserDetail>.CreateAsync(loadedRecords, pageIndex, pageSize);
-			var resultDTO = _mapper.Map<List<UserDetailViewDTO>>(pagedRecords);
-			return new PaginatedList<UserDetailViewDTO>(resultDTO, pagedRecords.TotalItems, pageIndex, pageSize);
+			if(!string.IsNullOrEmpty(dto.FullName))
+			{
+				loadedRecords = loadedRecords.Where(x => x.FullName.Contains(dto.FullName));
+			}
+
+			if (!string.IsNullOrEmpty(dto.UserName))
+			{
+				loadedRecords = loadedRecords.Where(x => x.User.UserName.Contains(dto.UserName));
+			}
+
+			if (!string.IsNullOrEmpty(dto.UserId))
+			{
+				loadedRecords = loadedRecords.Where(x => x.UserId.Contains(dto.UserId));
+			}
+
+			var pagedRecords = await PaginatedList<UserDetail>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
+			var resultDTO = ConvertUserDetailsToUserDetailViews(pagedRecords);
+			return new PaginatedList<UserDetailViewDTO>(resultDTO, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 		}
 
-		public async Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetailsByName(int pageIndex, int pageSize, string? name)
-		{
-			var repo = _unitOfWork.GetRepo<UserDetail>();
-			var loadedRecords = repo.Get(new QueryBuilder<UserDetail>()
-										.WithPredicate(x => x.IsActive == true)
-										.Build());
-			if(string.IsNullOrEmpty(name))
-			{
-				loadedRecords = loadedRecords.Where(x => x.FullName.Contains(name));
-			}
-			var pagedRecords = await PaginatedList<UserDetail>.CreateAsync(loadedRecords, pageIndex, pageSize);
-			var resultDTO = _mapper.Map<List<UserDetailViewDTO>>(pagedRecords);
-			return new PaginatedList<UserDetailViewDTO>(resultDTO, pagedRecords.TotalItems, pageIndex, pageSize);
-		}
 
 		public async Task<UserDetailViewDTO> GetUserDetailByUserId(string userId)
 		{
 			var repo = _unitOfWork.GetRepo<UserDetail>();
 			var response = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
 													.WithPredicate(x => x.UserId.Equals(userId) && x.IsActive == true)
+													.WithInclude(x => x.User)
 													.WithTracking(false)
 													.Build());
 			if (response == null) return null;
-			return _mapper.Map<UserDetailViewDTO>(response);
+			return ConvertUserDetailToUserDetailView(response);
 		}
+
+		public async Task<UserDetailViewDTO> GetUserDetailById(Guid id)
+		{
+			var repo = _unitOfWork.GetRepo<UserDetail>();
+			var response = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
+													.WithPredicate(x => x.Id.Equals(id) && x.IsActive == true)
+													.WithInclude(x => x.User)
+													.WithTracking(false)
+													.Build());
+			if (response == null) return null;
+			return ConvertUserDetailToUserDetailView(response);
+		}
+
+		#region Convert
+
+		/// <summary>
+		/// This is used to convert a user profile to user profile view
+		/// </summary>
+		/// <param name="userDetail"></param>
+		/// <returns></returns>
+		private UserDetailViewDTO ConvertUserDetailToUserDetailView(UserDetail userDetail)
+		{
+			var repsonse = new UserDetailViewDTO(userDetail);
+			return repsonse;
+		}
+
+		/// <summary>
+		/// This is used to convert a collection of user profile to a collection of user detail views
+		/// </summary>
+		/// <param name="userDetails"></param>
+		/// <returns></returns>
+		private List<UserDetailViewDTO> ConvertUserDetailsToUserDetailViews(List<UserDetail> userDetails)
+		{
+			var repsonse = new List<UserDetailViewDTO>();
+            foreach (var userDetail in userDetails)
+            {
+				var userDetailViewDto = ConvertUserDetailToUserDetailView(userDetail);
+				repsonse.Add(userDetailViewDto);
+            }
+			return repsonse;
+        }
+
+		#endregion
 	}
 }

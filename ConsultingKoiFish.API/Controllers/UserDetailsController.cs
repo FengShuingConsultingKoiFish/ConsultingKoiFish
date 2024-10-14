@@ -52,7 +52,7 @@ namespace ConsultingKoiFish.API.Controllers
 
 		[Authorize]
 		[HttpGet]
-		[Route("get-user-detail")]
+		[Route("get-user-detail-for-user")]
 		public async Task<IActionResult> GetUserDetailByUserId()
 		{
 			try
@@ -70,15 +70,13 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
-		[Authorize]
 		[HttpGet]
-		[Route("get-all-details/{pageIndex}/{pageSize}")]
-		public async Task<IActionResult> GetAllUserDetails([FromRoute] int pageIndex, [FromRoute] int pageSize)
+		[Route("get-user-detail-by-id/{id}")]
+		public async Task<IActionResult> GetUserDetailById([FromRoute] Guid id)
 		{
 			try
 			{
-				var data = await _userDetailService.GetAllUserDetails(pageIndex, pageSize);
-				var response = new PagingDTO<UserDetailViewDTO>(data);
+				var response = await _userDetailService.GetUserDetailById(id);
 				if (response == null) return GetError();
 				return GetSuccess(response);
 			}
@@ -91,14 +89,15 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
-		[Authorize]
-		[HttpGet]
-		[Route("filter-all-details-By-Name/{pageIndex}/{pageSize}")]
-		public async Task<IActionResult> GetAllUserDetailsByName([FromRoute] int pageIndex, [FromRoute] int pageSize, string? name)
+
+		[HttpPost]
+		[Route("get-all-details")]
+		public async Task<IActionResult> GetAllUserDetails(UserDetailGetListDTO dto)
 		{
 			try
 			{
-				var data = await _userDetailService.GetAllUserDetailsByName(pageIndex, pageSize, name);
+				if(!ModelState.IsValid) return ModelInvalid();
+				var data = await _userDetailService.GetAllUserDetails(dto);
 				var response = new PagingDTO<UserDetailViewDTO>(data);
 				if (response == null) return GetError();
 				return GetSuccess(response);
