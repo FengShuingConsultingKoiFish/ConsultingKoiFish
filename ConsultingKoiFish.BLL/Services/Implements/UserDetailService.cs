@@ -151,6 +151,18 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return ConvertUserDetailToUserDetailView(response);
 		}
 
+		public async Task<UserDetailViewDTO> GetUserDetailByUserName(string userName)
+		{
+			var repo = _unitOfWork.GetRepo<UserDetail>();
+			var response = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
+													.WithPredicate(x => x.User.UserName.Equals(userName) && x.IsActive == true)
+													.WithInclude(x => x.User)
+													.WithTracking(false)
+													.Build());
+			if (response == null) return null;
+			return ConvertUserDetailToUserDetailView(response);
+		}
+
 		#region Convert
 
 		/// <summary>

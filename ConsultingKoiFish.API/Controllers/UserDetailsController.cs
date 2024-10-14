@@ -89,6 +89,25 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 
+		[HttpGet]
+		[Route("get-user-detail-by-userName/{userName}")]
+		public async Task<IActionResult> GetUserDetailById([FromRoute] string userName)
+		{
+			try
+			{
+				var response = await _userDetailService.GetUserDetailByUserName(userName);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+			}
+		}
+
 
 		[HttpPost]
 		[Route("get-all-details")]
