@@ -12,6 +12,7 @@ namespace ConsultingKoiFish.BLL.DTOs.ImageDTOs
 	{
 		[Required(ErrorMessage = "Vui lòng nhập số trang.")]
 		public int PageIndex { get; set; }
+
 		[Required(ErrorMessage = "Vui lòng nhập kích cỡ trang.")]
 		public int PageSize { get; set; }
         public string? Name { get; set; }
