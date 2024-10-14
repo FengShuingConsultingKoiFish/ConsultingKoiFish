@@ -12,6 +12,7 @@ using ConsultingKoiFish.DAL.Enums;
 using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsultingKoiFish.BLL.Services.Implements;
 
@@ -219,76 +220,33 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		return new BaseResponse { IsSuccess = false, Message = "Gói không tồn tại." };
 	}
 
-	public async Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackages(int pageIndex, int pageSize)
+	public async Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackages(PackageGetListDTO dto)
 	{
 		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
 		var imageRepo = _unitOfWork.GetRepo<Image>();
 		var loadedRecords = repo.Get(new QueryBuilder<AdvertisementPackage>()
 			.WithPredicate(x => x.IsActive == true)
 			.WithTracking(false)
-			.WithInclude(r => r.PackageImages)
 			.Build());
-		var pagedRecords = await PaginatedList<AdvertisementPackage>.CreateAsync(loadedRecords, pageIndex, pageSize);
-		var response = new List<AdvertisementPackageViewDTO>();
-		foreach (var package in pagedRecords)
+		if(!string.IsNullOrEmpty(dto.Name))
 		{
-			var packageImageViewDtos = await ConvertPackageImagesToImageViews(package.PackageImages);
-			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
-			response.Add(childResponse);
+			loadedRecords = loadedRecords.Where(x => x.Name.Contains(dto.Name));
 		}
-		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
-	}
 
-	public async Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackagesByName(string? name, int pageIndex, int pageSize)
-	{
-		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
-		var imageRepo = _unitOfWork.GetRepo<Image>();
-		var loadedRecords = repo.Get(new QueryBuilder<AdvertisementPackage>()
-			.WithPredicate(x => x.IsActive == true)
-			.WithTracking(false)
-			.WithInclude(r => r.PackageImages)
-			.Build());
-		if(!string.IsNullOrEmpty(name))
+		if(dto.PriceFilter.HasValue)
 		{
-			loadedRecords = loadedRecords.Where(x => x.Name.Contains(name));
-		}
-		var pagedRecords = await PaginatedList<AdvertisementPackage>.CreateAsync(loadedRecords, pageIndex, pageSize);
-		var response = new List<AdvertisementPackageViewDTO>();
-		foreach (var package in pagedRecords)
-		{
-			var packageImageViewDtos = await ConvertPackageImagesToImageViews(package.PackageImages);
-			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
-			response.Add(childResponse);
-		}
-		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
-	}
-
-	public async Task<PaginatedList<AdvertisementPackageViewDTO>> GetAllPackagesByPrice(PriceFilter? priceFilter, int pageIndex, int pageSize)
-	{
-		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
-		var imageRepo = _unitOfWork.GetRepo<Image>();
-		var loadedRecords = repo.Get(new QueryBuilder<AdvertisementPackage>()
-			.WithPredicate(x => x.IsActive == true)
-			.WithTracking(false)
-			.WithInclude(r => r.PackageImages)
-			.Build());
-		if(priceFilter.HasValue)
-		{
-			var priceRange = PriceRangeHelper.GetPriceRange(priceFilter.Value);
+			var priceRange = PriceRangeHelper.GetPriceRange(dto.PriceFilter.Value);
 			loadedRecords = loadedRecords.Where(x => x.Price >= priceRange.min && x.Price <= priceRange.max);
 		}
-		var pagedRecords = await PaginatedList<AdvertisementPackage>.CreateAsync(loadedRecords, pageIndex, pageSize);
-		var response = new List<AdvertisementPackageViewDTO>();
-		foreach (var package in pagedRecords)
-		{
-			var packageImageViewDtos = await ConvertPackageImagesToImageViews(package.PackageImages);
-			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
-			response.Add(childResponse);
-		}
-		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+
+		var pagedRecords = await PaginatedList<AdvertisementPackage>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
+		var response = await ConvertPackagesToPackageViews(pagedRecords, dto.OrderImage);
+		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 	}
 
-	public async Task<AdvertisementPackageViewDTO> GetPackageById(int id)
+	
+
+	public async Task<AdvertisementPackageViewDTO> GetPackageById(int id, OrderImage? orderImage)
 	{
 		var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
 		var package = await repo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
@@ -297,12 +255,36 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 			.WithInclude(r => r.PackageImages)
 			.Build());
 		if (package == null) return null;
-		var packageImageViewDtos = await ConvertPackageImagesToImageViews(package.PackageImages);
-		var response = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
+		var response = await ConvertPackageToPackageView(package, orderImage);
 		return response;
 	}
 
 	#region Private
+
+	/// <summary>
+	/// This is used to get package images for each pacakage
+	/// </summary>
+	/// <param name="package"></param>
+	/// <param name="orderImage"></param>
+	/// <returns></returns>
+	private async Task<List<PackageImage>> GetPackageImagesForEachPackage(AdvertisementPackage package, OrderImage? orderImage)
+	{
+		var packageImageRepo = _unitOfWork.GetRepo<PackageImage>();
+		var packageImages = packageImageRepo.Get(new QueryBuilder<PackageImage>()
+												.WithPredicate(x => x.AdvertisementPackageId == package.Id)
+												.WithTracking(false)
+												.Build());
+		if (orderImage.HasValue)
+		{
+			switch ((int)orderImage)
+			{
+				case 1: packageImages = packageImages.OrderByDescending(x => x.Id); break;
+				case 2: packageImages = packageImages.OrderBy(x => x.Id); break;
+			}
+		}
+		return await packageImages.ToListAsync();
+	}
+
 	/// <summary>
 	/// This is used to convert a collection image of package to a collection imageViewDTOs
 	/// </summary>
@@ -311,6 +293,33 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 	private Task<List<ImageViewDTO>> ConvertPackageImagesToImageViews(ICollection<PackageImage> packageImages)
 	{
 		return _imageService.ConvertSpeciedImageToImageViews(packageImages, packageImage => packageImage.ImageId);
+	}
+
+	/// <summary>
+	/// This is used to convert a collection of packages to a collectgion of advertisementPackageViewDTOs
+	/// </summary>
+	/// <param name="packages"></param>
+	/// <param name="orderComment"></param>
+	/// <param name="orderImage"></param>
+	/// <returns></returns>
+	private async Task<List<AdvertisementPackageViewDTO>> ConvertPackagesToPackageViews(List<AdvertisementPackage> packages, OrderImage? orderImage)
+	{
+		var response = new List<AdvertisementPackageViewDTO>();
+		foreach (var package in packages)
+		{
+			var packageImageViewDtos = await ConvertPackageImagesToImageViews(await GetPackageImagesForEachPackage(package, orderImage));
+			var childResponse = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
+			response.Add(childResponse);
+		}
+		return response;
+	}
+
+
+	private async Task<AdvertisementPackageViewDTO> ConvertPackageToPackageView(AdvertisementPackage package, OrderImage? orderImage)
+	{
+		var packageImageViewDtos = await ConvertPackageImagesToImageViews(await GetPackageImagesForEachPackage(package, orderImage));
+		var response = new AdvertisementPackageViewDTO(package, packageImageViewDtos);
+		return response;
 	}
 	#endregion
 }
