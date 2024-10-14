@@ -55,6 +55,8 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			try
 			{
+				if(!ModelState.IsValid) return ModelInvalid();
+
 				if (dto.PageIndex <= 0)
 				{
 					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương.");
@@ -67,46 +69,19 @@ namespace ConsultingKoiFish.API.Controllers
 					return ModelInvalid();
 				}
 
-				var data = await _paymentService.GetAllPayments(dto);
-				var response = new PagingDTO<PaymentViewDTO>(data);
-				if (response == null) return GetError();
-				return GetSuccess(response);
-			}
-			catch (Exception ex)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(ex.Message);
-				Console.ResetColor();
-				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
-			}
-		}
-
-
-		/// <summary>
-		/// Get all payments and filter with date for admin
-		/// </summary>
-		/// <param name="dto"></param>
-		/// <returns></returns>
-		[Authorize(Roles = "Admin")]
-		[HttpPost]
-		[Route("filter-all-payments-with-date-for-admin")]
-		public async Task<IActionResult> GetAllPaymentsWithDate([FromBody] PaymentGetListDTO dto)
-		{
-			try
-			{
-				if (dto.PageIndex <= 0)
+				if(!dto.IsValidOrderImage())
 				{
-					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương.");
+					ModelState.AddModelError("OrderImage", "OrderImage không hợp lệ.");
 					return ModelInvalid();
 				}
 
-				if (dto.PageSize <= 0)
+				if (!dto.IsValidOrderDate())
 				{
-					ModelState.AddModelError("PageSize", "PageSize phải là số nguyên dương.");
+					ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
 					return ModelInvalid();
 				}
 
-				var data = await _paymentService.GetAllPaymentsWithDate(dto);
+				var data = await _paymentService.GetAllPaymentsForAdmin(dto);
 				var response = new PagingDTO<PaymentViewDTO>(data);
 				if (response == null) return GetError();
 				return GetSuccess(response);
@@ -128,11 +103,11 @@ namespace ConsultingKoiFish.API.Controllers
 		[Authorize(Roles = "Admin")]
 		[HttpGet]
 		[Route("get-payment-by-id-for-admin/{id}")]
-		public async Task<IActionResult> GetPaymentByIdForAdmin([FromRoute] int id)
+		public async Task<IActionResult> GetPaymentByIdForAdmin([FromRoute] int id, OrderImage? orderImage)
 		{
 			try
 			{
-				var response = await _paymentService.GetPaymentByIdForAdmin(id);
+				var response = await _paymentService.GetPaymentByIdForAdmin(id, orderImage);
 				if (response == null) return GetError("Payment này không tồn tại.");
 				return GetSuccess(response);
 			}
@@ -149,6 +124,11 @@ namespace ConsultingKoiFish.API.Controllers
 
 		#region Member
 
+		/// <summary>
+		/// This is used to purchase a package and make a payment
+		/// </summary>
+		/// <param name="packageViewDTO"></param>
+		/// <returns></returns>
 		[Authorize(Roles = "Member")]
 		[HttpPost]
 		[Route("purchase-package")]
@@ -185,11 +165,13 @@ namespace ConsultingKoiFish.API.Controllers
 
 		[Authorize(Roles = "Member")]
 		[HttpPost]
-		[Route("get-all-payments-by-userId")]
-		public async Task<IActionResult> GetAllPaymentsByUserId([FromBody] PaymentGetListDTO dto)
+		[Route("get-all-payments-for-member")]
+		public async Task<IActionResult> GetAllPaymentsForMember([FromBody] PaymentGetListDTO dto)
 		{
 			try
 			{
+				if (!ModelState.IsValid) return ModelInvalid();
+
 				if (dto.PageIndex <= 0)
 				{
 					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương.");
@@ -202,45 +184,19 @@ namespace ConsultingKoiFish.API.Controllers
 					return ModelInvalid();
 				}
 
-				var data = await _paymentService.GetAllPaymentsByUserId(dto, UserId);
-				var response = new PagingDTO<PaymentViewDTO>(data);
-				if (response == null) return GetError();
-				return GetSuccess(response);
-			}
-			catch (Exception ex)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(ex.Message);
-				Console.ResetColor();
-				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
-			}
-		}
-
-		/// <summary>
-		/// Get all payments follow userId and filter with date
-		/// </summary>
-		/// <param name="dto"></param>
-		/// <returns></returns>
-		[Authorize(Roles = "Member")]
-		[HttpPost]
-		[Route("filter-all-payments-by-userId-with-date")]
-		public async Task<IActionResult> GetAllPaymentsByUserIdWithDate([FromBody] PaymentGetListDTO dto)
-		{
-			try
-			{
-				if (dto.PageIndex <= 0)
+				if (!dto.IsValidOrderImage())
 				{
-					ModelState.AddModelError("PageIndex", "PageIndex phải là số nguyên dương.");
+					ModelState.AddModelError("OrderImage", "OrderImage không hợp lệ.");
 					return ModelInvalid();
 				}
 
-				if (dto.PageSize <= 0)
+				if (!dto.IsValidOrderDate())
 				{
-					ModelState.AddModelError("PageSize", "PageSize phải là số nguyên dương.");
+					ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
 					return ModelInvalid();
 				}
 
-				var data = await _paymentService.GetAllPaymentsByUserIdWithDate(dto, UserId);
+				var data = await _paymentService.GetAllPaymentsForMember(dto, UserId);
 				var response = new PagingDTO<PaymentViewDTO>(data);
 				if (response == null) return GetError();
 				return GetSuccess(response);
@@ -263,11 +219,11 @@ namespace ConsultingKoiFish.API.Controllers
 		[Authorize(Roles = "Member")]
 		[HttpGet]
 		[Route("get-payment-by-id-for-member/{id}")]
-		public async Task<IActionResult> GetPaymentByIdForMember([FromRoute] int id)
+		public async Task<IActionResult> GetPaymentByIdForMember([FromRoute] int id, OrderImage? orderImage)
 		{
 			try
 			{
-				var response = await _paymentService.GetPaymentByIdForMember(id, UserId);
+				var response = await _paymentService.GetPaymentByIdForMember(id, UserId, orderImage);
 				if (response == null) return GetError("Payment này không tồn tại.");
 				return GetSuccess(response);
 			}
@@ -282,7 +238,11 @@ namespace ConsultingKoiFish.API.Controllers
 
 		#endregion
 
-
+		/// <summary>
+		/// This is used to request a payment link
+		/// </summary>
+		/// <param name="requestDTO"></param>
+		/// <returns></returns>
 		[HttpPost]
 		[Route("request-payment")]
 		public IActionResult RequestPayment(VnPayRequestDTO requestDTO)
@@ -292,6 +252,10 @@ namespace ConsultingKoiFish.API.Controllers
 			return Ok(new {Url = paymentUrl});
 		}
 
+		/// <summary>
+		/// This is used to response after payment processing
+		/// </summary>
+		/// <returns></returns>
 		[HttpGet]
 		[Route("response-payment")]
 		public async Task<IActionResult> ResponsePayment()

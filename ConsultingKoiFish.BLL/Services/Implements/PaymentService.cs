@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
+using ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 using ConsultingKoiFish.BLL.DTOs.PaymentDTOs;
 using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
+using ConsultingKoiFish.DAL.Enums;
 using ConsultingKoiFish.DAL.Paging;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
@@ -21,11 +23,13 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
+		private readonly IAdvertisementPackageService _advertisementPackageService;
 
-		public PaymentService(IUnitOfWork unitOfWork, IMapper mapper)
+		public PaymentService(IUnitOfWork unitOfWork, IMapper mapper, IAdvertisementPackageService advertisementPackageService)
         {
 			this._unitOfWork = unitOfWork;
 			this._mapper = mapper;
+			this._advertisementPackageService = advertisementPackageService;
 		}
         public async Task<BaseResponse> CreatePayment(PaymentCreateDTO dto)
 		{
@@ -70,7 +74,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 
 		#region Admin
 
-		public async Task<PaginatedList<PaymentViewDTO>> GetAllPayments(PaymentGetListDTO dto)
+		public async Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsForAdmin(PaymentGetListDTO dto)
 		{
 			var repo = _unitOfWork.GetRepo<Payment>();
 			var imageRepo = _unitOfWork.GetRepo<Image>();
@@ -78,45 +82,28 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				.WithTracking(false)
 				.WithInclude(x => x.User, r => r.AdvertisementPackage)
 				.Build());
-			var pagedRecords = await PaginatedList<Payment>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
-			var response = new List<PaymentViewDTO>();
-			foreach (var payment in pagedRecords)
-			{
-				var childResponse = new PaymentViewDTO(payment);
-				response.Add(childResponse);
-			}
-			return new PaginatedList<PaymentViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
-		}
 
-		public async Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsWithDate(PaymentGetListDTO dto)
-		{
-			var repo = _unitOfWork.GetRepo<Payment>();
-			var imageRepo = _unitOfWork.GetRepo<Image>();
-			var loadedRecords = repo.Get(new QueryBuilder<Payment>()
-				.WithTracking(false)
-				.WithInclude(x => x.User, r => r.AdvertisementPackage)
-				.Build());
-			if (dto.FromDate.HasValue)
+			if(dto.OrderDate.HasValue)
 			{
-				loadedRecords = loadedRecords.Where(x => x.CreatedDate >= dto.FromDate.Value);
+				switch((int)dto.OrderDate)
+				{
+					case 1: loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate); break;
+					case 2: loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate); break;
+				}
 			}
 
-			if (dto.ToDate.HasValue)
+			if(dto.TransactionId.HasValue)
 			{
-				loadedRecords = loadedRecords.Where(x => x.CreatedDate <= dto.ToDate.Value);
+				loadedRecords = loadedRecords.Where(x => x.TransactionId == dto.TransactionId);
 			}
+
 			var pagedRecords = await PaginatedList<Payment>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
-			var response = new List<PaymentViewDTO>();
-			foreach (var payment in pagedRecords)
-			{
-				var childResponse = new PaymentViewDTO(payment);
-				response.Add(childResponse);
-			}
+			var response = await ConvertPaymentsToPaymentViews(pagedRecords, dto.OrderImage);
 			return new PaginatedList<PaymentViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 		}
 
 
-		public async Task<PaymentViewDTO> GetPaymentByIdForAdmin(int id)
+		public async Task<PaymentViewDTO> GetPaymentByIdForAdmin(int id, OrderImage? orderImage)
 		{
 			var repo = _unitOfWork.GetRepo<Payment>();
 			var payment = await repo.GetSingleAsync(new QueryBuilder<Payment>()
@@ -125,14 +112,14 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				.WithInclude(x => x.User, r => r.AdvertisementPackage)
 				.Build());
 			if (payment == null) return null;
-			var response = new PaymentViewDTO(payment);
+			var response = await ConvertPaymentToPaymentView(payment, orderImage);
 			return response;
 		}
 		#endregion
 
 		#region Member
 
-		public async Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsByUserId(PaymentGetListDTO dto, string userId)
+		public async Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsForMember(PaymentGetListDTO dto, string userId)
 		{
 			var repo = _unitOfWork.GetRepo<Payment>();
 			var imageRepo = _unitOfWork.GetRepo<Image>();
@@ -142,44 +129,11 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				.WithInclude(x => x.User, r => r.AdvertisementPackage)
 				.Build());
 			var pagedRecords = await PaginatedList<Payment>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
-			var response = new List<PaymentViewDTO>();
-			foreach (var payment in pagedRecords)
-			{
-				var childResponse = new PaymentViewDTO(payment);
-				response.Add(childResponse);
-			}
+			var response = await ConvertPaymentsToPaymentViews(pagedRecords, dto.OrderImage);
 			return new PaginatedList<PaymentViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 		}
 
-		public async Task<PaginatedList<PaymentViewDTO>> GetAllPaymentsByUserIdWithDate(PaymentGetListDTO dto, string userId)
-		{
-			var repo = _unitOfWork.GetRepo<Payment>();
-			var imageRepo = _unitOfWork.GetRepo<Image>();
-			var loadedRecords = repo.Get(new QueryBuilder<Payment>()
-				.WithPredicate(x => x.UserId.Equals(userId))
-				.WithTracking(false)
-				.WithInclude(x => x.User, r => r.AdvertisementPackage)
-				.Build());
-			if(dto.FromDate.HasValue)
-			{
-				loadedRecords = loadedRecords.Where(x => x.CreatedDate >= dto.FromDate.Value);
-			}
-
-			if (dto.ToDate.HasValue)
-			{
-				loadedRecords = loadedRecords.Where(x => x.CreatedDate <= dto.ToDate.Value);
-			}
-			var pagedRecords = await PaginatedList<Payment>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
-			var response = new List<PaymentViewDTO>();
-			foreach (var payment in pagedRecords)
-			{
-				var childResponse = new PaymentViewDTO(payment);
-				response.Add(childResponse);
-			}
-			return new PaginatedList<PaymentViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
-		}
-
-		public async Task<PaymentViewDTO> GetPaymentByIdForMember(int id, string userId)
+		public async Task<PaymentViewDTO> GetPaymentByIdForMember(int id, string userId, OrderImage? orderImage)
 		{
 			var repo = _unitOfWork.GetRepo<Payment>();
 			var payment = await repo.GetSingleAsync(new QueryBuilder<Payment>()
@@ -188,7 +142,43 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				.WithInclude(x => x.User, r => r.AdvertisementPackage)
 				.Build());
 			if (payment == null) return null;
-			var response = new PaymentViewDTO(payment);
+			var response = await ConvertPaymentToPaymentView(payment, orderImage);
+			return response;
+		}
+
+		#endregion
+
+		#region PRIVATE
+
+		/// <summary>
+		/// This is used to convert a payment to paymentView
+		/// </summary>
+		/// <param name="payment"></param>
+		/// <param name="orderImage"></param>
+		/// <returns></returns>
+		private async Task<PaymentViewDTO> ConvertPaymentToPaymentView(Payment payment, OrderImage? orderImage)
+		{
+			var adPackageViewDto = await _advertisementPackageService.ConvertPackageToPackageView(payment.AdvertisementPackage, orderImage);
+			var response = new PaymentViewDTO(payment, adPackageViewDto);
+			return response;
+		}
+
+
+		/// <summary>
+		/// This is used to convert a collection of payments to paymentViewDtos
+		/// </summary>
+		/// <param name="payments"></param>
+		/// <param name="orderImage"></param>
+		/// <returns></returns>
+		private async Task<List<PaymentViewDTO>> ConvertPaymentsToPaymentViews(List<Payment> payments, OrderImage? orderImage)
+		{
+			var response = new List<PaymentViewDTO>();
+			foreach (var payment in payments)
+			{
+				var adPackageViewDto = await _advertisementPackageService.ConvertPackageToPackageView(payment.AdvertisementPackage, orderImage);
+				var childResponse = new PaymentViewDTO(payment, adPackageViewDto);
+				response.Add(childResponse);
+			}
 			return response;
 		}
 

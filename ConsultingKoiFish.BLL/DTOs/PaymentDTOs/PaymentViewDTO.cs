@@ -13,21 +13,21 @@ namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
 	{
         public int Id { get; set; }
         public string UserName { get; set; }
-        public string PackageName { get; set; } = null!;
         public long TransactionId { get; set; }
 		public string? Content { get; set; }
         public double Amount { get; set; }
         public string CreatedDate { get; set; }
+        public AdvertisementPackageViewDTO AdvertisementPackageViewDTO { get; set; }
 
-        public PaymentViewDTO(Payment payment)
+        public PaymentViewDTO(Payment payment, AdvertisementPackageViewDTO advertisementPackageViewDTO)
         {
 			Id = payment.Id;
             UserName = payment.User.UserName;
-			PackageName = payment.AdvertisementPackage.Name;
 			TransactionId = payment.TransactionId;
 			Content = payment.Content;
             Amount = payment.Amount;
 			CreatedDate = payment.CreatedDate.ToString("dd/MM/yyyy");
+            AdvertisementPackageViewDTO = advertisementPackageViewDTO;
         }
     }
 }
