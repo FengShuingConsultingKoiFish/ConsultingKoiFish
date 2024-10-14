@@ -13,9 +13,8 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 	public interface IImageService
 	{
 		Task<BaseResponse> CreateUpdateImage(ImageRequestDTO requestDTO, string userId);
-		Task<ImageViewDTO> GetImageById(int id, string userId);
-		Task<PaginatedList<ImageViewDTO>> GetListImageByUserId(string userId, int pageIndex, int pageSize);
-		Task<PaginatedList<ImageViewDTO>> GetListImageByName(string? name, string userId, int pageIndex, int pageSize);
+		Task<ImageViewDTO> GetImageById(int id);
+		Task<PaginatedList<ImageViewDTO>> GetListImageForMember(ImageGetListDTO dto, string userId);
 		Task<BaseResponse> DeleteImage(int id, string userId);
 		Task<List<ImageViewDTO>> ConvertSpeciedImageToImageViews<TImage>(ICollection<TImage> images, Func<TImage, int> getImageId);
 		List<ImageViewDTO> ConvertToImageViews(ICollection<Image> images);

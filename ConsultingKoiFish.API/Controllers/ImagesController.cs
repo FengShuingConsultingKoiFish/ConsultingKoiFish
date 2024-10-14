@@ -44,7 +44,7 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			try
 			{
-				var response = await _imageService.GetImageById(id, UserId);
+				var response = await _imageService.GetImageById(id);
 				if (response == null) return GetError("Ảnh này không tồn tại.");
 				return GetSuccess(response);
 			}
@@ -58,54 +58,32 @@ namespace ConsultingKoiFish.API.Controllers
 		}
 
 		[Authorize]
-		[HttpGet]
-		[Route("get-images-by-userid/{pageIndex}/{pageSize}")]
-		public async Task<IActionResult> GetListImageByUserId([FromRoute] int pageIndex, [FromRoute] int pageSize)
+		[HttpPost]
+		[Route("get-images-for-member")]
+		public async Task<IActionResult> GetListImageForMember(ImageGetListDTO dto)
 		{
 			try
 			{
-				if (pageIndex <= 0)
+				if (!ModelState.IsValid) return ModelInvalid();
+				if (dto.PageIndex <= 0)
 				{
-					return GetError("Page Index phải là số nguyên dương.");
+					ModelState.AddModelError("PageIndex", "Page Index phải là số nguyên dương.");
+					return ModelInvalid();
 				}
 
-				if (pageSize <= 0)
+				if (dto.PageSize <= 0)
 				{
-					return GetError("Page Size phải là số nguyên dương.");
+					ModelState.AddModelError("PageSize", "Page Size phải là số nguyên dương.");
+					return ModelInvalid();
 				}
 
-				var data = await _imageService.GetListImageByUserId(UserId, pageIndex, pageSize);
-				var response = new PagingDTO<ImageViewDTO>(data);
-				if (response == null) return GetError();
-				return GetSuccess(response);
-			}
-			catch (Exception ex)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine(ex.Message);
-				Console.ResetColor();
-				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
-			}
-		}
-
-		[Authorize]
-		[HttpGet]
-		[Route("get-images-by-alt-text/{pageIndex}/{pageSize}")]
-		public async Task<IActionResult> GetListImageByUserId(string? name, [FromRoute] int pageIndex, [FromRoute] int pageSize)
-		{
-			try
-			{
-				if (pageIndex <= 0)
+				if(!dto.IsValidOrderDate())
 				{
-					return GetError("Page Index phải là số nguyên dương.");
-				}
+					ModelState.AddModelError("OrderDate", "OrderDate không hợp lệ.");
+					return ModelInvalid();
+				} 
 
-				if (pageSize <= 0)
-				{
-					return GetError("Page Size phải là số nguyên dương.");
-				}
-
-				var data = await _imageService.GetListImageByName(name, UserId, pageIndex, pageSize);
+				var data = await _imageService.GetListImageForMember(dto, UserId);
 				var response = new PagingDTO<ImageViewDTO>(data);
 				if (response == null) return GetError();
 				return GetSuccess(response);

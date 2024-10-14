@@ -97,11 +97,11 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
 		}
 
-		public async Task<ImageViewDTO> GetImageById(int id, string userId)
+		public async Task<ImageViewDTO> GetImageById(int id)
 		{
 			var repo = _unitOfWork.GetRepo<Image>();
 			var image = await repo.GetSingleAsync(new QueryBuilder<Image>()
-													.WithPredicate(x => x.Id == id && x.IsActive == true && x.UserId.Equals(userId))
+													.WithPredicate(x => x.Id == id && x.IsActive == true)
 													.WithTracking(false)
 													.WithInclude(x => x.User)
 													.Build());
@@ -110,7 +110,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return response;
 		}
 
-		public async Task<PaginatedList<ImageViewDTO>> GetListImageByName(string? name, string userId, int pageIndex, int pageSize)
+		public async Task<PaginatedList<ImageViewDTO>> GetListImageForMember(ImageGetListDTO dto, string userId)
 		{
 			var repo = _unitOfWork.GetRepo<Image>();
 			var loadedRecords = repo.Get(new QueryBuilder<Image>()
@@ -118,27 +118,22 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 												.WithTracking(false)
 												.WithInclude(x => x.User)
 												.Build());
-			if (!string.IsNullOrEmpty(name))
+			if(!string.IsNullOrEmpty(dto.Name))
 			{
-				loadedRecords = loadedRecords.Where(x => x.AltText.Contains(name));
+				loadedRecords = loadedRecords.Where(x => x.AltText.Contains(dto.Name));
 			}
 
-			var pagedRecords = await PaginatedList<Image>.CreateAsync(loadedRecords, pageIndex, pageSize);
+			if(dto.OrderDate.HasValue)
+			{
+				switch((int)dto.OrderDate)
+				{
+					case 1: loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate); break;
+					case 2: loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate); break;
+				}
+			}
+			var pagedRecords = await PaginatedList<Image>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
 			var response = ConvertToImageViews(pagedRecords);
-			return new PaginatedList<ImageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
-		}
-
-		public async Task<PaginatedList<ImageViewDTO>> GetListImageByUserId(string userId, int pageIndex, int pageSize)
-		{
-			var repo = _unitOfWork.GetRepo<Image>();
-			var loadedRecords = repo.Get(new QueryBuilder<Image>()
-												.WithPredicate(x => x.UserId.Equals(userId) && x.IsActive == true)
-												.WithTracking(false)
-												.WithInclude(x => x.User)
-												.Build());
-			var pagedRecords = await PaginatedList<Image>.CreateAsync(loadedRecords, pageIndex, pageSize);
-			var response = ConvertToImageViews(pagedRecords);
-			return new PaginatedList<ImageViewDTO>(response, pagedRecords.TotalItems, pageIndex, pageSize);
+			return new PaginatedList<ImageViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 		}
 
 		#region Convert
