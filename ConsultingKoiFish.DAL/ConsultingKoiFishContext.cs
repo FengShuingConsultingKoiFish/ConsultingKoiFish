@@ -54,13 +54,16 @@ namespace ConsultingKoiFish.DAL
 		{
 			if (!optionsBuilder.IsConfigured)
 			{
+				var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"); // Lấy môi trường hiện tại
 				var builder = new ConfigurationBuilder()
-				.SetBasePath(Directory.GetCurrentDirectory())
-				.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
+					.SetBasePath(Directory.GetCurrentDirectory())
+					.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) // Đọc appsettings.json
+					.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true); // Đọc file cấu hình dựa trên môi trường
 				IConfigurationRoot configuration = builder.Build();
 				optionsBuilder.UseSqlServer(configuration.GetConnectionString("ConsultingKoiFish"));
 			}
 		}
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
