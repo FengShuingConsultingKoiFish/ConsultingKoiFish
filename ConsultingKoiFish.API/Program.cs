@@ -138,7 +138,6 @@ namespace ConsultingKoiFish.API
 				var services = scope.ServiceProvider;
 				try
 				{
-					// Gọi phương thức seed dữ liệu admin từ ServicesExtensions
 					 services.SeedData().Wait();
 				}
 				catch (Exception ex)

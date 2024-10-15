@@ -15,10 +15,12 @@ namespace ConsultingKoiFish.DAL
 	{
 		public ConsultingKoiFishContext CreateDbContext(string[] args)
 		{
+			var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"); 
 			var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../ConsultingKoiFish.API");
 			IConfigurationRoot configuration = new ConfigurationBuilder()
 				.SetBasePath(basePath)
-				.AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true)
+				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) 
+				.AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true) 
 				.Build();
 
 			var builder = new DbContextOptionsBuilder<ConsultingKoiFishContext>();
@@ -26,10 +28,10 @@ namespace ConsultingKoiFish.DAL
 
 			builder.UseSqlServer(connectionString);
 
-			// Use the constructor without UserManager and RoleManager
 			return new ConsultingKoiFishContext(builder.Options);
 		}
 	}
+
 
 
 }
