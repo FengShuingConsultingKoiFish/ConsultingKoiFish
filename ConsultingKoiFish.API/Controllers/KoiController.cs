@@ -3,6 +3,7 @@ using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ConsultingKoiFish.API.Controllers
 {
@@ -201,9 +202,11 @@ namespace ConsultingKoiFish.API.Controllers
             }
             return BadRequest(result);
         }
-        [HttpGet("Get-Suitable-Koi-For-User/{userId}")]
-        public async Task<IActionResult> GetSuitableKoiForUser(string userId)
+        [Authorize]
+        [HttpGet("Get-Suitable-Koi-For-User")]
+        public async Task<IActionResult> GetSuitableKoiForUser()
         {
+            var userId = UserId;
             var result = await _koiService.GetSuitableKoiForUser(userId);
             if (result.IsSuccess)
             {
