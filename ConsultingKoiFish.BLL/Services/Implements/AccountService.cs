@@ -215,7 +215,8 @@ public class AccountService : IAccountService
 		{
 			var emailToken = await _identityService.GenerateEmailConfirmationTokenAsync(user);
 			var encodedToken = HttpUtility.UrlEncode(emailToken);
-			var confirmationLink = $"https://localhost:7166/api/Accounts/verify-email?token={encodedToken}&email={user.Email}";
+			var configVerifyUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmail");
+			var confirmationLink = $"{configVerifyUrl}token={encodedToken}&email={user.Email}";
 			var message = new EmailDTO
 			(
 				new string[] { user.Email! },
@@ -370,7 +371,9 @@ public class AccountService : IAccountService
 		Console.ForegroundColor = ConsoleColor.Red;
 		Console.WriteLine($"encode token: {encodedToken}");
 		Console.ResetColor();
-		var forgotUrl = $"https://localhost:7166/api/Accounts/reset-password-view?token={encodedToken}&email={user.Email}";
+
+		var forgotConfigUrl = _configuration.GetSection("Authentication").GetValue<string>("ForgotPass");
+		var forgotUrl = $"{forgotConfigUrl}token={encodedToken}&email={user.Email}";
 		//var forgotUrl = $"http://localhost:5173/Password-reset?token={encodedToken}&email={user.Email}";
 		var message = new EmailDTO
 				(
