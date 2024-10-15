@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,15 +14,23 @@ namespace ConsultingKoiFish.DAL.Entities
 
         public string UserId {  get; set; }
 
-        public string FullName { get; set; } = null!;
-        public string? IdentityCard { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public string? Gender { get; set; }
-        public string? Avatar { get; set; }
-        public string? Status { get; set; }
-        public bool IsLocked { get; set; }
-        public DateTime CreatedDate { get; set; }
+        [AllowNull]
+        public string? FullName { get; set; }
+		[AllowNull]
+		public string? IdentityCard { get; set; }
+		[AllowNull]
+		public DateTime? DateOfBirth { get; set; }
+		[AllowNull]
+		public string? Gender { get; set; }
+		[AllowNull]
+		public string? Avatar { get; set; }
+		[AllowNull]
+		public string? Status { get; set; }
+		[AllowNull]
+		public bool? IsActive { get; set; }
+		[AllowNull]
+		public DateTime? CreatedDate { get; set; }
         //
-        public virtual IdentityUser User { get; set; }
+        public virtual ApplicationUser User { get; set; }
     }
 }

@@ -19,6 +19,6 @@ namespace ConsultingKoiFish.DAL.Entities
 		public DateTime IssuedAt { get; set; }
 		public DateTime ExpiredAt { get; set; }
 		//
-		public virtual IdentityUser User { get; set; }
+		public virtual ApplicationUser User { get; set; }
 	}
 }

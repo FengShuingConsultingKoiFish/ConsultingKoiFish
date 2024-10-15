@@ -1,0 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace ConsultingKoiFish.BLL.DTOs.BlogDTOs;
+
+public class BlogUpdateDTO
+{
+    [Required(ErrorMessage = "Tựa đề không được để trống.")]
+    public string Title { get; set; } = null!;
+    [Required(ErrorMessage = "Nội dung không được để trống.")]
+    public string Content { get; set; } = null!;
+}

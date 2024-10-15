@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using ConsultingKoiFish.DAL.Entities;
 
 namespace ConsultingKoiFish.DAL
 {
@@ -16,7 +18,7 @@ namespace ConsultingKoiFish.DAL
 			var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../ConsultingKoiFish.API");
 			IConfigurationRoot configuration = new ConfigurationBuilder()
 				.SetBasePath(basePath)
-				.AddJsonFile("appsettings.json")
+				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 				.Build();
 
 			var builder = new DbContextOptionsBuilder<ConsultingKoiFishContext>();
@@ -24,8 +26,10 @@ namespace ConsultingKoiFish.DAL
 
 			builder.UseSqlServer(connectionString);
 
+			// Use the constructor without UserManager and RoleManager
 			return new ConsultingKoiFishContext(builder.Options);
 		}
 	}
+
 
 }

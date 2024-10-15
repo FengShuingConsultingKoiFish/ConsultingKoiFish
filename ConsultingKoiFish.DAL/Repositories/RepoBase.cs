@@ -25,6 +25,11 @@ namespace ConsultingKoiFish.DAL.Repositories
 			return entity;
 		}
 
+		public async Task CreateAllAsync(List<T> entities)
+		{
+			await _dbSet.AddRangeAsync(entities);
+		}
+		
 		public Task DeleteAsync(T entity)
 		{
 			if (_context.Entry<T>(entity).State == EntityState.Detached)
@@ -33,6 +38,12 @@ namespace ConsultingKoiFish.DAL.Repositories
 			}
 			_dbSet.Remove(entity);
 
+			return Task.CompletedTask;
+		}
+
+		public Task DeleteAllAsync(List<T> entities)
+		{
+			_dbSet.RemoveRange(entities);
 			return Task.CompletedTask;
 		}
 
@@ -86,6 +97,16 @@ namespace ConsultingKoiFish.DAL.Repositories
 		public async Task<T> GetSingleAsync(QueryOptions<T> options)
 		{
 			return await Get(options).FirstOrDefaultAsync();
+		}
+
+		public async Task<bool> AnyAsync(QueryOptions<T> options)
+		{
+			if(options.Predicate != null)
+			{
+				var result = await _dbSet.AnyAsync(options.Predicate);
+				return result;
+			}
+			return false;
 		}
 	}
 }
