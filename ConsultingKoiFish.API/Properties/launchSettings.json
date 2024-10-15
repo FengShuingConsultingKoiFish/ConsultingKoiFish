@@ -49,8 +49,8 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "launchUrl": "swagger",
-      "applicationUrl": "https://consultingfish.azurewebsites.net/index.html", 
+      "launchUrl": "index.html",
+      "applicationUrl": "https://consultingfish.azurewebsites.net", 
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"
       }
