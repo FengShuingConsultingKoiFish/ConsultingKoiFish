@@ -137,7 +137,7 @@ public class ZodiacService : IZodiacService
             return new BaseResponse { IsSuccess = false, Message = "Có lỗi xảy ra khi xóa cung hoàng đạo." };
         }
     }
-    public async Task<ResponseApiDTO> GetZodiacByBirthDate(DateTime birthDate, string userId)
+    public async Task<ResponseApiDTO> GetZodiacByBirthDate(string userId)
 {
     try
     {
