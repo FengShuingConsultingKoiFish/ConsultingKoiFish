@@ -18,7 +18,7 @@ namespace ConsultingKoiFish.DAL
 			var basePath = Path.Combine(Directory.GetCurrentDirectory(), "../ConsultingKoiFish.API");
 			IConfigurationRoot configuration = new ConfigurationBuilder()
 				.SetBasePath(basePath)
-				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+				.AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true)
 				.Build();
 
 			var builder = new DbContextOptionsBuilder<ConsultingKoiFishContext>();

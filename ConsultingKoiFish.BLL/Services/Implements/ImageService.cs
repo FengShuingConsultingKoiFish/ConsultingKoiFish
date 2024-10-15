@@ -8,6 +8,7 @@ using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
 using Mailjet.Client.Resources;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,6 +71,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				throw;
 			}
 		}
+
 
 		public async Task<BaseResponse> DeleteImage(int id, string userId)
 		{
@@ -186,6 +188,8 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		}
 
 		#endregion
+
+		
 	}
 }
 
