@@ -1,6 +1,7 @@
 
 using ConsultingKoiFish.BLL.DTOs;
 using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
+using ConsultingKoiFish.BLL.Helpers.Config;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,6 +23,84 @@ namespace ConsultingKoiFish.API.Controllers
 			this._configuration = configuration;
 		}
 
+		
+		[Authorize]
+		[HttpPost]
+		[Route("upload-image")]
+		public async Task<IActionResult> UploadImage(ImageUploadDTO dto)
+		{
+			try
+			{
+				if (!ModelState.IsValid) return ModelInvalid();
+				dto.ProcessFileName(isCamelCase: true);
+				using (var memoryStream = new MemoryStream())
+				{
+					await dto.File.CopyToAsync(memoryStream);
+					var extension = Path.GetExtension(dto.File.FileName);
+					var isSvg = extension.Equals(".svg");
+					var isValid = IsValidFileExtension(dto.File.FileName, new string[] { ".jpg", ".png", ".svg", ".jpeg", ".dng" });
+					if (!isValid)
+					{
+						ModelState.AddModelError("File", "Không hỗ trợ định dạng ảnh hiện tại.");
+						return ModelInvalid();
+					}
+					if (dto.File.Length > _fileSizeLimit)
+					{
+						var megabyteSizeLimit = _fileSizeLimit / 1048576;
+						ModelState.AddModelError("File", $"Kích thước ảnh vượt quá quy định cho phép ({megabyteSizeLimit:N1} MB).");
+						return ModelInvalid();
+					}
+					string guidFileName;
+					if (!string.IsNullOrEmpty(dto.FileName))
+					{
+						guidFileName = dto.FileName;
+					}
+					else
+					{
+						guidFileName = Path.GetRandomFileName();
+					}
+					var guildStringPath = new string[] { "images", IsAdmin ? String.Empty : "stock-photo", $"{guidFileName}{extension}" };
+					var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", FileConfig.PathCombine(guildStringPath));
+					string directory = Path.GetDirectoryName(path);
+					if (!Directory.Exists(directory))
+						Directory.CreateDirectory(directory);
+					using (var fileStream = System.IO.File.Create(path))
+					{
+						await fileStream.WriteAsync(memoryStream.ToArray());
+						fileStream.Close();
+					}
+
+
+					string cdnhost = _configuration.GetSection("AppSettings").GetValue<string>("CdnUrl");
+					string imageUrl = $"{cdnhost}{FileConfig.UrlCombine(guildStringPath)}";
+					string thumbUrl = isSvg ? imageUrl : $"{cdnhost}/{CompressThumbnailWithNew(path)}";
+
+					var imageRequestDTO = new ImageRequestDTO
+					{
+						Id = 0,
+						FilePath = FileConfig.PathCombine(guildStringPath),
+					};
+					if (!string.IsNullOrEmpty(dto.FileName))
+						imageRequestDTO.AltText = dto.FileName;
+					var addImageToDB = await _imageService.CreateImage(imageRequestDTO, UserId);
+					if (addImageToDB == null) return SaveError(addImageToDB);
+					return SaveSuccess(new
+					{
+						ImageUrl = imageUrl,
+						ThumbnailUrl = thumbUrl,
+						addImageToDB
+					});
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+			}
+		}
+		
 		[Authorize]
 		[HttpPost]
 		[Route("create-update-image")]
@@ -29,6 +108,8 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			try
 			{
+				if (!ModelState.IsValid) return ModelInvalid();
+				dto.ProcessFileName(isCamelCase: true);
 				var response = await _imageService.CreateUpdateImage(dto, UserId);
 				if (!response.IsSuccess) return SaveError(response);
 				return SaveSuccess(response);
@@ -41,63 +122,6 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
 			}
 		}
-
-		// [Authorize]
-		// [HttpPost]
-		// [Route("upload-image")]
-		// public async Task<IActionResult> UploadImage(ImageUploadDTO dto)
-		// {
-		// 	try
-		// 	{
-		// 		using (var memoryStream = new MemoryStream())
-		// 		{
-		// 			await dto.File.CopyToAsync(memoryStream);
-		// 			var extension = Path.GetExtension(dto.File.FileName);
-		// 			var isSvg = extension.Equals(".svg");
-		// 			var isValid = IsValidFileExtension(dto.File.FileName, new string[] { ".jpg", ".png", ".svg", ".jpeg", ".dng" });
-		// 			if (!isValid)
-		// 			{
-		// 				ModelState.AddModelError("File", "Không hỗ trợ định dạng ảnh hiện tại.");
-		// 				return ModelInvalid();
-		// 			}
-		// 			if (dto.File.Length > _fileSizeLimit)
-		// 			{
-		// 				var megabyteSizeLimit = _fileSizeLimit / 1048576;
-		// 				ModelState.AddModelError("File", $"Kích thước ảnh vượt quá quy định cho phép ({megabyteSizeLimit:N1} MB).");
-		// 				return ModelInvalid();
-		// 			}
-		// 			var guidFileName = Path.GetRandomFileName();
-		// 			var guildStringPath = new string[] { "images", IsAdmin ? String.Empty : "stock-photo", $"{guidFileName}{extension}" };
-		// 			var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", Helpers.PathCombine(guildStringPath));
-		// 			string directory = Path.GetDirectoryName(path);
-		// 			if (!Directory.Exists(directory))
-		// 				Directory.CreateDirectory(directory);
-		// 			using (var fileStream = System.IO.File.Create(path))
-		// 			{
-		// 				await fileStream.WriteAsync(memoryStream.ToArray());
-		// 				fileStream.Close();
-		// 			}
-		//
-		//
-		// 			string cdnhost = _configuration.GetSection("AppSettings").GetValue<string>("CdnUrl");
-		// 			string imageUrl = $"{cdnhost}{Helpers.UrlCombine(guildStringPath)}";
-		// 			string thumbUrl = isSvg ? imageUrl : $"{cdnhost}/{CompressThumbnailWithNew(path)}";
-		// 			return SaveSuccess(new
-		// 			{
-		// 				Success = true,
-		// 				ImageUrl = imageUrl,
-		// 				ThumbnailUrl = thumbUrl
-		// 			});
-		// 		}
-		// 	}
-		// 	catch (Exception ex)
-		// 	{
-		// 		Console.ForegroundColor = ConsoleColor.Red;
-		// 		Console.WriteLine(ex.Message);
-		// 		Console.ResetColor();
-		// 		return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
-		// 	}
-		// }
 		
 		[HttpGet]
 		[Route("get-image-by-id/{id}")]
