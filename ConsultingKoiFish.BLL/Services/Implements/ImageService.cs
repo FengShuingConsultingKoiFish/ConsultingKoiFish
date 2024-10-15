@@ -72,7 +72,35 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			}
 		}
 
+		public async Task<ImageViewDTO> CreateImage(ImageRequestDTO requestDTO, string userId)
+		{
+			try
+			{
+				await _unitOfWork.BeginTransactionAsync();
+				var repo = _unitOfWork.GetRepo<Image>();
+				var createdImageDto = new ImageCreateDTO { AltText = requestDTO.AltText, FilePath = requestDTO.FilePath };
+				var createdImage = _mapper.Map<Image>(createdImageDto);
+				createdImage.UserId = userId;
+				createdImage.IsActive = true;
+				createdImage.CreatedDate = DateTime.Now;
+				await repo.CreateAsync(createdImage);
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver)
+				{
+					return null;
+				}
 
+				var response = await GetImageById(createdImage.Id);
+				return response;
+			}
+			catch (Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
+		
 		public async Task<BaseResponse> DeleteImage(int id, string userId)
 		{
 			var repo = _unitOfWork.GetRepo<Image>();
@@ -112,6 +140,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			return response;
 		}
 
+		
 		public async Task<PaginatedList<ImageViewDTO>> GetListImageForMember(ImageGetListDTO dto, string userId)
 		{
 			var repo = _unitOfWork.GetRepo<Image>();

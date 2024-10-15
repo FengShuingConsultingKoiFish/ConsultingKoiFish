@@ -22,4 +22,14 @@
     </ProjectReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\images\stock-photo\imicswji.tm2.JPG">
+      <Link>wwwroot\imicswji.tm2.JPG</Link>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>
