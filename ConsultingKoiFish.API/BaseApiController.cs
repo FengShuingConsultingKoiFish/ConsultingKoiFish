@@ -160,15 +160,14 @@ namespace ConsultingKoiFish.API
 		//	}
 		//}
 
-		//protected bool IsAdmin
-		//{
-		//	get
-		//	{
-		//		var isadmin = User.FindFirst(Constants.IS_ADMIN)?.Value;
-		//		bool.TryParse(isadmin, out bool isAdmin);
-		//		return isAdmin;
-		//	}
-		//}
+		protected bool IsAdmin
+		{
+			get
+			{
+				var isadmin = UserName;
+				return isadmin.Equals("Admin");
+			}
+		}
 
 		//protected bool IsCreator
 		//{

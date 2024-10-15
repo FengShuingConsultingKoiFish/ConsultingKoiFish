@@ -1,4 +1,4 @@
-@ConsultingKoiFish.API_HostAddress = http://localhost:5025
+@ConsultingKoiFish.API_HostAddress = http://localhost:7166
 
 GET {{ConsultingKoiFish.API_HostAddress}}/weatherforecast/
 Accept: application/json

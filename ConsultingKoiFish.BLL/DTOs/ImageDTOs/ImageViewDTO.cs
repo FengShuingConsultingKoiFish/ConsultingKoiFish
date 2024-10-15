@@ -19,7 +19,6 @@ namespace ConsultingKoiFish.BLL.DTOs.ImageDTOs
 		public string? AltText { get; set; }
 		public string? UserId { get; set; }
 		public string? UserName { get; set; }
-		[DataType(DataType.Date)]
 		public string? CreatedDate { get; set; }
 
         public ImageViewDTO(Image image)
