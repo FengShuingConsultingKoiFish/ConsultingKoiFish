@@ -1,4 +1,7 @@
-﻿using ConsultingKoiFish.BLL.DTOs;
+﻿using System.Net;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using ConsultingKoiFish.BLL.DTOs;
 using ConsultingKoiFish.BLL.DTOs.ImageDTOs;
 using ConsultingKoiFish.BLL.Helpers.Config;
 using ConsultingKoiFish.BLL.Services.Interfaces;
@@ -14,12 +17,14 @@ namespace ConsultingKoiFish.API.Controllers
 	{
 		private readonly IImageService _imageService;
 		private readonly IConfiguration _configuration;
+		private readonly Cloudinary _cloudinary;
 		private readonly long _fileSizeLimit = 10 * 1024 * 1024;
 
-		public ImagesController(IImageService imageService, IConfiguration configuration)
+		public ImagesController(IImageService imageService, IConfiguration configuration, Cloudinary cloudinary)
 		{
 			this._imageService = imageService;
 			this._configuration = configuration;
+			_cloudinary = cloudinary;
 		}
 
 		
@@ -32,69 +37,51 @@ namespace ConsultingKoiFish.API.Controllers
 			{
 				if (!ModelState.IsValid) return ModelInvalid();
 				dto.ProcessFileName(isCamelCase: true);
-				using (var memoryStream = new MemoryStream())
+				var isValid = IsValidFileExtension(dto.File.FileName, new string[] { ".jpg", ".png", ".svg", ".jpeg", ".dng" });
+				if (!isValid)
 				{
-					await dto.File.CopyToAsync(memoryStream);
-					var extension = Path.GetExtension(dto.File.FileName);
-					var isSvg = extension.Equals(".svg");
-					var isValid = IsValidFileExtension(dto.File.FileName, new string[] { ".jpg", ".png", ".svg", ".jpeg", ".dng" });
-					if (!isValid)
-					{
-						ModelState.AddModelError("File", "Không hỗ trợ định dạng ảnh hiện tại.");
-						return ModelInvalid();
-					}
-					if (dto.File.Length > _fileSizeLimit)
-					{
-						var megabyteSizeLimit = _fileSizeLimit / 1048576;
-						ModelState.AddModelError("File", $"Kích thước ảnh vượt quá quy định cho phép ({megabyteSizeLimit:N1} MB).");
-						return ModelInvalid();
-					}
-					string guidFileName;
-					if (!string.IsNullOrEmpty(dto.FileName))
-					{
-						guidFileName = dto.FileName;
-					}
-					else
-					{
-						guidFileName = Path.GetRandomFileName();
-					}
-					var guildStringPath = new string[] { "images", IsAdmin ? String.Empty : "stock-photo", $"{guidFileName}{extension}" };
-					var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", FileConfig.PathCombine(guildStringPath));
-					string directory = Path.GetDirectoryName(path);
-					if (!Directory.Exists(directory))
-						Directory.CreateDirectory(directory);
-					using (var fileStream = System.IO.File.Create(path))
-					{
-						await fileStream.WriteAsync(memoryStream.ToArray());
-						fileStream.Close();
-					}
-
-
-					string cdnhost = _configuration.GetSection("AppSettings").GetValue<string>("CdnUrl");
-					string imageUrl = $"{cdnhost}{FileConfig.UrlCombine(guildStringPath)}";
-					string thumbUrl = isSvg ? imageUrl : $"{cdnhost}/{CompressThumbnailWithNew(path)}";
-
-					var imageRequestDTO = new ImageRequestDTO
-					{
-						Id = 0,
-						FilePath = FileConfig.PathCombine(guildStringPath),
-					};
-					if (!string.IsNullOrEmpty(dto.FileName))
-						imageRequestDTO.AltText = dto.FileName;
-					var addImageToDB = await _imageService.CreateImage(imageRequestDTO, UserId);
-					if (addImageToDB == null) return SaveError(addImageToDB);
-					return SaveSuccess(new
-					{
-						ImageUrl = imageUrl,
-						ThumbnailUrl = thumbUrl,
-						addImageToDB
-					});
+					ModelState.AddModelError("File", "Không hỗ trợ định dạng ảnh hiện tại.");
+					return ModelInvalid();
 				}
+				
+				if (dto.File.Length > _fileSizeLimit)
+				{
+					var megabyteSizeLimit = _fileSizeLimit / 1048576;
+					ModelState.AddModelError("File", $"Kích thước ảnh vượt quá quy định cho phép ({megabyteSizeLimit:N1} MB).");
+					return ModelInvalid();
+				}
+				
+				var uploadParams = new ImageUploadParams
+				{
+					File = new FileDescription(dto.File.FileName, dto.File.OpenReadStream())
+				};
+				
+				var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+				if (uploadResult.Error != null)
+				{
+					Console.WriteLine($"Cloudinary error: {uploadResult.Error.Message}");
+					return StatusCode(500, $"Upload failed: {uploadResult.Error.Message}");
+				}
+
+				if (uploadResult.StatusCode != HttpStatusCode.OK)
+					return Error("Upload ảnh không thành công.");
+
+				var imageRequestDTO = new ImageRequestDTO
+				{
+					Id = 0,
+					Url = uploadResult.SecureUrl.ToString(),
+					AltText = dto.FileName
+				};
+				
+				var addImageToDB = await _imageService.CreateImage(imageRequestDTO, UserId);
+				if (addImageToDB == null) return SaveError(addImageToDB);
+				return SaveSuccess(await _imageService.GetImageById(addImageToDB.Id));
 			}
 			catch (Exception ex)
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine(ex.Message);
+				Console.WriteLine(ex.StackTrace);
 				Console.ResetColor();
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
 			}

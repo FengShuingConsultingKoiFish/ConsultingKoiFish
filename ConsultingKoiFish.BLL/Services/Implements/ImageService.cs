@@ -50,7 +50,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				}
 				else
 				{
-					var createdImageDto = new ImageCreateDTO { AltText = requestDTO.AltText, FilePath = requestDTO.FilePath };
+					var createdImageDto = new ImageCreateDTO { AltText = requestDTO.AltText, FilePath = requestDTO.Url };
 					var createdImage = _mapper.Map<Image>(createdImageDto);
 					createdImage.UserId = userId;
 					createdImage.IsActive = true;
@@ -78,7 +78,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			{
 				await _unitOfWork.BeginTransactionAsync();
 				var repo = _unitOfWork.GetRepo<Image>();
-				var createdImageDto = new ImageCreateDTO { AltText = requestDTO.AltText, FilePath = requestDTO.FilePath };
+				var createdImageDto = new ImageCreateDTO { AltText = requestDTO.AltText, FilePath = requestDTO.Url };
 				var createdImage = _mapper.Map<Image>(createdImageDto);
 				createdImage.UserId = userId;
 				createdImage.IsActive = true;

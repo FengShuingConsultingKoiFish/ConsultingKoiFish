@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using CloudinaryDotNet;
 
 namespace ConsultingKoiFish.API
 {
@@ -132,8 +133,13 @@ namespace ConsultingKoiFish.API
 			builder.Services.AddHttpClient();
 			
 			//Add Cloud Dinary
-			var config = builder.Configuration;
-			builder.Services.AddCloudDinary(config); 
+			var cloudinaryUrl = builder.Configuration["CloudinaryUrl"];
+			var cloudName = builder.Configuration["CloudinaryUrl:CloudName"];
+			var apiKey = builder.Configuration["CloudinaryUrl:ApiKey"];
+			var apiSecret = builder.Configuration["CloudinaryUrl:ApiSecret"];
+			var account = new Account(cloudName, apiKey, apiSecret);
+			builder.Services.AddSingleton(new Cloudinary(account));
+ 
 
 			var app = builder.Build();
 

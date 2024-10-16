@@ -12,7 +12,7 @@ namespace ConsultingKoiFish.BLL.DTOs.ImageDTOs
 	{
 		public int Id { get; set; }
 		[Required(ErrorMessage = "Đường dẫn đến ảnh không được để trống")]
-		public string FilePath { get; set; } = null!;
+		public string Url { get; set; } = null!;
 		public string? AltText { get; set; }
 		
 		public void ProcessFileName(bool isCamelCase = false)
