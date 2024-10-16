@@ -1,4 +1,5 @@
 ﻿
+using System.Configuration;
 using ConsultingKoiFish.API.ConfigExtensions;
 using ConsultingKoiFish.BLL.Helpers.Config;
 using ConsultingKoiFish.DAL;
@@ -129,6 +130,10 @@ namespace ConsultingKoiFish.API
 
 			//Add HttpClient
 			builder.Services.AddHttpClient();
+			
+			//Add Cloud Dinary
+			var config = builder.Configuration;
+			builder.Services.AddCloudDinary(config); 
 
 			var app = builder.Build();
 
