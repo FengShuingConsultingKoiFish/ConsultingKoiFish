@@ -4,6 +4,7 @@ using ConsultingKoiFish.DAL.Repositories;
 using ConsultingKoiFish.DAL.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 using System.Reflection;
+using CloudinaryDotNet;
 
 namespace ConsultingKoiFish.API.ConfigExtensions
 {
@@ -76,6 +77,14 @@ namespace ConsultingKoiFish.API.ConfigExtensions
 					await userManager.AddToRoleAsync(adminUser, "Admin");
 				}
 			}
+		}
+
+		//Add Cloud Dinary
+		public static void AddCloudDinary(this IServiceCollection services, IConfiguration configuration)
+		{
+			var cloudinaryUrl = configuration["CloudinaryUrl"];
+			var cloudinaryAccount = new CloudinaryDotNet.Account(cloudinaryUrl);
+			services.AddSingleton(new Cloudinary(cloudinaryAccount));
 		}
 	}
 }
