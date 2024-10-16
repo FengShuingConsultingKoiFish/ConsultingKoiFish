@@ -29,9 +29,9 @@ namespace ConsultingKoiFish.API.Controllers
 
 				if (dto.Gender != null)
 				{
-					if (!dto.Gender.Equals("Male") && !dto.Gender.Equals("Female"))
+					if (!dto.Gender.Equals("Nam") && !dto.Gender.Equals("Nữ"))
 					{
-						ModelState.AddModelError("Gender", "Giới tính chỉ nhận Male hoặc Female.");
+						ModelState.AddModelError("Gender", "Giới tính chỉ nhận Nam hoặc Nữ.");
 						return ModelInvalid();
 					}
 				}
