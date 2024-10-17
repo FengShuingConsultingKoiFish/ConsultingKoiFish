@@ -32,12 +32,6 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				var repo = _unitOfWork.GetRepo<UserDetail>();
 				var imageRepo = _unitOfWork.GetRepo<Image>();
 				await _unitOfWork.BeginTransactionAsync();
-
-				var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
-															.WithPredicate(x => x.Id == dto.ImageId && x.IsActive == true)
-															.WithTracking(false)
-															.Build());
-				if (image == null) return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
 				var any = await repo.AnyAsync(new QueryBuilder<UserDetail>()
 
 												.WithPredicate(x => x.UserId.Equals(userId))
@@ -50,7 +44,6 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 					if(userId != userDetail.UserId) return new BaseResponse { IsSuccess = false, Message = "Người dùng không khớp."};
 
 					var updateUserDetail = _mapper.Map(dto, userDetail);
-					updateUserDetail.Avatar = image.FilePath;
 					await repo.UpdateAsync(updateUserDetail);
 				}
 				else
@@ -60,7 +53,6 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 					userDetail.Id = userDetailId;
 					userDetail.UserId = userId;
 					userDetail.IsActive = true;
-					userDetail.Avatar = image.FilePath;
 					userDetail.CreatedDate = DateTime.Now;
 					await repo.CreateAsync(userDetail);
 				}
@@ -70,6 +62,78 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công" };
 			}
 			catch(Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
+
+		public async Task<BaseResponse> UpdateAvatar(UserDetailUpdateAvatarDTO dto, string userId)
+		{
+			try
+			{
+				var repo = _unitOfWork.GetRepo<UserDetail>();
+				var imageRepo = _unitOfWork.GetRepo<Image>();
+				await _unitOfWork.BeginTransactionAsync();
+				
+				var image = await imageRepo.GetSingleAsync(new QueryBuilder<Image>()
+					.WithPredicate(x => x.Id == dto.Avatar && x.IsActive == true)
+					.WithTracking(false)
+					.Build());
+				if (image == null) return new BaseResponse { IsSuccess = false, Message = "Ảnh không tồn tại." };
+				var any = await repo.AnyAsync(new QueryBuilder<UserDetail>()
+
+					.WithPredicate(x => x.UserId.Equals(userId))
+					.Build());
+				if(any)
+				{
+					var userDetail = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
+						.WithPredicate(x => x.UserId.Equals(userId))
+						.Build());
+					if(userId != userDetail.UserId) return new BaseResponse { IsSuccess = false, Message = "Người dùng không khớp."};
+					userDetail.Avatar = image.FilePath;
+					await repo.UpdateAsync(userDetail);
+					var saver = await _unitOfWork.SaveAsync();
+					await _unitOfWork.CommitTransactionAsync();
+					if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu thất bại" };
+					return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công" };
+				}
+
+				return new BaseResponse { IsSuccess = false, Message = "Người dùng chưa tạo hồ sơ." };
+			}
+			catch (Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
+
+		public async Task<BaseResponse> DeleteAvatar(string userId)
+		{
+			try
+			{
+				var repo = _unitOfWork.GetRepo<UserDetail>();
+				await _unitOfWork.BeginTransactionAsync();
+				var any = await repo.AnyAsync(new QueryBuilder<UserDetail>()
+					.WithPredicate(x => x.UserId.Equals(userId))
+					.Build());
+				if(any)
+				{
+					var userDetail = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
+						.WithPredicate(x => x.UserId.Equals(userId))
+						.Build());
+					if(userId != userDetail.UserId) return new BaseResponse { IsSuccess = false, Message = "Người dùng không khớp."};
+					userDetail.Avatar = null;
+					await repo.UpdateAsync(userDetail);
+					var saver = await _unitOfWork.SaveAsync();
+					await _unitOfWork.CommitTransactionAsync();
+					if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu dữ liệu thất bại" };
+					return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công" };
+				}
+
+				return new BaseResponse { IsSuccess = false, Message = "Người dùng chưa tạo hồ sơ." };
+			}
+			catch (Exception)
 			{
 				await _unitOfWork.RollBackAsync();
 				throw;

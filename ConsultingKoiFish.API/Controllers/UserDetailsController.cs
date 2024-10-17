@@ -18,6 +18,11 @@ namespace ConsultingKoiFish.API.Controllers
 			this._userDetailService = userDetailService;
 		}
 
+		/// <summary>
+		/// This is used to create or update user profile in4
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
 		[Authorize]
 		[HttpPost]
 		[Route("create-update-user-detail")]
@@ -49,6 +54,58 @@ namespace ConsultingKoiFish.API.Controllers
 				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
 			}
 		}
+		
+		/// <summary>
+		/// This is used to update user avatar
+		/// </summary>
+		/// <param name="dto"></param>
+		/// <returns></returns>
+		[Authorize]
+		[HttpPost]
+		[Route("update-user-avatar")]
+		public async Task<IActionResult> UpdateAvatar(UserDetailUpdateAvatarDTO dto)
+		{
+			try
+			{
+				var userId = UserId;
+				var response = await _userDetailService.UpdateAvatar(dto, userId);
+				if (!response.IsSuccess) return SaveError(response.Message);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+			}
+		}
+		
+		/// <summary>
+		/// This is used to remove user avatar
+		/// </summary>
+		/// <returns></returns>
+		[Authorize]
+		[HttpPost]
+		[Route("delete-user-avatar")]
+		public async Task<IActionResult> DeleteAvatar()
+		{
+			try
+			{
+				var userId = UserId;
+				var response = await _userDetailService.DeleteAvatar(userId);
+				if (!response.IsSuccess) return SaveError(response.Message);
+				return SaveSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+			}
+		}
+		
 
 		[Authorize]
 		[HttpGet]
