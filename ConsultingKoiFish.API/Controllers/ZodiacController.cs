@@ -97,5 +97,16 @@ namespace ConsultingKoiFish.API.Controllers
 
             return BadRequest(result);
         }
+        [HttpGet("Get-Zodiac-By-Birthdate-For-Guest")]
+        public async Task<IActionResult> GetZodiacByBirthDate([FromQuery] string name, [FromQuery] DateTime birthDate)
+        {
+            var result = await _zodiacService.GetZodiacByBirthDate(name, birthDate);
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
     }
 }

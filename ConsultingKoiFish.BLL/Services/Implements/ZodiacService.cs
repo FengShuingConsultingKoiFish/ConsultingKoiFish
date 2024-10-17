@@ -325,6 +325,69 @@ public class ZodiacService : IZodiacService
         };
     }
 }
+    public async Task<ResponseApiDTO> GetZodiacByBirthDate(string name, DateTime birthDate)
+{
+    try
+    {
+        var year = birthDate.Year;
+        
+        int thienCan = (year + 6) % 10;
+        int diaChi = (year + 8) % 12;
+
+        string[] thienCanList = { "Giáp", "Ất", "Bính", "Đinh", "Mậu", "Kỷ", "Canh", "Tân", "Nhâm", "Quý" };
+        string[] diaChiList = { "Tý", "Sửu", "Dần", "Mão", "Thìn", "Tỵ", "Ngọ", "Mùi", "Thân", "Dậu", "Tuất", "Hợi" };
+
+        var canChiToMenh = new Dictionary<string, string>
+        {
+            { "Giáp Tý", "Kim" }, { "Ất Sửu", "Kim" }, { "Bính Dần", "Hỏa" }, { "Đinh Mão", "Hỏa" }, 
+            { "Mậu Thìn", "Mộc" }, { "Kỷ Tỵ", "Mộc" }, { "Canh Ngọ", "Thổ" }, { "Tân Mùi", "Thổ" }, 
+            { "Nhâm Thân", "Kim" }, { "Quý Dậu", "Kim" }, { "Giáp Tuất", "Hỏa" }, { "Ất Hợi", "Hỏa" }, 
+            { "Bính Tý", "Thuỷ" }, { "Đinh Sửu", "Thuỷ" }, { "Mậu Dần", "Thổ" }, { "Kỷ Mão", "Thổ" }, 
+            { "Canh Thìn", "Kim" }, { "Tân Tỵ", "Kim" }, { "Nhâm Ngọ", "Mộc" }, { "Quý Mùi", "Mộc" }, 
+            { "Giáp Thân", "Thuỷ" }, { "Ất Dậu", "Thuỷ" }, { "Bính Tuất", "Thổ" }, { "Đinh Hợi", "Thổ" }, 
+            { "Mậu Tý", "Hỏa" }, { "Kỷ Sửu", "Hỏa" }, { "Canh Dần", "Thổ" }, { "Tân Mão", "Thổ" }, 
+            { "Nhâm Thìn", "Thuỷ" }, { "Quý Tỵ", "Thuỷ" }, { "Giáp Ngọ", "Kim" }, { "Ất Mùi", "Kim" }, 
+            { "Bính Thân", "Hỏa" }, { "Đinh Dậu", "Hỏa" }, { "Mậu Tuất", "Mộc" }, { "Kỷ Hợi", "Mộc" }, 
+            { "Canh Tý", "Thổ" }, { "Tân Sửu", "Thổ" }, { "Nhâm Dần", "Kim" }, { "Quý Mão", "Kim" }, 
+            { "Giáp Thìn", "Hỏa" }, { "Ất Tỵ", "Hỏa" }, { "Bính Ngọ", "Thuỷ" }, { "Đinh Mùi", "Thuỷ" }, 
+            { "Mậu Thân", "Thổ" }, { "Kỷ Dậu", "Thổ" }, { "Canh Tuất", "Kim" }, { "Tân Hợi", "Kim" }, 
+            { "Nhâm Tý", "Mộc" }, { "Quý Sửu", "Mộc" }, { "Giáp Dần", "Thuỷ" }, { "Ất Mão", "Thuỷ" }, 
+            { "Bính Thìn", "Thổ" }, { "Đinh Tỵ", "Thổ" }, { "Mậu Ngọ", "Hỏa" }, { "Kỷ Mùi", "Hỏa" }, 
+            { "Canh Thân", "Mộc" }, { "Tân Dậu", "Mộc" }, { "Nhâm Tuất", "Thuỷ" }, { "Quý Hợi", "Thuỷ" }
+        };
+
+        string can = thienCanList[thienCan];
+        string chi = diaChiList[diaChi];
+        string canChi = $"{can} {chi}";
+
+        if (canChiToMenh.TryGetValue(canChi, out string menh))
+        {
+            return new ResponseApiDTO
+            {
+                StatusCode = HttpStatusCode.OK,
+                IsSuccess = true,
+                Message = $"{name} có mệnh {menh}."
+            };
+        }
+        else
+        {
+            return new ResponseApiDTO
+            {
+                IsSuccess = false,
+                Message = $"Không tìm thấy mệnh cho năm {year} ({canChi})."
+            };
+        }
+    }
+    catch (Exception ex)
+    {
+        return new ResponseApiDTO
+        {
+            IsSuccess = false,
+            Message = "Có lỗi xảy ra khi tính mệnh: " + ex.Message
+        };
+    }
+}
+
 
 
 
