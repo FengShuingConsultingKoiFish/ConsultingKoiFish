@@ -59,9 +59,10 @@ namespace ConsultingKoiFish.API.Controllers
         }
 
         // GET api/userpond/getall/{userId}
-        [HttpGet("getall/{userId}")]
-        public async Task<IActionResult> GetAllUserPonds(string userId)
+        [HttpGet("getall")]
+        public async Task<IActionResult> GetAllUserPonds()
         {
+            var userId = UserId;
             var result = await _userPondService.GetAllUserPond(userId);
             if (result.IsSuccess)
             {

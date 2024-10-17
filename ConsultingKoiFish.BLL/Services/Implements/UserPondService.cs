@@ -69,6 +69,7 @@ public class UserPondService : IUserPondService
             userPond.Quantity = userPondDtOs.Quantity;
             userPond.Description = userPondDtOs.Description;
             userPond.Image = userPondDtOs.Image;
+            userPond.Score = 0;
             
             await repo.UpdateAsync(userPond);
             
