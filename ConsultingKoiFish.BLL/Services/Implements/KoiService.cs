@@ -380,41 +380,51 @@ public class KoiService : IKoiService
     }
 
     public async Task<ResponseApiDTO> GetSuitableKoiForUser(string userId)
+{
+    try
     {
-        try
+        // Step 1: Retrieve user's zodiac sign from the UserZodiac repository
+        var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+        var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+            .WithPredicate(x => x.UserId.Equals(userId))
+            .Build());
+
+        if (userZodiac == null)
         {
-            // Step 1: Retrieve user's zodiac sign from the UserZodiac repository
-            var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
-            var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
-                .WithPredicate(x => x.UserId.Equals(userId))
-                .Build());
-
-            if (userZodiac == null)
-            {
-                return new ResponseApiDTO { IsSuccess = false, Message = "Zodiac for the user not found." };
-            }
-
-            // Step 2: Retrieve matching Koi breeds for the user's zodiac
-            var koiZodiacRepo = _unitOfWork.GetRepo<KoiBreedZodiac>();
-            var queryBuilder = new QueryBuilder<KoiBreedZodiac>()
-                .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match the ZodiacId from UserZodiac
-                .Build();
-
-            var suitableKoiBreeds = await koiZodiacRepo.GetAllAsync(queryBuilder);
-            if (suitableKoiBreeds == null || !suitableKoiBreeds.Any())
-            {
-                return new ResponseApiDTO { IsSuccess = false, Message = "No suitable Koi breeds found for the user's zodiac." };
-            }
-
-            // Step 3: Map the result to DTO (if necessary) and return
-            var suitableKoiBreedDTOs = _mapper.Map<List<KoiBreedZodiac>>(suitableKoiBreeds);
-            return new ResponseApiDTO { IsSuccess = true, Result = suitableKoiBreedDTOs, Message = "Suitable Koi breeds retrieved successfully." };
+            return new ResponseApiDTO { IsSuccess = false, Message = "Zodiac for the user not found." };
         }
-        catch (Exception e)
+
+        // Step 2: Retrieve matching Koi breeds for the user's zodiac, including KoiBreed and Zodiac details
+        var koiZodiacRepo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+        var queryBuilder = new QueryBuilder<KoiBreedZodiac>()
+            .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match the ZodiacId from UserZodiac
+            .WithInclude(x => x.KoiBreed) // Include KoiBreed details
+            .WithInclude(x => x.Zodiac) // Include Zodiac details
+            .Build();
+
+        var suitableKoiBreeds = await koiZodiacRepo.GetAllAsync(queryBuilder);
+        if (suitableKoiBreeds == null || !suitableKoiBreeds.Any())
         {
-            Console.WriteLine(e);
-            return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable Koi breeds." };
+            return new ResponseApiDTO { IsSuccess = false, Message = "No suitable Koi breeds found for the user's zodiac." };
         }
+
+        // Step 3: Map the result to a DTO including KoiBreed and Zodiac names
+        var suitableKoiBreedDTOs = suitableKoiBreeds.Select(koiBreedZodiac => new 
+        {
+            KoiBreedId = koiBreedZodiac.KoiBreedId,
+            KoiBreedName = koiBreedZodiac.KoiBreed?.Name,
+            ZodiacId = koiBreedZodiac.ZodiacId,
+            ZodiacName = koiBreedZodiac.Zodiac?.ZodiacName // Ensure "Name" is the correct field name
+        }).ToList();
+
+        return new ResponseApiDTO { IsSuccess = true, Result = suitableKoiBreedDTOs, Message = "Suitable Koi breeds retrieved successfully." };
     }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable Koi breeds." };
+    }
+}
+
 
 }

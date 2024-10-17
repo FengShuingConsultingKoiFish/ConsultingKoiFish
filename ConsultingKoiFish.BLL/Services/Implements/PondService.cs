@@ -377,42 +377,53 @@ namespace ConsultingKoiFish.BLL.Services.Implements
         }
 
         public async Task<ResponseApiDTO> GetSuitablePondForUser(string userId)
+{
+    try
+    {
+        // Retrieve user's zodiac sign from the UserZodiac repository
+        var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+        var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+            .WithPredicate(x => x.UserId.Equals(userId))
+            .Build());
+
+        if (userZodiac == null)
         {
-            try
-            {
-                // Retrieve user's zodiac sign from the UserZodiac repository
-                var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
-                var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
-                    .WithPredicate(x => x.UserId.Equals(userId))
-                    .Build());
-
-                if (userZodiac == null)
-                {
-                    return new ResponseApiDTO { IsSuccess = false, Message = "User's zodiac not found." };
-                }
-
-                // Retrieve matching ponds based on the user's zodiac sign
-                var pondZodiacRepo = _unitOfWork.GetRepo<PondZodiac>();
-                var queryBuilder = new QueryBuilder<PondZodiac>()
-                    .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match ZodiacId from PondZodiac
-                    .Build();
-        
-                var matchingPonds = await pondZodiacRepo.GetAllAsync(queryBuilder);
-                if (matchingPonds == null || matchingPonds.Count() == 0)
-                {
-                    return new ResponseApiDTO { IsSuccess = false, Message = "No suitable ponds found for the user's zodiac sign." };
-                }
-
-                // Map the result to a DTO (if needed) and return
-                var suitablePondDTOs = _mapper.Map<List<PondZodiac>>(matchingPonds);
-                return new ResponseApiDTO { IsSuccess = true, Result = suitablePondDTOs, Message = "Suitable ponds retrieved successfully." };
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable ponds." };
-            }
+            return new ResponseApiDTO { IsSuccess = false, Message = "User's zodiac not found." };
         }
+
+        // Retrieve matching ponds based on the user's zodiac sign, including pond and zodiac details
+        var pondZodiacRepo = _unitOfWork.GetRepo<PondZodiac>();
+        var queryBuilder = new QueryBuilder<PondZodiac>()
+            .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match ZodiacId from PondZodiac
+            .WithInclude(x => x.Pond) // Include Pond details
+            .WithInclude(x => x.Zodiac) // Include Zodiac details
+            .Build();
+        
+        var matchingPonds = await pondZodiacRepo.GetAllAsync(queryBuilder);
+        if (matchingPonds == null || !matchingPonds.Any())
+        {
+            return new ResponseApiDTO { IsSuccess = false, Message = "No suitable ponds found for the user's zodiac sign." };
+        }
+
+        // Map the result to a DTO including pond and zodiac names
+        var suitablePondDTOs = matchingPonds.Select(pondZodiac => new 
+        {
+            PondId = pondZodiac.PondId,
+            PondName = pondZodiac.Pond?.Name,
+            ZodiacId = pondZodiac.ZodiacId,
+            ZodiacName = pondZodiac.Zodiac?.ZodiacName // Confirm "Name" is the correct field name
+        }).ToList();
+
+        return new ResponseApiDTO { IsSuccess = true, Result = suitablePondDTOs, Message = "Suitable ponds retrieved successfully." };
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable ponds." };
+    }
+}
+
+
 
     }
 }
