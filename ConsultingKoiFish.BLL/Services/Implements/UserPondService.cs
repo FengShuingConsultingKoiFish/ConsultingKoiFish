@@ -5,6 +5,7 @@ using ConsultingKoiFish.BLL.Services.Interfaces;
 using ConsultingKoiFish.DAL.Entities;
 using ConsultingKoiFish.DAL.Queries;
 using ConsultingKoiFish.DAL.UnitOfWork;
+using Microsoft.AspNetCore.Builder;
 
 namespace ConsultingKoiFish.BLL.Services.Implements;
 
@@ -18,19 +19,20 @@ public class UserPondService : IUserPondService
         this._unitOfWork = unitOfWork;
         this._mapper = mapper;
     }
-    public async Task<BaseResponse> AddUserPond(UserPondDTOs userPondDtOs)
+    public async Task<BaseResponse> AddUserPond(UserPondDTOs userPondDtOs, string userId)
     {
         try
         {
             var repo = _unitOfWork.GetRepo<UserPond>();
             var zodiacDTO = new UserPond()
             {
-                UserId = userPondDtOs.UserId,
+                UserId = userId,
                 PondName = userPondDtOs.PondName,
                 Quantity = userPondDtOs.Quantity,
                 Description = userPondDtOs.Description,
                 Image = userPondDtOs.Image
             };
+            
             await repo.CreateAsync(zodiacDTO);
             await _unitOfWork.SaveChangesAsync();
             return new BaseResponse { IsSuccess = true, Message = "Thêm hồ thành công thành công" };

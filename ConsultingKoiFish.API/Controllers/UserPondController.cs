@@ -3,12 +3,13 @@ using ConsultingKoiFish.BLL.DTOs.Response;
 using ConsultingKoiFish.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ConsultingKoiFish.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserPondController : ControllerBase
+    public class UserPondController : BaseAPIController
     {
         private readonly IUserPondService _userPondService;
 
@@ -18,6 +19,7 @@ namespace ConsultingKoiFish.API.Controllers
         }
 
         // POST api/userpond/add
+        [Authorize]
         [HttpPost("add")]
         public async Task<IActionResult> AddUserPond([FromBody] UserPondDTOs userPondDto)
         {
@@ -25,8 +27,9 @@ namespace ConsultingKoiFish.API.Controllers
             {
                 return BadRequest(ModelState);
             }
+            var userId = UserId;
 
-            var result = await _userPondService.AddUserPond(userPondDto);
+            var result = await _userPondService.AddUserPond(userPondDto, userId);
 
             if (result.IsSuccess)
             {
