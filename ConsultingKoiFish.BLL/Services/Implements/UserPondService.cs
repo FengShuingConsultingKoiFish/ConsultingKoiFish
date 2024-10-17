@@ -116,7 +116,7 @@ public class UserPondService : IUserPondService
             }
 
             // Áp dụng AutoMapper để chuyển đổi từ thực thể sang DTO
-            var userPondDtos = _mapper.Map<IEnumerable<UserPondDTOs>>(userPonds);
+            var userPondDtos = _mapper.Map<IEnumerable<UserPond>>(userPonds);
 
             // Trả về danh sách DTO
             return new ResponseApiDTO
@@ -214,69 +214,116 @@ public class UserPondService : IUserPondService
     }
 }
 
+    
+
     public async Task<BaseResponse> AddKoiAndPondDetails(KoiAndPondDetailRequestDTOs.KoiAndPondDetailRequestDTO requestDto)
+{
+    try
     {
-        try
+        var userPondRepo = _unitOfWork.GetRepo<UserPond>();
+        var koiDetailRepo = _unitOfWork.GetRepo<KoiDetail>();
+        var pondDetailRepo = _unitOfWork.GetRepo<PondDetail>();
+        var koiBreedZodiacRepo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+        var pondZodiacRepo = _unitOfWork.GetRepo<PondZodiac>();
+        var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+
+        // Validate if UserPond exists for the provided PondId and get the userId
+        var userPond = await userPondRepo.GetSingleAsync(new QueryBuilder<UserPond>()
+            .WithPredicate(x => x.Id == requestDto.PondId)
+            .Build());
+
+        if (userPond == null)
         {
-            var userPondRepo = _unitOfWork.GetRepo<UserPond>();
-            var koiDetailRepo = _unitOfWork.GetRepo<KoiDetail>();
-            var pondDetailRepo = _unitOfWork.GetRepo<PondDetail>();
-
-            // Validate if UserPond exists for the provided PondId
-            var userPondExists = await userPondRepo.AnyAsync(new QueryBuilder<UserPond>()
-                .WithPredicate(x => x.Id == requestDto.PondId)
-                .Build());
-
-            if (!userPondExists)
-            {
-                return new BaseResponse
-                {
-                    IsSuccess = false,
-                    Message = "UserPond không tồn tại."
-                };
-            }
-
-            // Map KoiDetails and add to the repository
-            foreach (var koiDetailDto in requestDto.KoiDetails)
-            {
-                var koiDetail = new KoiDetail
-                {
-                    UserPondId = requestDto.PondId, // Set UserPondId from request
-                    KoiBreedId = koiDetailDto.KoiBreedId
-                };
-                await koiDetailRepo.CreateAsync(koiDetail);
-            }
-
-            // Map PondDetails and add to the repository
-            foreach (var pondDetailDto in requestDto.PondDetails)
-            {
-                var pondDetail = new PondDetail
-                {
-                    UserPondId = requestDto.PondId, // Set UserPondId from request
-                    PondId = pondDetailDto.PondId
-                };
-                await pondDetailRepo.CreateAsync(pondDetail);
-            }
-
-            // Save changes to database
-            await _unitOfWork.SaveChangesAsync();
-
-            return new BaseResponse
-            {
-                IsSuccess = true,
-                Message = "Thêm chi tiết Koi và hồ thành công."
-            };
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
             return new BaseResponse
             {
                 IsSuccess = false,
-                Message = "Có lỗi xảy ra khi thêm chi tiết Koi và hồ."
+                Message = "UserPond không tồn tại."
             };
         }
+
+        // Retrieve ZodiacId associated with the userId from UserPond
+        var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+            .WithPredicate(x => x.UserId == userPond.UserId)
+            .Build());
+
+        if (userZodiac == null)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Zodiac không tồn tại cho người dùng này."
+            };
+        }
+
+        // Map KoiDetails and add to the repository
+        foreach (var koiDetailDto in requestDto.KoiDetails)
+        {
+            var koiDetail = new KoiDetail
+            {
+                UserPondId = requestDto.PondId, // Set UserPondId from request
+                KoiBreedId = koiDetailDto.KoiBreedId
+            };
+            await koiDetailRepo.CreateAsync(koiDetail);
+        }
+
+        // Map PondDetails and add to the repository
+        foreach (var pondDetailDto in requestDto.PondDetails)
+        {
+            var pondDetail = new PondDetail
+            {
+                UserPondId = requestDto.PondId, // Set UserPondId from request
+                PondId = pondDetailDto.PondId
+            };
+            await pondDetailRepo.CreateAsync(pondDetail);
+        }
+
+        // Save all changes
+        await _unitOfWork.SaveChangesAsync();
+
+        // Calculate the score based on matching ponds and koi using ZodiacId
+        var matchingPonds = await pondZodiacRepo.GetAllAsync(new QueryBuilder<PondZodiac>()
+            .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)
+            .Build());
+        var matchingPondsCount = matchingPonds.Count();
+
+        var matchingKoi = await koiBreedZodiacRepo.GetAllAsync(new QueryBuilder<KoiBreedZodiac>()
+            .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)
+            .Build());
+        var matchingKoiCount = matchingKoi.Count();
+
+        // Assuming a scoring logic where each match adds 10 points
+        userPond.Score = (matchingPondsCount + matchingKoiCount) * 10;
+
+        // Update the UserPond score in the database
+        await userPondRepo.UpdateAsync(userPond);
+        var isSaved = await _unitOfWork.SaveAsync();
+
+        if (!isSaved)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Không thể cập nhật điểm số sau khi thêm chi tiết Koi và hồ."
+            };
+        }
+
+        return new BaseResponse
+        {
+            IsSuccess = true,
+            Message = "Thêm chi tiết Koi và hồ thành công, và điểm số đã được cập nhật."
+        };
     }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        return new BaseResponse
+        {
+            IsSuccess = false,
+            Message = "Có lỗi xảy ra khi thêm chi tiết Koi và hồ."
+        };
+    }
+}
+
     public async Task<BaseResponse> UpdateKoiAndPondDetails(int userPondId, KoiAndPondDetailRequestDTOs.KoiAndPondDetailRequestDTO requestDto)
 {
     try
