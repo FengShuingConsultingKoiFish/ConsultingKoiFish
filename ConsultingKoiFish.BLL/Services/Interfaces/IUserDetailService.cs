@@ -15,6 +15,8 @@ namespace ConsultingKoiFish.BLL.Services.Interfaces
 		Task<BaseResponse> UpdateAvatar(UserDetailUpdateAvatarDTO dto, string userId);
 		Task<BaseResponse> DeleteAvatar(string userId);
 		Task<UserDetailViewDTO> GetUserDetailByUserId(string userId);
+		Task<string> GetUserAvatarByUserId(string userId);
+		Task<string> GetUserAvatarByUserName(string userName);
 		Task<UserDetailViewDTO> GetUserDetailById(Guid id);
 		Task<UserDetailViewDTO> GetUserDetailByUserName(string userName);
 		Task<PaginatedList<UserDetailViewDTO>> GetAllUserDetails(UserDetailGetListDTO dto);

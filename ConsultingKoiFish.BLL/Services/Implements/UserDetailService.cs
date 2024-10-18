@@ -19,12 +19,14 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IMapper _mapper;
+		private readonly IIdentityService _identityService;
 
-		public UserDetailService(IUnitOfWork unitOfWork, IMapper mapper)
+		public UserDetailService(IUnitOfWork unitOfWork, IMapper mapper, IIdentityService identityService)
         {
 			this._unitOfWork = unitOfWork;
 			this._mapper = mapper;
-		}
+			_identityService = identityService;
+        }
         public async Task<BaseResponse> CreateUpdateUserDetail(UserDetailRequestDTO dto, string userId)
 		{
 			try
@@ -225,6 +227,46 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 													.Build());
 			if (response == null) return null;
 			return ConvertUserDetailToUserDetailView(response);
+		}
+
+		public async Task<string> GetUserAvatarByUserId(string userId)
+		{
+			var repo = _unitOfWork.GetRepo<UserDetail>();
+			var response = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
+				.WithPredicate(x => x.UserId.Equals(userId) && x.IsActive == true)
+				.WithInclude(x => x.User)
+				.WithTracking(false)
+				.Build());
+			if (response == null) return null;
+			if (string.IsNullOrEmpty(response.Avatar))
+			{
+				return null;
+			}
+			else
+			{
+				return response.Avatar;
+			}
+		}
+
+		public async Task<string> GetUserAvatarByUserName(string userName)
+		{
+			var repo = _unitOfWork.GetRepo<UserDetail>();
+			var user = await _identityService.GetByUserNameAsync(userName);
+			if (user == null) return null;
+			var response = await repo.GetSingleAsync(new QueryBuilder<UserDetail>()
+				.WithPredicate(x => x.UserId.Equals(user.Id) && x.IsActive == true)
+				.WithInclude(x => x.User)
+				.WithTracking(false)
+				.Build());
+			if (response == null) return null;
+			if (string.IsNullOrEmpty(response.Avatar))
+			{
+				return null;
+			}
+			else
+			{
+				return response.Avatar;
+			}
 		}
 
 		#region Convert

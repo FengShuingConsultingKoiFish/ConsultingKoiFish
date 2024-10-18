@@ -106,6 +106,55 @@ namespace ConsultingKoiFish.API.Controllers
 			}
 		}
 		
+		/// <summary>
+		/// This is used to get avatar for current user login
+		/// </summary>
+		/// <returns></returns>
+		[Authorize]
+		[HttpGet]
+		[Route("get-user-avatar-for-user")]
+		public async Task<IActionResult> GetUserAvatarByUserId()
+		{
+			try
+			{
+				var response = await _userDetailService.GetUserAvatarByUserId(UserId);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+			}
+		}
+
+		/// <summary>
+		/// This is used to get a single user avatar userName
+		/// </summary>
+		/// <param name="userName"></param>
+		/// <returns></returns>
+		[Authorize]
+		[HttpGet]
+		[Route("get-user-avatar-by-userName/{userName}")]
+		public async Task<IActionResult> GetUserAvatarByUserId([FromRoute]string userName)
+		{
+			try
+			{
+				var response = await _userDetailService.GetUserAvatarByUserName(userName);
+				if (response == null) return GetError();
+				return GetSuccess(response);
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ResetColor();
+				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+			}
+		}
+		
 
 		[Authorize]
 		[HttpGet]
