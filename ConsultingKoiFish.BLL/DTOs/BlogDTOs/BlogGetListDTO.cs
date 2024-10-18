@@ -30,7 +30,7 @@ namespace ConsultingKoiFish.BLL.DTOs.BlogDTOs
 		public bool IsValidOrderBlog()
 		{
 			if (OrderBlog.HasValue)
-				return Enum.IsDefined(typeof(OrderAdvertisement), OrderBlog);
+				return Enum.IsDefined(typeof(OrderBlog), OrderBlog);
 			return true;
 		}
 
