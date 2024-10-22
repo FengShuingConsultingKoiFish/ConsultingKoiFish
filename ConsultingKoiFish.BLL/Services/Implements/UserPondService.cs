@@ -216,7 +216,7 @@ public class UserPondService : IUserPondService
 
     
 
-    public async Task<BaseResponse> AddKoiAndPondDetails(KoiAndPondDetailRequestDTOs.KoiAndPondDetailRequestDTO requestDto)
+    public async Task<ResponseApiDTO> AddKoiAndPondDetails(KoiAndPondDetailRequestDTOs.KoiAndPondDetailRequestDTO requestDto)
 {
     try
     {
@@ -234,7 +234,7 @@ public class UserPondService : IUserPondService
 
         if (userPond == null)
         {
-            return new BaseResponse
+            return new ResponseApiDTO
             {
                 IsSuccess = false,
                 Message = "UserPond không tồn tại."
@@ -248,7 +248,7 @@ public class UserPondService : IUserPondService
 
         if (userZodiac == null)
         {
-            return new BaseResponse
+            return new ResponseApiDTO
             {
                 IsSuccess = false,
                 Message = "Zodiac không tồn tại cho người dùng này."
@@ -300,23 +300,23 @@ public class UserPondService : IUserPondService
 
         if (!isSaved)
         {
-            return new BaseResponse
+            return new ResponseApiDTO
             {
                 IsSuccess = false,
                 Message = "Không thể cập nhật điểm số sau khi thêm chi tiết Koi và hồ."
             };
         }
 
-        return new BaseResponse
+        return new ResponseApiDTO
         {
             IsSuccess = true,
-            Message = "Thêm chi tiết Koi và hồ thành công, và điểm số đã được cập nhật."
+            Message = $"Thêm chi tiết Koi và hồ thành công, điểm số cho hồ cá Koi của bạn là {userPond.Score}"
         };
     }
     catch (Exception e)
     {
         Console.WriteLine(e);
-        return new BaseResponse
+        return new ResponseApiDTO
         {
             IsSuccess = false,
             Message = "Có lỗi xảy ra khi thêm chi tiết Koi và hồ."

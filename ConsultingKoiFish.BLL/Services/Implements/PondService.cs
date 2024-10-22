@@ -405,13 +405,14 @@ namespace ConsultingKoiFish.BLL.Services.Implements
             return new ResponseApiDTO { IsSuccess = false, Message = "No suitable ponds found for the user's zodiac sign." };
         }
 
-        // Map the result to a DTO including pond and zodiac names
+       
         var suitablePondDTOs = matchingPonds.Select(pondZodiac => new 
         {
             PondId = pondZodiac.PondId,
             PondName = pondZodiac.Pond?.Name,
             ZodiacId = pondZodiac.ZodiacId,
-            ZodiacName = pondZodiac.Zodiac?.ZodiacName // Confirm "Name" is the correct field name
+            ZodiacName = pondZodiac.Zodiac?.ZodiacName,
+            Image = pondZodiac.Pond?.Image,
         }).ToList();
 
         return new ResponseApiDTO { IsSuccess = true, Result = suitablePondDTOs, Message = "Suitable ponds retrieved successfully." };

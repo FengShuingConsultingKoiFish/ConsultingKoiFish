@@ -11,4 +11,5 @@ public interface IZodiacService
     Task<BaseResponse> DeleteZodiac(int zodiacID);
     Task<ResponseApiDTO> GetZodiacByBirthDate(string userId);
     Task<ResponseApiDTO> GetZodiacByBirthDate(string name, DateTime birthDate);
+    Task<ResponseApiDTO> CheckIfUserHasZodiac(string userId);
 }

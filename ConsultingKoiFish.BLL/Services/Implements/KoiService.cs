@@ -407,14 +407,16 @@ public class KoiService : IKoiService
         {
             return new ResponseApiDTO { IsSuccess = false, Message = "No suitable Koi breeds found for the user's zodiac." };
         }
-
-        // Step 3: Map the result to a DTO including KoiBreed and Zodiac names
+        
         var suitableKoiBreedDTOs = suitableKoiBreeds.Select(koiBreedZodiac => new 
         {
             KoiBreedId = koiBreedZodiac.KoiBreedId,
             KoiBreedName = koiBreedZodiac.KoiBreed?.Name,
             ZodiacId = koiBreedZodiac.ZodiacId,
-            ZodiacName = koiBreedZodiac.Zodiac?.ZodiacName // Ensure "Name" is the correct field name
+            ZodiacName = koiBreedZodiac.Zodiac?.ZodiacName,
+            Image = koiBreedZodiac.KoiBreed?.Image
+            
+            
         }).ToList();
 
         return new ResponseApiDTO { IsSuccess = true, Result = suitableKoiBreedDTOs, Message = "Suitable Koi breeds retrieved successfully." };

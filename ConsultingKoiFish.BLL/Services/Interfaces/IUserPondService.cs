@@ -10,7 +10,7 @@ public interface IUserPondService
     Task<ResponseApiDTO> GetAllUserPond(string userId);
     Task<BaseResponse> DeleteUserPond(int userPondId);
 
-    public Task<BaseResponse> AddKoiAndPondDetails(
+    public Task<ResponseApiDTO> AddKoiAndPondDetails(
         KoiAndPondDetailRequestDTOs.KoiAndPondDetailRequestDTO requestDto);
 
     public Task<BaseResponse> UpdateKoiAndPondDetails(int userPondId,

@@ -387,6 +387,56 @@ public class ZodiacService : IZodiacService
         };
     }
 }
+    public async Task<ResponseApiDTO> CheckIfUserHasZodiac(string userId)
+    {
+        try
+        {
+            
+            var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+            var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+                .WithPredicate(x => x.UserId == userId)
+                .Build());
+            if (userZodiac == null)
+            {
+                return new ResponseApiDTO
+                {
+                    IsSuccess = false,
+                    Message = "Người dùng chưa có mệnh trong hệ thống."
+                };
+            }
+            var zodiacRepo = _unitOfWork.GetRepo<Zodiac>();
+            var zodiac = await zodiacRepo.GetSingleAsync(new QueryBuilder<Zodiac>()
+                .WithPredicate(x => x.Id == userZodiac.ZodiacId)
+                .Build());
+
+            if (zodiac == null)
+            {
+                return new ResponseApiDTO
+                {
+                    IsSuccess = false,
+                    Message = "Mệnh của người dùng không tồn tại trong hệ thống."
+                };
+            }
+            return new ResponseApiDTO
+            {
+                IsSuccess = true,
+                Result = new 
+                {
+                    ZodiacName = zodiac.ZodiacName,
+                    UserZodiacId = userZodiac.ZodiacId
+                },
+                Message = $"Người dùng đã có mệnh: {zodiac.ZodiacName}."
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ResponseApiDTO
+            {
+                IsSuccess = false,
+                Message = "Có lỗi xảy ra khi kiểm tra mệnh của người dùng: " + ex.Message
+            };
+        }
+    }
 
 
 

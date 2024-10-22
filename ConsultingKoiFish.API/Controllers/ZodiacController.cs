@@ -108,5 +108,19 @@ namespace ConsultingKoiFish.API.Controllers
 
             return BadRequest(result);
         }
+        [Authorize]
+        [HttpGet("Check-If-User-Has-Zodiac")]
+        public async Task<IActionResult> CheckIfUserHasZodiac()
+        {
+            var userId = UserId;
+            var result = await _zodiacService.CheckIfUserHasZodiac(userId);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
     }
 }
