@@ -403,68 +403,75 @@ public class UserPondService : IUserPondService
     }
 }
     public async Task<ResponseApiDTO> ViewKoiAndPondDetails(int userPondId)
+{
+    try
     {
-        try
+        // Bước 1: Lấy thông tin chi tiết của Koi từ repository
+        var koiDetailRepo = _unitOfWork.GetRepo<KoiDetail>();
+        var koiDetails = await koiDetailRepo.GetAllAsync(new QueryBuilder<KoiDetail>()
+            .WithPredicate(x => x.UserPondId == userPondId)  // Khớp với UserPondId
+            .WithInclude(x => x.KoiBreed) // Bao gồm chi tiết giống cá Koi
+            .Build());
+
+        // Bước 2: Lấy thông tin chi tiết của hồ từ repository
+        var pondDetailRepo = _unitOfWork.GetRepo<PondDetail>();
+        var pondDetails = await pondDetailRepo.GetAllAsync(new QueryBuilder<PondDetail>()
+            .WithPredicate(x => x.UserPondId == userPondId)  // Khớp với UserPondId
+            .WithInclude(x => x.Pond) // Bao gồm chi tiết loại hồ
+            .Build());
+
+        // Bước 3: Kiểm tra xem có dữ liệu Koi hoặc hồ hay không
+        if ((koiDetails == null || !koiDetails.Any()) && (pondDetails == null || !pondDetails.Any()))
         {
-            var koiDetailRepo = _unitOfWork.GetRepo<KoiDetail>();
-            var pondDetailRepo = _unitOfWork.GetRepo<PondDetail>();
-
-            // Get KoiDetails and PondDetails for the UserPond
-            var koiDetails = await koiDetailRepo.GetAllAsync(new QueryBuilder<KoiDetail>()
-                .WithPredicate(x => x.UserPondId == userPondId)
-                .Build());
-
-            var pondDetails = await pondDetailRepo.GetAllAsync(new QueryBuilder<PondDetail>()
-                .WithPredicate(x => x.UserPondId == userPondId)
-                .Build());
-
-            if ((koiDetails == null || !koiDetails.Any()) && (pondDetails == null || !pondDetails.Any()))
-            {
-                return new ResponseApiDTO
-                {
-                    IsSuccess = false,
-                    Message = "Không tìm thấy chi tiết Koi hoặc hồ cho UserPond này.",
-                    Result = null
-                };
-            }
-
-            // Map entities to DTOs
-            var koiDetailDtos = koiDetails.Select(k => new 
-            {
-                k.Id,
-                k.KoiBreed.Name,
-                 
-            });
-            var pondDetailDtos = pondDetails.Select(p => new 
-            {
-                p.Id,
-                p.Pond.Name, 
-               
-            });
-
-            // Return result as a combined response
-            return new ResponseApiDTO
-            {
-                IsSuccess = true,
-                Message = "Lấy chi tiết Koi và hồ thành công.",
-                Result = new
-                {
-                    KoiDetails = koiDetailDtos,
-                    PondDetails = pondDetailDtos
-                }
-            };
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
             return new ResponseApiDTO
             {
                 IsSuccess = false,
-                Message = e.Message,
+                Message = "Không tìm thấy chi tiết Koi hoặc hồ cho UserPond này.",
                 Result = null
             };
         }
+
+        // Bước 4: Map chi tiết Koi sang DTO
+        var koiDetailDtos = koiDetails.Select(koiDetail => new 
+        {
+            KoiDetailId = koiDetail.Id,
+            KoiBreedName = koiDetail.KoiBreed?.Name,  // Tên giống cá Koi
+            KoiName = koiDetail.KoiBreed?.Name,  // Tên cá Koi (nếu có)
+           
+        }).ToList();
+
+        // Bước 5: Map chi tiết hồ sang DTO
+        var pondDetailDtos = pondDetails.Select(pondDetail => new 
+        {
+            PondDetailId = pondDetail.Id,
+            PondName = pondDetail.Pond.Name,  // Tên hồ
+           
+        }).ToList();
+
+        // Bước 6: Trả về kết quả
+        return new ResponseApiDTO
+        {
+            IsSuccess = true,
+            Message = "Lấy chi tiết Koi và hồ thành công.",
+            Result = new
+            {
+                KoiDetails = koiDetailDtos,
+                PondDetails = pondDetailDtos
+            }
+        };
     }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        return new ResponseApiDTO
+        {
+            IsSuccess = false,
+            Message = "Đã xảy ra lỗi khi lấy chi tiết Koi và hồ.",
+            Result = null
+        };
+    }
+}
+
 
 
 
