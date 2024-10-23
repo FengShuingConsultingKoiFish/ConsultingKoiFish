@@ -429,8 +429,18 @@ public class UserPondService : IUserPondService
             }
 
             // Map entities to DTOs
-            var koiDetailDtos = _mapper.Map<IEnumerable<KoiDetail>>(koiDetails);
-            var pondDetailDtos = _mapper.Map<IEnumerable<PondDetail>>(pondDetails);
+            var koiDetailDtos = koiDetails.Select(k => new 
+            {
+                k.Id,
+                k.KoiBreed.Name,
+                 
+            });
+            var pondDetailDtos = pondDetails.Select(p => new 
+            {
+                p.Id,
+                p.Pond.Name, 
+               
+            });
 
             // Return result as a combined response
             return new ResponseApiDTO
