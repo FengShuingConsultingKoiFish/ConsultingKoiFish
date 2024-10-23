@@ -429,8 +429,8 @@ public class UserPondService : IUserPondService
             }
 
             // Map entities to DTOs
-            var koiDetailDtos = _mapper.Map<IEnumerable<KoiDetailDTO>>(koiDetails);
-            var pondDetailDtos = _mapper.Map<IEnumerable<PondDetailDTO>>(pondDetails);
+            var koiDetailDtos = _mapper.Map<IEnumerable<KoiDetail>>(koiDetails);
+            var pondDetailDtos = _mapper.Map<IEnumerable<PondDetail>>(pondDetails);
 
             // Return result as a combined response
             return new ResponseApiDTO
@@ -450,7 +450,7 @@ public class UserPondService : IUserPondService
             return new ResponseApiDTO
             {
                 IsSuccess = false,
-                Message = "Có lỗi xảy ra khi lấy chi tiết Koi và hồ.",
+                Message = e.Message,
                 Result = null
             };
         }
