@@ -121,14 +121,14 @@ public class BlogService : IBlogService
 			.WithTracking(false)
 			.WithInclude(x => x.User, y => y.BlogImages)
 			.Build());
-		if(dto.Title != null)
+		if (dto.Title != null)
 		{
 			loadedRecords = loadedRecords.Where(x => x.Title.Contains(dto.Title));
 		}
 
-		if(dto.OrderBlog.HasValue)
+		if (dto.OrderBlog.HasValue)
 		{
-			switch((int)dto.OrderBlog)
+			switch ((int)dto.OrderBlog)
 			{
 				case 1: loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate); break;
 				case 2: loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate); break;
@@ -155,7 +155,7 @@ public class BlogService : IBlogService
 			loadedRecords = loadedRecords.Where(x => x.Title.Contains(dto.Title));
 		}
 
-		if(dto.BlogStatus.HasValue)
+		if (dto.BlogStatus.HasValue)
 		{
 			loadedRecords = loadedRecords.Where(x => x.Status == (int)dto.BlogStatus);
 		}
@@ -281,15 +281,15 @@ public class BlogService : IBlogService
 				.Build());
 			if (any)
 			{
-				foreach (var blogImageId in dto.BlogImageIds)
+				foreach (var imageId in dto.ImageIds)
 				{
 					var deleteBlogImage = await repo.GetSingleAsync(new QueryBuilder<BlogImage>()
-						.WithPredicate(x => x.Id == blogImageId && x.BlogId == dto.BlogId)
+						.WithPredicate(x => x.Id == imageId && x.BlogId == dto.BlogId)
 						.WithTracking(false)
 						.Build());
 					if (deleteBlogImage == null)
 						return new BaseResponse
-						{ IsSuccess = false, Message = $"Ảnh {blogImageId} không tồn tại trong Blog" };
+						{ IsSuccess = false, Message = $"Ảnh {imageId} không tồn tại trong Blog" };
 					deletedBlogImages.Add(deleteBlogImage);
 				}
 
@@ -398,16 +398,16 @@ public class BlogService : IBlogService
 												.WithPredicate(x => x.BlogId == blog.Id)
 												.WithTracking(false)
 												.Build());
-		if(orderComment.HasValue)
+		if (orderComment.HasValue)
 		{
-			switch((int)orderComment)
+			switch ((int)orderComment)
 			{
 				case 1: blogComments = blogComments.OrderByDescending(x => x.Id); break;
 				case 2: blogComments = blogComments.OrderBy(x => x.Id); break;
 			}
 		}
 		return await blogComments.ToListAsync();
-    }
+	}
 
 	/// <summary>
 	/// this is used to convert blog comments to commentViewDTOs
@@ -416,7 +416,7 @@ public class BlogService : IBlogService
 	/// <returns></returns>
 	private Task<List<CommentViewDTO>> ConvertBlogCommentsToCommentViews(ICollection<BlogComment> blogComments)
 	{
-		var commentViews =  _commentService.ConvertSpeciedCommentToCommentViews(blogComments, blogComment => blogComment.CommentId);
+		var commentViews = _commentService.ConvertSpeciedCommentToCommentViews(blogComments, blogComment => blogComment.CommentId);
 		return commentViews;
 	}
 
