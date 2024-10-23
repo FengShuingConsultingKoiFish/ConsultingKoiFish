@@ -14,7 +14,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5025",
+      "applicationUrl": "http://localhost:7166",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -37,20 +37,18 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-
     "ConsultingKoiFish.API": {
       "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-
     "Production": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "https://consultingfish.azurewebsites.net/index.html", 
+      "applicationUrl": "https://consultingfish.azurewebsites.net/index.html",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"
       }
