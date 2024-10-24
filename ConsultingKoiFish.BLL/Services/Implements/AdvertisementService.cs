@@ -206,15 +206,15 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 					.Build());
 				if (any)
 				{
-					foreach (var adImageId in dto.AdImageIds)
+					foreach (var imageId in dto.ImageIds)
 					{
 						var deleteAdImage = await repo.GetSingleAsync(new QueryBuilder<AdImage>()
-							.WithPredicate(x => x.Id == adImageId && x.AdvertisementId == dto.AdvertisementId)
+							.WithPredicate(x => x.ImageId == imageId && x.AdvertisementId == dto.AdvertisementId)
 							.WithTracking(false)
 							.Build());
 						if (deleteAdImage == null)
 							return new BaseResponse
-							{ IsSuccess = false, Message = $"Ảnh {adImageId} không tồn tại trong Blog" };
+							{ IsSuccess = false, Message = $"Ảnh {imageId} không tồn tại trong Blog" };
 						deletedAdImages.Add(deleteAdImage);
 					}
 
@@ -377,7 +377,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				}
 				return new BaseResponse { IsSuccess = false, Message = "Quảng cáo không tồn tại." };
 			}
-			catch(Exception)
+			catch (Exception)
 			{
 				await _unitOfWork.RollBackAsync();
 				throw;

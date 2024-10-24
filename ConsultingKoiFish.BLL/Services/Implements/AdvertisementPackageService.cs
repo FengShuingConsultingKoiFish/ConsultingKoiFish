@@ -18,14 +18,14 @@ namespace ConsultingKoiFish.BLL.Services.Implements;
 
 public class AdvertisementPackageService : IAdvertisementPackageService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+	private readonly IUnitOfWork _unitOfWork;
+	private readonly IMapper _mapper;
 	private readonly IImageService _imageService;
 
 	public AdvertisementPackageService(IUnitOfWork unitOfWork, IMapper mapper, IImageService imageService)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
+	{
+		_unitOfWork = unitOfWork;
+		_mapper = mapper;
 		this._imageService = imageService;
 	}
 
@@ -66,93 +66,93 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 	}
 
 	public async Task<BaseResponse> CreateUpdateAdvertisementPackage(AdvertisementPackageRequestDTO dto, string userName)
-    {
-        try
-        {
-            await _unitOfWork.BeginTransactionAsync();
-            var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
-            var packageImageRepo = _unitOfWork.GetRepo<PackageImage>();
-            var any = await repo.AnyAsync(new QueryBuilder<AdvertisementPackage>()
-                .WithPredicate(x => x.Id == dto.Id)
-                .WithInclude(x => x.PackageImages)
-                .Build());
-            if (any)
-            {
-                var adPackage = await repo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
-                    .WithPredicate(x => x.Id == dto.Id)
-                    .WithTracking(false)
-                    .Build());
-                var updatePackageDto = new AdvertisementPackageUpdateDTO
-                {
-                    Name = dto.Name,
-                    Price = dto.Price,
-                    Description = dto.Description,
-                    LimitContent = dto.LimitContent,
-                    LimitImage = dto.LimitImage,
-                    LimitAd = dto.LimitAd
-                };
-                var updatePackage = _mapper.Map(updatePackageDto, adPackage);
-                await repo.UpdateAsync(updatePackage);
-            }
-            else
-            {
-                var createdPackageDto = new AdvertisementPackageCreateDTO()
-                {
-                    Name = dto.Name,
-                    Price = dto.Price,
-                    Description = dto.Description,
-                    LimitContent = dto.LimitContent,
-                    LimitImage = dto.LimitImage,
-                    LimitAd = dto.LimitAd
-                };
-                var createdPackage = _mapper.Map<AdvertisementPackage>(createdPackageDto);
-                createdPackage.CreatedBy = userName;
-                createdPackage.IsActive = true;
-                createdPackage.CreatedDate = DateTime.Now;
-                await repo.CreateAsync(createdPackage);
-                await _unitOfWork.SaveChangesAsync();
+	{
+		try
+		{
+			await _unitOfWork.BeginTransactionAsync();
+			var repo = _unitOfWork.GetRepo<AdvertisementPackage>();
+			var packageImageRepo = _unitOfWork.GetRepo<PackageImage>();
+			var any = await repo.AnyAsync(new QueryBuilder<AdvertisementPackage>()
+				.WithPredicate(x => x.Id == dto.Id)
+				.WithInclude(x => x.PackageImages)
+				.Build());
+			if (any)
+			{
+				var adPackage = await repo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
+					.WithPredicate(x => x.Id == dto.Id)
+					.WithTracking(false)
+					.Build());
+				var updatePackageDto = new AdvertisementPackageUpdateDTO
+				{
+					Name = dto.Name,
+					Price = dto.Price,
+					Description = dto.Description,
+					LimitContent = dto.LimitContent,
+					LimitImage = dto.LimitImage,
+					LimitAd = dto.LimitAd
+				};
+				var updatePackage = _mapper.Map(updatePackageDto, adPackage);
+				await repo.UpdateAsync(updatePackage);
+			}
+			else
+			{
+				var createdPackageDto = new AdvertisementPackageCreateDTO()
+				{
+					Name = dto.Name,
+					Price = dto.Price,
+					Description = dto.Description,
+					LimitContent = dto.LimitContent,
+					LimitImage = dto.LimitImage,
+					LimitAd = dto.LimitAd
+				};
+				var createdPackage = _mapper.Map<AdvertisementPackage>(createdPackageDto);
+				createdPackage.CreatedBy = userName;
+				createdPackage.IsActive = true;
+				createdPackage.CreatedDate = DateTime.Now;
+				await repo.CreateAsync(createdPackage);
+				await _unitOfWork.SaveChangesAsync();
 
-                if (dto.ImageIds != null || dto.ImageIds.Any())
-                {
-                    var createdPackageImageDTOs = new List<PackageImageCreateDTO>();
-                    foreach (var image in dto.ImageIds)
-                    {
-                        var existedImage = await _unitOfWork.GetRepo<Image>().GetSingleAsync(new QueryBuilder<Image>()
-                                                                                             .WithPredicate(x => x.Id == image)
-                                                                                             .WithTracking(false)
-                                                                                             .Build());
-                        if(existedImage == null)  return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} không tồn tại."};
-                        var createdPackageImageDto = new PackageImageCreateDTO
-                        {
-                            AdvertisementPackageId = createdPackage.Id,
-                            ImageId = image
-                        };
-                        createdPackageImageDTOs.Add(createdPackageImageDto);
-                    }
-                    var createdPackageImages = _mapper.Map<List<PackageImage>>(createdPackageImageDTOs);
-                    await packageImageRepo.CreateAllAsync(createdPackageImages);
-                }
-            }
+				if (dto.ImageIds != null || dto.ImageIds.Any())
+				{
+					var createdPackageImageDTOs = new List<PackageImageCreateDTO>();
+					foreach (var image in dto.ImageIds)
+					{
+						var existedImage = await _unitOfWork.GetRepo<Image>().GetSingleAsync(new QueryBuilder<Image>()
+																							 .WithPredicate(x => x.Id == image)
+																							 .WithTracking(false)
+																							 .Build());
+						if (existedImage == null) return new BaseResponse { IsSuccess = false, Message = $"Ảnh {image} không tồn tại." };
+						var createdPackageImageDto = new PackageImageCreateDTO
+						{
+							AdvertisementPackageId = createdPackage.Id,
+							ImageId = image
+						};
+						createdPackageImageDTOs.Add(createdPackageImageDto);
+					}
+					var createdPackageImages = _mapper.Map<List<PackageImage>>(createdPackageImageDTOs);
+					await packageImageRepo.CreateAllAsync(createdPackageImages);
+				}
+			}
 
-            var saver = await _unitOfWork.SaveAsync();
-            await _unitOfWork.CommitTransactionAsync();
-            if (!saver)
-            {
-                return new BaseResponse
-                {
-                    IsSuccess = false,
-                    Message = "Lưu dữ liệu không thành công."
-                };
-            }
+			var saver = await _unitOfWork.SaveAsync();
+			await _unitOfWork.CommitTransactionAsync();
+			if (!saver)
+			{
+				return new BaseResponse
+				{
+					IsSuccess = false,
+					Message = "Lưu dữ liệu không thành công."
+				};
+			}
 
-            return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
-        }
-        catch (Exception)
-        {
-            await _unitOfWork.RollBackAsync();
-            throw;
-        }
-    }
+			return new BaseResponse { IsSuccess = true, Message = "Lưu dữ liệu thành công." };
+		}
+		catch (Exception)
+		{
+			await _unitOfWork.RollBackAsync();
+			throw;
+		}
+	}
 
 	public async Task<BaseResponse> DeleteImagesFromPackage(PackageImageDeleteDTO dto)
 	{
@@ -168,15 +168,15 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 				.Build());
 			if (any)
 			{
-				foreach (var packageImageId in dto.PackageImageIds)
+				foreach (var imageId in dto.ImageIds)
 				{
 					var deletePackageImage = await repo.GetSingleAsync(new QueryBuilder<PackageImage>()
-						.WithPredicate(x => x.Id == packageImageId && x.AdvertisementPackageId == dto.AdvertisementPackageId)
+						.WithPredicate(x => x.ImageId == imageId && x.AdvertisementPackageId == dto.AdvertisementPackageId)
 						.WithTracking(false)
 						.Build());
 					if (deletePackageImage == null)
 						return new BaseResponse
-						{ IsSuccess = false, Message = $"Ảnh {packageImageId} không tồn tại trong gói" };
+						{ IsSuccess = false, Message = $"Ảnh {imageId} không tồn tại trong gói" };
 					deletedPackageImages.Add(deletePackageImage);
 				}
 
@@ -210,15 +210,15 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 				.Build());
 			if (!package.CreatedBy.Equals(userName)) return new BaseResponse { IsSuccess = false, Message = "Gói không thuộc sở hữu người dùng." };
 			var inUsedPackage = new List<PurchasedPackage>();
-            foreach (var item in package.PurchasedPackages)
-            {
-                if(item.Status == (int)PurchasedPackageStatus.Available)
+			foreach (var item in package.PurchasedPackages)
+			{
+				if (item.Status == (int)PurchasedPackageStatus.Available)
 				{
 					inUsedPackage.Add(item);
 				}
-            }
+			}
 			if (inUsedPackage.Any()) return new BaseResponse { IsSuccess = false, Message = $"Vẫn còn {inUsedPackage.Count} gói còn khả dụng của người dùng." };
-            package.IsActive = false;
+			package.IsActive = false;
 			await repo.UpdateAsync(package);
 			var saver = await _unitOfWork.SaveAsync();
 			if (!saver)
@@ -238,12 +238,12 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 			.WithPredicate(x => x.IsActive == true)
 			.WithTracking(false)
 			.Build());
-		if(!string.IsNullOrEmpty(dto.Name))
+		if (!string.IsNullOrEmpty(dto.Name))
 		{
 			loadedRecords = loadedRecords.Where(x => x.Name.Contains(dto.Name));
 		}
 
-		if(dto.PriceFilter.HasValue)
+		if (dto.PriceFilter.HasValue)
 		{
 			var priceRange = PriceRangeHelper.GetPriceRange(dto.PriceFilter.Value);
 			loadedRecords = loadedRecords.Where(x => x.Price >= priceRange.min && x.Price <= priceRange.max);
@@ -254,7 +254,7 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 		return new PaginatedList<AdvertisementPackageViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
 	}
 
-	
+
 
 	public async Task<AdvertisementPackageViewDTO> GetPackageById(int id, OrderImage? orderImage)
 	{

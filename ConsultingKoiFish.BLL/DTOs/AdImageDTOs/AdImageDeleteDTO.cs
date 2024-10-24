@@ -12,6 +12,6 @@ namespace ConsultingKoiFish.BLL.DTOs.AdImageDTOs
 		[Required(ErrorMessage = "AdvertisementId không thể để trống.")]
 		public int AdvertisementId { get; set; }
 		[Required(ErrorMessage = "Vui lòng chọn ảnh muốn xóa.")]
-		public List<int> AdImageIds { get; set; } = new List<int>();
+		public List<int> ImageIds { get; set; } = new List<int>();
 	}
 }
