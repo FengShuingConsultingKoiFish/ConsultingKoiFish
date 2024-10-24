@@ -423,6 +423,43 @@ namespace ConsultingKoiFish.BLL.Services.Implements
         return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable ponds." };
     }
 }
+        public async Task<ResponseApiDTO> GetPondByPondCategory(int pondCategoryId)
+        {
+            try
+            {
+                var pondRepo = _unitOfWork.GetRepo<Pond>();
+
+                // Fetch all Pond that belong to the provided PondCategoryId
+                var ponds = await pondRepo.GetAllAsync(new QueryBuilder<Pond>()
+                    .WithPredicate(x => x.PondCategoryId == pondCategoryId)
+                    .Build());
+
+                if (ponds == null || !ponds.Any())
+                {
+                    return new ResponseApiDTO
+                    {
+                        IsSuccess = false,
+                        Message = "Không tìm thấy Pond theo PondCategoryId cung cấp."
+                    };
+                }
+
+                return new ResponseApiDTO
+                {
+                    IsSuccess = true,
+                    Result = ponds,
+                    Message = "Lấy danh sách Pond thành công."
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new ResponseApiDTO
+                {
+                    IsSuccess = false,
+                    Message = "Có lỗi xảy ra khi lấy danh sách Pond."
+                };
+            }
+        }
 
 
 

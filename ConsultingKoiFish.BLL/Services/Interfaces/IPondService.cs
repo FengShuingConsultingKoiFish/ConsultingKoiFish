@@ -18,4 +18,5 @@ public interface IPondService
     Task<ResponseApiDTO> GetAllPondZodiac();
     Task<BaseResponse> DeletePondZodiac(int zodiacPondId);
     Task<ResponseApiDTO> GetSuitablePondForUser(string UserId);
+    Task<ResponseApiDTO> GetPondByPondCategory(int pondCategoryId);
 }

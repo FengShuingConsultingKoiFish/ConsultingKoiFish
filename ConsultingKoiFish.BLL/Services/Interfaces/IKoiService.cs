@@ -19,4 +19,5 @@ public interface IKoiService
     Task<ResponseApiDTO> GetAllKoiZodiac();
     Task<BaseResponse> DeleteKoiZodiac(int koiZodiacId);
     Task<ResponseApiDTO> GetSuitableKoiForUser(string UserId);
+    Task<ResponseApiDTO> GetKoiBreedByKoiCategory(int koiCategoryId);
 }

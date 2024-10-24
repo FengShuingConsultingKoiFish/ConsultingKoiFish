@@ -215,5 +215,19 @@ namespace ConsultingKoiFish.API.Controllers
             }
             return BadRequest(result);
         }
+        // GET api/pond/Get-Ponds-By-PondCategory/{categoryId}
+        [HttpGet("Get-Ponds-By-PondCategory/{categoryId}")]
+        public async Task<IActionResult> GetPondsByPondCategory(int categoryId)
+        {
+            var result = await _pondService.GetPondByPondCategory(categoryId);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
     }
 }

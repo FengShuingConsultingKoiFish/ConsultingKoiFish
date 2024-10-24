@@ -255,26 +255,52 @@ public class UserPondService : IUserPondService
             };
         }
 
-        // Map KoiDetails and add to the repository
-        foreach (var koiDetailDto in requestDto.KoiDetails)
+        // Get the total number of Koi already added to this pond
+        var existingKoiDetails = await koiDetailRepo.GetAllAsync(new QueryBuilder<KoiDetail>()
+            .WithPredicate(x => x.UserPondId == requestDto.PondId)
+            .Build());
+
+        var existingKoiCount = existingKoiDetails.Count();
+
+
+        // Ensure the total koi in the pond does not exceed the maximum allowed
+        if (requestDto.KoiDetails != null && requestDto.KoiDetails.Any())
         {
-            var koiDetail = new KoiDetail
+            int totalKoiToAdd = requestDto.KoiDetails.Count;
+            if (existingKoiCount + totalKoiToAdd > userPond.Quantity)
             {
-                UserPondId = requestDto.PondId, // Set UserPondId from request
-                KoiBreedId = koiDetailDto.KoiBreedId
-            };
-            await koiDetailRepo.CreateAsync(koiDetail);
+                return new ResponseApiDTO
+                {
+                    IsSuccess = false,
+                    Message = $"Không thể thêm quá số lượng cá Koi cho phép trong hồ, số lượng tối đa: {userPond.Quantity}"
+                };
+            }
+
+            // Map KoiDetails and add to the repository
+            foreach (var koiDetailDto in requestDto.KoiDetails)
+            {
+                var koiDetail = new KoiDetail
+                {
+                    UserPondId = requestDto.PondId, // Set UserPondId from request
+                    KoiBreedId = koiDetailDto.KoiBreedId
+                };
+                await koiDetailRepo.CreateAsync(koiDetail);
+            }
         }
 
-        // Map PondDetails and add to the repository
-        foreach (var pondDetailDto in requestDto.PondDetails)
+        // Check and add pond details if provided
+        if (requestDto.PondDetails != null && requestDto.PondDetails.Any())
         {
-            var pondDetail = new PondDetail
+            // Map PondDetails and add to the repository
+            foreach (var pondDetailDto in requestDto.PondDetails)
             {
-                UserPondId = requestDto.PondId, // Set UserPondId from request
-                PondId = pondDetailDto.PondId
-            };
-            await pondDetailRepo.CreateAsync(pondDetail);
+                var pondDetail = new PondDetail
+                {
+                    UserPondId = requestDto.PondId, // Set UserPondId from request
+                    PondId = pondDetailDto.PondId
+                };
+                await pondDetailRepo.CreateAsync(pondDetail);
+            }
         }
 
         // Save all changes
@@ -406,21 +432,25 @@ public class UserPondService : IUserPondService
 {
     try
     {
-        // Bước 1: Lấy thông tin chi tiết của Koi từ repository
+        // Repositories for fetching Koi and Pond details
         var koiDetailRepo = _unitOfWork.GetRepo<KoiDetail>();
-        var koiDetails = await koiDetailRepo.GetAllAsync(new QueryBuilder<KoiDetail>()
-            .WithPredicate(x => x.UserPondId == userPondId)  // Khớp với UserPondId
-            .WithInclude(x => x.KoiBreed) // Bao gồm chi tiết giống cá Koi
-            .Build());
-
-        // Bước 2: Lấy thông tin chi tiết của hồ từ repository
         var pondDetailRepo = _unitOfWork.GetRepo<PondDetail>();
-        var pondDetails = await pondDetailRepo.GetAllAsync(new QueryBuilder<PondDetail>()
-            .WithPredicate(x => x.UserPondId == userPondId)  // Khớp với UserPondId
-            .WithInclude(x => x.Pond) // Bao gồm chi tiết loại hồ
+        var pondCategoryRepo = _unitOfWork.GetRepo<PondCategory>();
+        var koiCategoryRepo = _unitOfWork.GetRepo<KoiCategory>();
+
+        // Fetch Koi details
+        var koiDetails = await koiDetailRepo.GetAllAsync(new QueryBuilder<KoiDetail>()
+            .WithPredicate(x => x.UserPondId == userPondId)
+            .WithInclude(x => x.KoiBreed)
             .Build());
 
-        // Bước 3: Kiểm tra xem có dữ liệu Koi hoặc hồ hay không
+        // Fetch Pond details
+        var pondDetails = await pondDetailRepo.GetAllAsync(new QueryBuilder<PondDetail>()
+            .WithPredicate(x => x.UserPondId == userPondId)
+            .WithInclude(x => x.Pond)
+            .Build());
+
+        // Step 3: Check if there are any Koi or Pond details
         if ((koiDetails == null || !koiDetails.Any()) && (pondDetails == null || !pondDetails.Any()))
         {
             return new ResponseApiDTO
@@ -431,24 +461,44 @@ public class UserPondService : IUserPondService
             };
         }
 
-        // Bước 4: Map chi tiết Koi sang DTO
-        var koiDetailDtos = koiDetails.Select(koiDetail => new 
+        // Step 4: Fetch pond categories in bulk to minimize repeated queries
+        var pondCategoryIds = pondDetails.Select(pd => pd.Pond.PondCategoryId).Distinct().ToList();
+        var pondCategories = await pondCategoryRepo.GetAllAsync(new QueryBuilder<PondCategory>()
+            .WithPredicate(pc => pondCategoryIds.Contains(pc.Id))
+            .Build());
+
+        var koiCategoryIds = koiDetails.Select(kd => kd.KoiBreed.KoiCategoryId).Distinct().ToList();
+        var koiCategories = await koiCategoryRepo.GetAllAsync(new QueryBuilder<KoiCategory>()
+            .WithPredicate(kc => koiCategoryIds.Contains(kc.Id))
+            .Build());
+
+        // Step 5: Map Koi details to DTO, including fetching KoiCategory name
+        var koiDetailDtos = koiDetails.Select(koiDetail =>
         {
-            KoiDetailId = koiDetail.Id,
-            KoiBreedName = koiDetail.KoiBreed?.Name,  // Tên giống cá Koi
-            KoiName = koiDetail.KoiBreed?.Name,  // Tên cá Koi (nếu có)
-           
+            var koiCategoryName = koiCategories.FirstOrDefault(kc => kc.Id == koiDetail.KoiBreed?.KoiCategoryId)?.Name ?? "Unknown Category";
+            return new 
+            {
+                KoiDetailId = koiDetail.Id,
+                KoiBreedName = koiDetail.KoiBreed?.Name ?? "Unknown Breed",
+                KoiCategory = koiCategoryName,
+                Image = koiDetail.KoiBreed?.Image,
+            };
         }).ToList();
 
-        // Bước 5: Map chi tiết hồ sang DTO
-        var pondDetailDtos = pondDetails.Select(pondDetail => new 
+        // Step 6: Map Pond details to DTO, including fetching PondCategory name
+        var pondDetailDtos = pondDetails.Select(pondDetail =>
         {
-            PondDetailId = pondDetail.Id,
-            PondName = pondDetail.Pond.Name,  // Tên hồ
-           
+            var pondCategoryName = pondCategories.FirstOrDefault(pc => pc.Id == pondDetail.Pond?.PondCategoryId)?.Name ?? "Unknown Category";
+            return new 
+            {
+                PondDetailId = pondDetail.Id,
+                PondName = pondDetail.Pond?.Name ?? "Unknown Pond",
+                PondCategory = pondCategoryName,
+                Image = pondDetail.Pond?.Image,
+            };
         }).ToList();
 
-        // Bước 6: Trả về kết quả
+        // Step 7: Return the result
         return new ResponseApiDTO
         {
             IsSuccess = true,
@@ -471,6 +521,10 @@ public class UserPondService : IUserPondService
         };
     }
 }
+
+
+    
+    
 
 
 

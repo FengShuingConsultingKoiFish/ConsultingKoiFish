@@ -427,6 +427,43 @@ public class KoiService : IKoiService
         return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable Koi breeds." };
     }
 }
+    public async Task<ResponseApiDTO> GetKoiBreedByKoiCategory(int koiCategoryId)
+    {
+        try
+        {
+            var koiBreedRepo = _unitOfWork.GetRepo<KoiBreed>();
+
+            // Fetch all KoiBreed that belong to the provided KoiCategoryId
+            var koiBreeds = await koiBreedRepo.GetAllAsync(new QueryBuilder<KoiBreed>()
+                .WithPredicate(x => x.KoiCategoryId == koiCategoryId)
+                .Build());
+
+            if (koiBreeds == null || !koiBreeds.Any())
+            {
+                return new ResponseApiDTO
+                {
+                    IsSuccess = false,
+                    Message = "Không tìm thấy KoiBreed theo KoiCategoryId cung cấp."
+                };
+            }
+
+            return new ResponseApiDTO
+            {
+                IsSuccess = true,
+                Result = koiBreeds,
+                Message = "Lấy danh sách KoiBreed thành công."
+            };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new ResponseApiDTO
+            {
+                IsSuccess = false,
+                Message = "Có lỗi xảy ra khi lấy danh sách KoiBreed."
+            };
+        }
+    }
 
 
 }

@@ -214,5 +214,19 @@ namespace ConsultingKoiFish.API.Controllers
             }
             return BadRequest(result);
         }
+        // GET api/koi/Get-KoiBreeds-By-KoiCategory/{categoryId}
+        [HttpGet("Get-KoiBreeds-By-KoiCategory/{categoryId}")]
+        public async Task<IActionResult> GetKoiBreedsByKoiCategory(int categoryId)
+        {
+            var result = await _koiService.GetKoiBreedByKoiCategory(categoryId);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
     }
 }
