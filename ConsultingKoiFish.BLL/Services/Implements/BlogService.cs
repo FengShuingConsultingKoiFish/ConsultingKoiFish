@@ -284,7 +284,7 @@ public class BlogService : IBlogService
 				foreach (var imageId in dto.ImageIds)
 				{
 					var deleteBlogImage = await repo.GetSingleAsync(new QueryBuilder<BlogImage>()
-						.WithPredicate(x => x.Id == imageId && x.BlogId == dto.BlogId)
+						.WithPredicate(x => x.ImageId == imageId && x.BlogId == dto.BlogId)
 						.WithTracking(false)
 						.Build());
 					if (deleteBlogImage == null)
