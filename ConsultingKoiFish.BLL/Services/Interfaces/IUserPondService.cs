@@ -17,4 +17,6 @@ public interface IUserPondService
         KoiAndPondDetailRequestDTOs.KoiAndPondDetailRequestDTO requestDto);
 
     public Task<ResponseApiDTO> ViewKoiAndPondDetails(int userPondId);
+    Task<BaseResponse> DeletePondFromUserPond(int userPondId, int pondId);
+    Task<BaseResponse> DeleteKoiBreedFromUserPond(int userPondId, int koiBreedId);
 }

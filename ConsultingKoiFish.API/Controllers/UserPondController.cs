@@ -137,5 +137,51 @@ namespace ConsultingKoiFish.API.Controllers
 
             return BadRequest(result);
         }
+        // DELETE api/userpond/deletekoibreed
+        [HttpDelete("deletekoibreed")]
+        public async Task<IActionResult> DeleteKoiBreedFromUserPond([FromBody] dynamic body)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            int userPondId = body.userPondId;
+            int koiBreedId = body.koiBreedId;
+
+            var result = await _userPondService.DeleteKoiBreedFromUserPond(userPondId, koiBreedId);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+        // DELETE api/userpond/deletepond
+        [HttpDelete("deletepond")]
+        public async Task<IActionResult> DeletePondFromUserPond([FromBody] dynamic body)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            int userPondId = body.userPondId;
+            int pondId = body.pondId;
+
+            var result = await _userPondService.DeletePondFromUserPond(userPondId, pondId);
+
+            if (result.IsSuccess)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
+        }
+
+
+
     }
 }
