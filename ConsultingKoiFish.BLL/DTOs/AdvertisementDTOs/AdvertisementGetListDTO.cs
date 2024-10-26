@@ -23,7 +23,7 @@ namespace ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs
 		public bool IsValidAdvertisementStatus()
 		{
 			if (AdvertisementStatus.HasValue)
-				return Enum.IsDefined(typeof(BlogStatus), AdvertisementStatus);
+				return Enum.IsDefined(typeof(AdvertisementStatus), AdvertisementStatus);
 			return true;
 		}
 
