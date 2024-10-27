@@ -33,7 +33,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
                     Description = userPondDtOs.Description,
                     Image = userPondDtOs.Image,
                     Score = 0, // Initialize score to 0
-                    ScoreDetail = "Pond Compatibility: 100%, Koi Compatibility: 100%" // Default compatibility
+                    ScoreDetail = "Vui lòng update thông tin hồ" // Default compatibility
                 };
 
                 await repo.CreateAsync(userPond);
