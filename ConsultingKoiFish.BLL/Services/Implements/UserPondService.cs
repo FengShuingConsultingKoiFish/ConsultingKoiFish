@@ -104,7 +104,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
                     };
                 }
 
-                var userPondDtos = _mapper.Map<IEnumerable<UserPondDTOs>>(userPonds);
+                var userPondDtos = _mapper.Map<IEnumerable<UserPond>>(userPonds);
 
                 return new ResponseApiDTO
                 {
