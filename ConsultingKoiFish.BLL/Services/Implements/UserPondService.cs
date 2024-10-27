@@ -262,7 +262,6 @@ public class UserPondService : IUserPondService
 
         var existingKoiCount = existingKoiDetails.Count();
 
-
         // Ensure the total koi in the pond does not exceed the maximum allowed
         if (requestDto.KoiDetails != null && requestDto.KoiDetails.Any())
         {
@@ -306,21 +305,60 @@ public class UserPondService : IUserPondService
         // Save all changes
         await _unitOfWork.SaveChangesAsync();
 
-        // Calculate the score based on matching ponds and koi using ZodiacId
-        var matchingPonds = await pondZodiacRepo.GetAllAsync(new QueryBuilder<PondZodiac>()
-            .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)
+        // Calculate Pond Compatibility (max 50%)
+        var totalPonds = (await pondDetailRepo.GetAllAsync(new QueryBuilder<PondDetail>()
+            .WithPredicate(x => x.UserPondId == requestDto.PondId)
+            .Build())).Count();
+
+        var pondDetails = await pondDetailRepo.GetAllAsync(new QueryBuilder<PondDetail>()
+            .WithPredicate(x => x.UserPondId == requestDto.PondId)
             .Build());
-        var matchingPondsCount = matchingPonds.Count();
 
-        var matchingKoi = await koiBreedZodiacRepo.GetAllAsync(new QueryBuilder<KoiBreedZodiac>()
-            .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)
+        int matchingPondsCount = 0;
+        foreach (var pond in pondDetails)
+        {
+            var isCompatible = await pondZodiacRepo.AnyAsync(new QueryBuilder<PondZodiac>()
+                .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId && x.PondId == pond.PondId)
+                .Build());
+
+            if (isCompatible)
+                matchingPondsCount++;
+        }
+
+        double pondCompatibilityPercentage = (matchingPondsCount / (double)totalPonds) * 50;
+
+        // Calculate Koi Compatibility (max 50%)
+        var totalKoi = (await koiDetailRepo.GetAllAsync(new QueryBuilder<KoiDetail>()
+            .WithPredicate(x => x.UserPondId == requestDto.PondId)
+            .Build())).Count();
+
+        var koiDetails = await koiDetailRepo.GetAllAsync(new QueryBuilder<KoiDetail>()
+            .WithPredicate(x => x.UserPondId == requestDto.PondId)
             .Build());
-        var matchingKoiCount = matchingKoi.Count();
 
-        // Assuming a scoring logic where each match adds 10 points
-        userPond.Score = (matchingPondsCount + matchingKoiCount) * 10;
+        int matchingKoiCount = 0;
+        foreach (var koi in koiDetails)
+        {
+            var isCompatible = await koiBreedZodiacRepo.AnyAsync(new QueryBuilder<KoiBreedZodiac>()
+                .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId && x.KoiBreedId == koi.KoiBreedId)
+                .Build());
 
-        // Update the UserPond score in the database
+            if (isCompatible)
+                matchingKoiCount++;
+        }
+
+        double koiCompatibilityPercentage = (matchingKoiCount / (double)totalKoi) * 50;
+
+        // Total Compatibility
+        double finalCompatibilityPercentage = pondCompatibilityPercentage + koiCompatibilityPercentage;
+
+        // Update ScoreDetail with compatibility breakdown
+        userPond.ScoreDetail = $"Pond Compatibility: {pondCompatibilityPercentage}%, Koi Compatibility: {koiCompatibilityPercentage}%";
+
+        // Update the UserPond score (treated as compatibility percentage)
+        userPond.Score = finalCompatibilityPercentage;
+
+        // Save updated percentage
         await userPondRepo.UpdateAsync(userPond);
         var isSaved = await _unitOfWork.SaveAsync();
 
@@ -329,14 +367,14 @@ public class UserPondService : IUserPondService
             return new ResponseApiDTO
             {
                 IsSuccess = false,
-                Message = "Không thể cập nhật điểm số sau khi thêm chi tiết Koi và hồ."
+                Message = "Không thể cập nhật phần trăm hợp sau khi thêm chi tiết Koi và hồ."
             };
         }
 
         return new ResponseApiDTO
         {
             IsSuccess = true,
-            Message = $"Thêm chi tiết Koi và hồ thành công, điểm số cho hồ cá Koi của bạn là {userPond.Score}"
+            Message = $"Thêm chi tiết Koi và hồ thành công, phần trăm hợp cho hồ cá Koi của bạn là {finalCompatibilityPercentage}%"
         };
     }
     catch (Exception e)
@@ -522,116 +560,227 @@ public class UserPondService : IUserPondService
     }
 }
     public async Task<BaseResponse> DeleteKoiBreedFromUserPond(int userPondId, int koiBreedId)
+{
+    try
     {
-        try
+        var koiDetailRepo = _unitOfWork.GetRepo<KoiDetail>();
+        var koiBreedZodiacRepo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+        var userPondRepo = _unitOfWork.GetRepo<UserPond>();
+        var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+
+        // Find the koi detail that matches the given userPondId and koiBreedId
+        var koiDetail = await koiDetailRepo.GetSingleAsync(new QueryBuilder<KoiDetail>()
+            .WithPredicate(x => x.UserPondId == userPondId && x.KoiBreedId == koiBreedId)
+            .Build());
+
+        if (koiDetail == null)
         {
-            var koiDetailRepo = _unitOfWork.GetRepo<KoiDetail>();
-
-            // Find the koi detail that matches the given userPondId and koiBreedId
-            var koiDetail = await koiDetailRepo.GetSingleAsync(new QueryBuilder<KoiDetail>()
-                .WithPredicate(x => x.UserPondId == userPondId && x.KoiBreedId == koiBreedId)
-                .Build());
-
-            if (koiDetail == null)
-            {
-                return new BaseResponse
-                {
-                    IsSuccess = false,
-                    Message = "Không tìm thấy chi tiết cá Koi để xóa."
-                };
-            }
-
-            // Delete the koi detail
-            await koiDetailRepo.DeleteAsync(koiDetail);
-
-            // Save changes
-            var isDeleted = await _unitOfWork.SaveAsync();
-
-            if (!isDeleted)
-            {
-                return new BaseResponse
-                {
-                    IsSuccess = false,
-                    Message = "Xóa cá Koi thất bại."
-                };
-            }
-
-            return new BaseResponse
-            {
-                IsSuccess = true,
-                Message = "Xóa cá Koi thành công."
-            };
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
             return new BaseResponse
             {
                 IsSuccess = false,
-                Message = "Có lỗi xảy ra khi xóa cá Koi."
+                Message = "Không tìm thấy chi tiết cá Koi để xóa."
             };
         }
+
+        // Delete the koi detail
+        await koiDetailRepo.DeleteAsync(koiDetail);
+        await _unitOfWork.SaveChangesAsync();
+
+        // Recalculate the compatibility percentages
+        var userPond = await userPondRepo.GetSingleAsync(new QueryBuilder<UserPond>()
+            .WithPredicate(x => x.Id == userPondId)
+            .Build());
+
+        var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+            .WithPredicate(x => x.UserId == userPond.UserId)
+            .Build());
+
+        if (userZodiac == null)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Zodiac không tồn tại cho người dùng này."
+            };
+        }
+
+        // **Calculate Koi Compatibility Percentage**
+        var koiDetails = await koiDetailRepo.GetAllAsync(new QueryBuilder<KoiDetail>()
+            .WithPredicate(x => x.UserPondId == userPondId)
+            .Build());
+
+        double koiCompatibilityPercentage = 100; // Default to 100% if no koi details
+        if (koiDetails.Any())
+        {
+            int totalKoi = koiDetails.Count();
+
+            // Get list of compatible KoiBreedIds for the user's zodiac
+            var compatibleKoiBreedIds = (await koiBreedZodiacRepo.GetAllAsync(new QueryBuilder<KoiBreedZodiac>()
+                .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)
+                .Build())).Select(kbz => kbz.KoiBreedId).ToList();
+
+            // Count how many of the user's koi breeds are compatible
+            int compatibleKoiCount = koiDetails
+                .Count(kd => compatibleKoiBreedIds.Contains(kd.KoiBreedId));
+
+            koiCompatibilityPercentage = (compatibleKoiCount / (double)totalKoi) * 100;
+        }
+
+        // **Retrieve Pond Compatibility Percentage from ScoreDetail**
+        double pondCompatibilityPercentage = 100; // Default to 100%
+        if (!string.IsNullOrEmpty(userPond.ScoreDetail) && userPond.ScoreDetail.Contains("Pond Compatibility"))
+        {
+            var pondCompStr = userPond.ScoreDetail.Split(',')[0].Split(':')[1].Trim().TrimEnd('%');
+            pondCompatibilityPercentage = double.TryParse(pondCompStr, out double result) ? result : 100;
+        }
+
+        // **Calculate Final Compatibility Percentage**
+        double finalCompatibilityPercentage = (pondCompatibilityPercentage * 0.5) + (koiCompatibilityPercentage * 0.5);
+
+        // Update ScoreDetail and Score
+        userPond.ScoreDetail = $"Pond Compatibility: {pondCompatibilityPercentage}%, Koi Compatibility: {koiCompatibilityPercentage}%";
+        userPond.Score = finalCompatibilityPercentage;
+
+        // Update the UserPond in the database
+        await userPondRepo.UpdateAsync(userPond);
+        var isSaved = await _unitOfWork.SaveAsync();
+
+        if (!isSaved)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Xóa cá Koi thành công nhưng không thể cập nhật phần trăm hợp."
+            };
+        }
+
+        return new BaseResponse
+        {
+            IsSuccess = true,
+            Message = $"Xóa cá Koi thành công, phần trăm hợp đã được cập nhật là {finalCompatibilityPercentage}%."
+        };
     }
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        return new BaseResponse
+        {
+            IsSuccess = false,
+            Message = "Có lỗi xảy ra khi xóa cá Koi."
+        };
+    }
+}
+
     public async Task<BaseResponse> DeletePondFromUserPond(int userPondId, int pondId)
+{
+    try
     {
-        try
+        var pondDetailRepo = _unitOfWork.GetRepo<PondDetail>();
+        var pondZodiacRepo = _unitOfWork.GetRepo<PondZodiac>();
+        var userPondRepo = _unitOfWork.GetRepo<UserPond>();
+        var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+
+        // Find the pond detail that matches the given userPondId and pondId
+        var pondDetail = await pondDetailRepo.GetSingleAsync(new QueryBuilder<PondDetail>()
+            .WithPredicate(x => x.UserPondId == userPondId && x.PondId == pondId)
+            .Build());
+
+        if (pondDetail == null)
         {
-            var pondDetailRepo = _unitOfWork.GetRepo<PondDetail>();
-
-            // Find the pond detail that matches the given userPondId and pondId
-            var pondDetail = await pondDetailRepo.GetSingleAsync(new QueryBuilder<PondDetail>()
-                .WithPredicate(x => x.UserPondId == userPondId && x.PondId == pondId)
-                .Build());
-
-            if (pondDetail == null)
-            {
-                return new BaseResponse
-                {
-                    IsSuccess = false,
-                    Message = "Không tìm thấy chi tiết hồ để xóa."
-                };
-            }
-
-            // Delete the pond detail
-            await pondDetailRepo.DeleteAsync(pondDetail);
-
-            // Save changes
-            var isDeleted = await _unitOfWork.SaveAsync();
-
-            if (!isDeleted)
-            {
-                return new BaseResponse
-                {
-                    IsSuccess = false,
-                    Message = "Xóa hồ thất bại."
-                };
-            }
-
-            return new BaseResponse
-            {
-                IsSuccess = true,
-                Message = "Xóa hồ thành công."
-            };
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
             return new BaseResponse
             {
                 IsSuccess = false,
-                Message = "Có lỗi xảy ra khi xóa hồ."
+                Message = "Không tìm thấy chi tiết hồ để xóa."
             };
         }
+
+        // Delete the pond detail
+        await pondDetailRepo.DeleteAsync(pondDetail);
+        await _unitOfWork.SaveChangesAsync();
+
+        // Recalculate the compatibility percentages
+        var userPond = await userPondRepo.GetSingleAsync(new QueryBuilder<UserPond>()
+            .WithPredicate(x => x.Id == userPondId)
+            .Build());
+
+        var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+            .WithPredicate(x => x.UserId == userPond.UserId)
+            .Build());
+
+        if (userZodiac == null)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Zodiac không tồn tại cho người dùng này."
+            };
+        }
+
+        // **Calculate Pond Compatibility Percentage**
+        var pondDetails = await pondDetailRepo.GetAllAsync(new QueryBuilder<PondDetail>()
+            .WithPredicate(x => x.UserPondId == userPondId)
+            .Build());
+
+        double pondCompatibilityPercentage = 100; // Default to 100% if no pond details
+        if (pondDetails.Any())
+        {
+            int totalPonds = pondDetails.Count();
+
+            // Get list of compatible PondIds for the user's zodiac
+            var compatiblePondIds = (await pondZodiacRepo.GetAllAsync(new QueryBuilder<PondZodiac>()
+                .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)
+                .Build())).Select(pz => pz.PondId).ToList();
+
+            // Count how many of the user's ponds are compatible
+            int compatiblePondsCount = pondDetails
+                .Count(pd => compatiblePondIds.Contains(pd.PondId));
+
+            pondCompatibilityPercentage = (compatiblePondsCount / (double)totalPonds) * 100;
+        }
+
+        // **Retrieve Koi Compatibility Percentage from ScoreDetail**
+        double koiCompatibilityPercentage = 100; // Default to 100%
+        if (!string.IsNullOrEmpty(userPond.ScoreDetail) && userPond.ScoreDetail.Contains("Koi Compatibility"))
+        {
+            var koiCompStr = userPond.ScoreDetail.Split(',')[1].Split(':')[1].Trim().TrimEnd('%');
+            koiCompatibilityPercentage = double.TryParse(koiCompStr, out double result) ? result : 100;
+        }
+
+        // **Calculate Final Compatibility Percentage**
+        double finalCompatibilityPercentage = (pondCompatibilityPercentage * 0.5) + (koiCompatibilityPercentage * 0.5);
+
+        // Update ScoreDetail and Score
+        userPond.ScoreDetail = $"Pond Compatibility: {pondCompatibilityPercentage}%, Koi Compatibility: {koiCompatibilityPercentage}%";
+        userPond.Score = finalCompatibilityPercentage;
+
+        // Update the UserPond in the database
+        await userPondRepo.UpdateAsync(userPond);
+        var isSaved = await _unitOfWork.SaveAsync();
+
+        if (!isSaved)
+        {
+            return new BaseResponse
+            {
+                IsSuccess = false,
+                Message = "Xóa hồ thành công nhưng không thể cập nhật phần trăm hợp."
+            };
+        }
+
+        return new BaseResponse
+        {
+            IsSuccess = true,
+            Message = $"Xóa hồ thành công, phần trăm hợp đã được cập nhật là {finalCompatibilityPercentage}%."
+        };
     }
-
-
-
-
-    
-    
-
-
-
-
+    catch (Exception e)
+    {
+        Console.WriteLine(e);
+        return new BaseResponse
+        {
+            IsSuccess = false,
+            Message = "Có lỗi xảy ra khi xóa hồ."
+        };
+    }
+}
 
 }
