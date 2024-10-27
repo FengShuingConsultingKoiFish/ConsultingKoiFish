@@ -372,7 +372,7 @@ public class AccountService : IAccountService
 		Console.WriteLine($"encode token: {encodedToken}");
 		Console.ResetColor();
 
-		var forgotConfigUrl = _configuration.GetSection("Authentication").GetValue<string>("ForgotPass");
+		var forgotConfigUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmailFELocal");
 		var forgotUrl = $"{forgotConfigUrl}token={encodedToken}&email={user.Email}";
 		//var forgotUrl = $"http://localhost:5173/Password-reset?token={encodedToken}&email={user.Email}";
 		var message = new EmailDTO
