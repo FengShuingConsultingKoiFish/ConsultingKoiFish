@@ -215,7 +215,7 @@ public class AccountService : IAccountService
 		{
 			var emailToken = await _identityService.GenerateEmailConfirmationTokenAsync(user);
 			var encodedToken = HttpUtility.UrlEncode(emailToken);
-			var configVerifyUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmail");
+			var configVerifyUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmailFELocal");
 			var confirmationLink = $"{configVerifyUrl}token={encodedToken}&email={user.Email}";
 			var message = new EmailDTO
 			(
