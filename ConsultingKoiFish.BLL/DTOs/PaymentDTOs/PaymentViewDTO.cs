@@ -25,9 +25,21 @@ namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
             UserName = payment.User.UserName;
 			TransactionId = payment.TransactionId;
 			Content = payment.Content;
-            Amount = payment.Amount;
+            Amount = GetPaymentAmount(payment, advertisementPackageViewDTO);
 			CreatedDate = payment.CreatedDate.ToString("dd/MM/yyyy");
             AdvertisementPackageViewDTO = advertisementPackageViewDTO;
+        }
+
+        public double GetPaymentAmount(Payment payment, AdvertisementPackageViewDTO advertisementPackageViewDto)
+        {
+	        var paymentAmount = payment.Amount;
+	        var adverPrice = advertisementPackageViewDto.Price;
+	        if (paymentAmount/adverPrice == 100)
+	        {
+		        return adverPrice;
+	        }
+
+	        return paymentAmount;
         }
     }
 }
