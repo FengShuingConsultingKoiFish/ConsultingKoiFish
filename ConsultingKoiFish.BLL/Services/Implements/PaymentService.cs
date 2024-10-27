@@ -50,7 +50,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 																	.Build());
 					if (existPackage == null) return new BaseResponse { IsSuccess = false, Message = "Gói quảng cáo không khả dụng." };
 					var existedPayment = await repo.GetSingleAsync(new QueryBuilder<Payment>()
-																	.WithPredicate(x => x.Id == dto.AdvertisementPackageId && x.TransactionId == dto.TransactionId)
+																	.WithPredicate(x => x.AdvertisementPackageId == dto.AdvertisementPackageId && x.TransactionId == dto.TransactionId)
 																	.WithTracking(false)
 																	.Build());
 					if (existedPayment != null) return new BaseResponse { IsSuccess = false, Message = "Giao dịch đã tồn tại, không thể lưu giao dịch."};
