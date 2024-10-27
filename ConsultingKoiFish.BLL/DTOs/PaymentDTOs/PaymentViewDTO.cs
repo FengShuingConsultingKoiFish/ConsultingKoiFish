@@ -39,7 +39,7 @@ namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
 		        return adverPrice;
 	        }
 
-	        return paymentAmount;
+	        return paymentAmount; 
         }
     }
 }
