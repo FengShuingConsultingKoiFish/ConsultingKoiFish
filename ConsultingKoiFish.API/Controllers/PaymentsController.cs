@@ -279,7 +279,7 @@ namespace ConsultingKoiFish.API.Controllers
 					AdvertisementPackageId = Convert.ToInt32(packageId),
 					TransactionId = vnPayResponse.TransactionId,
 					Content = vnPayResponse.OrderDescription,
-					Amount = vnPayResponse.Amount,
+					Amount = vnPayResponse.Amount/100,
 					CreatedDate = DateTime.Now,
 				};
 

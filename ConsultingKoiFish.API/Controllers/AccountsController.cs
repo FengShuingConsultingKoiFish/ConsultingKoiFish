@@ -105,6 +105,7 @@ namespace ConsultingKoiFish.API.Controllers
 				}
 
 				var adminEmail = _configuration["Admin:email"];
+				//xác định tài khoản admin?
 				if(authenDTO.UserNameOrEmail.Equals(adminEmail))
 				{
 					var admin = await _identityService.GetByEmailAsync(adminEmail);
