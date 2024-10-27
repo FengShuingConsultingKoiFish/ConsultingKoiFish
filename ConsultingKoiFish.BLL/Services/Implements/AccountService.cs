@@ -372,7 +372,7 @@ public class AccountService : IAccountService
 		Console.WriteLine($"encode token: {encodedToken}");
 		Console.ResetColor();
 
-		var forgotConfigUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmailFELocal");
+		var forgotConfigUrl = _configuration.GetSection("Authentication").GetValue<string>("ForgotPassFELocal");
 		var forgotUrl = $"{forgotConfigUrl}token={encodedToken}&email={user.Email}";
 		//var forgotUrl = $"http://localhost:5173/Password-reset?token={encodedToken}&email={user.Email}";
 		var message = new EmailDTO
@@ -380,7 +380,7 @@ public class AccountService : IAccountService
 					new string[] { user.Email! },
 					"Forgot Password Link!",
 					forgotUrl!
-				);
+				);						
 		_emailService.SendEmail(message);
 		return new BaseResponse { IsSuccess = true, Message = "Url đổi mật khẩu đã được gửi đến email của bạn. Hãy truy cập url để đổi mật khẩu nhé." };
 	}
