@@ -215,7 +215,7 @@ public class AccountService : IAccountService
 		{
 			var emailToken = await _identityService.GenerateEmailConfirmationTokenAsync(user);
 			var encodedToken = HttpUtility.UrlEncode(emailToken);
-			var configVerifyUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmailFELocal");
+			var configVerifyUrl = _configuration.GetSection("Authentication").GetValue<string>("VerifyEmail");
 			var confirmationLink = $"{configVerifyUrl}token={encodedToken}&email={user.Email}";
 			var message = new EmailDTO
 			(
@@ -372,7 +372,7 @@ public class AccountService : IAccountService
 		Console.WriteLine($"encode token: {encodedToken}");
 		Console.ResetColor();
 
-		var forgotConfigUrl = _configuration.GetSection("Authentication").GetValue<string>("ForgotPassFELocal");
+		var forgotConfigUrl = _configuration.GetSection("Authentication").GetValue<string>("ForgotPass");
 		var forgotUrl = $"{forgotConfigUrl}token={encodedToken}&email={user.Email}";
 		//var forgotUrl = $"http://localhost:5173/Password-reset?token={encodedToken}&email={user.Email}";
 		var message = new EmailDTO
