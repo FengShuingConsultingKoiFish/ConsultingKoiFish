@@ -85,10 +85,13 @@ namespace ConsultingKoiFish.API
 			//set Services
 			builder.Services.AddBLLServices();
 
+			//set background service
+			builder.Services.AddBackGroundService();
+
 			//Add Email Config
 			var emailConfig = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
 			builder.Services.AddSingleton(emailConfig);
-			
+
 			//Add VnPay Config
 			var vnpConfig = builder.Configuration.GetSection("VnPayConfiguration").Get<VnPayConfiguration>();
 			builder.Services.AddSingleton(vnpConfig);
@@ -103,11 +106,13 @@ namespace ConsultingKoiFish.API
 			});
 
 			//Add authentication
-			builder.Services.AddAuthentication(options => {
+			builder.Services.AddAuthentication(options =>
+			{
 				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
 				options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 				options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-			}).AddJwtBearer(options => {
+			}).AddJwtBearer(options =>
+			{
 				options.SaveToken = true;
 				options.RequireHttpsMetadata = false;
 				options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
@@ -131,7 +136,7 @@ namespace ConsultingKoiFish.API
 
 			//Add HttpClient
 			builder.Services.AddHttpClient();
-			
+
 			//Add Cloud Dinary
 			var cloudinaryUrl = builder.Configuration["CloudinaryUrl"];
 			var cloudName = builder.Configuration["CloudinaryUrl:CloudName"];
@@ -139,7 +144,7 @@ namespace ConsultingKoiFish.API
 			var apiSecret = builder.Configuration["CloudinaryUrl:ApiSecret"];
 			var account = new Account(cloudName, apiKey, apiSecret);
 			builder.Services.AddSingleton(new Cloudinary(account));
- 
+
 
 			var app = builder.Build();
 
@@ -149,7 +154,7 @@ namespace ConsultingKoiFish.API
 				var services = scope.ServiceProvider;
 				try
 				{
-					 services.SeedData().Wait();
+					services.SeedData().Wait();
 				}
 				catch (Exception ex)
 				{

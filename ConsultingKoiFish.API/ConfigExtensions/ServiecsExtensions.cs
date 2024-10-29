@@ -5,6 +5,7 @@ using ConsultingKoiFish.DAL.UnitOfWork;
 using Microsoft.AspNetCore.Identity;
 using System.Reflection;
 using CloudinaryDotNet;
+using ConsultingKoiFish.BLL.Helpers.Validations.PurchasePackagedValidation;
 
 namespace ConsultingKoiFish.API.ConfigExtensions
 {
@@ -30,6 +31,12 @@ namespace ConsultingKoiFish.API.ConfigExtensions
 					.AddClasses(classes => classes.Where(type => type.Namespace == $"ConsultingKoiFish.BLL.Services.Implements" && type.Name.EndsWith("Service")))
 					.AsImplementedInterfaces()
 					.WithScopedLifetime());
+		}
+
+		//Add BackGround Service
+		public static void AddBackGroundService(this IServiceCollection services)
+		{
+			services.AddHostedService<PurchasedPackageExpirationChecker>();
 		}
 
 		//add auto mapper
