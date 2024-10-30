@@ -26,43 +26,29 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		private readonly IAdvertisementPackageService _advertisementPackageService;
 
 		public PaymentService(IUnitOfWork unitOfWork, IMapper mapper, IAdvertisementPackageService advertisementPackageService)
-        {
+		{
 			this._unitOfWork = unitOfWork;
 			this._mapper = mapper;
 			this._advertisementPackageService = advertisementPackageService;
 		}
-        public async Task<BaseResponse> CreatePayment(PaymentCreateDTO dto)
+		public async Task<BaseResponse> CreatePayment(PaymentCreateDTO dto)
 		{
 			try
 			{
 				await _unitOfWork.BeginTransactionAsync();
 				var repo = _unitOfWork.GetRepo<Payment>();
 				var packageRepo = _unitOfWork.GetRepo<AdvertisementPackage>();
-				var anyPackage = await packageRepo.AnyAsync(new QueryBuilder<AdvertisementPackage>()
-															.WithPredicate(x => x.Id == dto.AdvertisementPackageId)
-															.WithTracking(false)
-															.Build());
-				if(anyPackage)
-				{
-					var existPackage = await packageRepo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
-																	.WithPredicate(x => x.Id == dto.AdvertisementPackageId && x.IsActive == true)
+				var existedPayment = await repo.GetSingleAsync(new QueryBuilder<Payment>()
+																	.WithPredicate(x => x.AdvertisementPackageId == dto.SelectedPackage.Id && x.TransactionId == dto.TransactionId)
 																	.WithTracking(false)
 																	.Build());
-					if (existPackage == null) return new BaseResponse { IsSuccess = false, Message = "Gói quảng cáo không khả dụng." };
-					var existedPayment = await repo.GetSingleAsync(new QueryBuilder<Payment>()
-																	.WithPredicate(x => x.AdvertisementPackageId == dto.AdvertisementPackageId && x.TransactionId == dto.TransactionId)
-																	.WithTracking(false)
-																	.Build());
-					if (existedPayment != null) return new BaseResponse { IsSuccess = false, Message = "Giao dịch đã tồn tại, không thể lưu giao dịch."};
-					var createdPayment = _mapper.Map<Payment>(dto);
-					await repo.CreateAsync(createdPayment);
-					var saver = await _unitOfWork.SaveAsync();
-					await _unitOfWork.CommitTransactionAsync();
-					if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu giao dịch thất bại." };
-					return new BaseResponse { IsSuccess = true, Message = "Lưu giao dịch thành công." };
-				}
-
-				return new BaseResponse { IsSuccess = false, Message = "Gói quảng cáo không tồn tại" };
+				if (existedPayment != null) return new BaseResponse { IsSuccess = false, Message = "Giao dịch đã tồn tại, không thể lưu giao dịch." };
+				var createdPayment = _mapper.Map<Payment>(dto);
+				await repo.CreateAsync(createdPayment);
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu giao dịch thất bại." };
+				return new BaseResponse { IsSuccess = true, Message = "Lưu giao dịch thành công." };
 			}
 			catch (Exception)
 			{
@@ -83,16 +69,16 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				.WithInclude(x => x.User, r => r.AdvertisementPackage)
 				.Build());
 
-			if(dto.OrderDate.HasValue)
+			if (dto.OrderDate.HasValue)
 			{
-				switch((int)dto.OrderDate)
+				switch ((int)dto.OrderDate)
 				{
 					case 1: loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate); break;
 					case 2: loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate); break;
 				}
 			}
 
-			if(dto.TransactionId.HasValue)
+			if (dto.TransactionId.HasValue)
 			{
 				loadedRecords = loadedRecords.Where(x => x.TransactionId == dto.TransactionId);
 			}

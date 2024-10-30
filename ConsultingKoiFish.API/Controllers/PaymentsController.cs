@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Drawing.Printing;
 using System.Net.Http;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using ConsultingKoiFish.BLL.DTOs.EmailDTOs;
 
 namespace ConsultingKoiFish.API.Controllers
 {
@@ -27,11 +29,13 @@ namespace ConsultingKoiFish.API.Controllers
 		private readonly IUserDetailService _userDetailService;
 		private readonly IHttpClientFactory _httpClientFactory;
 		private readonly IConfiguration _configuration;
+		private readonly IAdvertisementPackageService _advertisementPackageService;
+		private readonly IEmailService _emailService;
 
 		public PaymentsController(IVnPayService vnPayService,
 			IPaymentService paymentService, IPurchasedPackageService purchasedPackageService,
 			IUserDetailService userDetailService, IHttpClientFactory httpClientFactory,
-			IConfiguration configuration)
+			IConfiguration configuration, IAdvertisementPackageService advertisementPackageService, IEmailService emailService)
 		{
 			this._vnPayService = vnPayService;
 			this._paymentService = paymentService;
@@ -39,6 +43,8 @@ namespace ConsultingKoiFish.API.Controllers
 			this._userDetailService = userDetailService;
 			this._httpClientFactory = httpClientFactory;
 			this._configuration = configuration;
+			this._advertisementPackageService = advertisementPackageService;
+			this._emailService = emailService;
 		}
 
 		#region Admin
@@ -55,7 +61,7 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			try
 			{
-				if(!ModelState.IsValid) return ModelInvalid();
+				if (!ModelState.IsValid) return ModelInvalid();
 
 				if (dto.PageIndex <= 0)
 				{
@@ -69,7 +75,7 @@ namespace ConsultingKoiFish.API.Controllers
 					return ModelInvalid();
 				}
 
-				if(!dto.IsValidOrderImage())
+				if (!dto.IsValidOrderImage())
 				{
 					ModelState.AddModelError("OrderImage", "OrderImage không hợp lệ.");
 					return ModelInvalid();
@@ -136,12 +142,18 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			var userDetail = await _userDetailService.GetUserDetailByUserId(UserId);
 			if (userDetail == null) return GetError("Vui lòng điền đầy đủ thông tin profile để tiếp tục thanh toán.");
+			var package = await _advertisementPackageService.GetPackageById(packageViewDTO.PackageId, OrderImage.DatetimeDescending);
+			if (package == null)
+			{
+				ModelState.AddModelError("PackageId", "Gói bạn chọn không còn tồn tại.");
+				return ModelInvalid();
+			}
 			var vnpRequest = new VnPayRequestDTO
 			{
 				UserId = UserId,
-				PackageName = packageViewDTO.Name,
+				PackageName = package.Name,
 				FullName = userDetail.FullName,
-				Description = $"{UserId}/{userDetail.FullName} thanh toan goi {packageViewDTO.Name}. Ma goi {packageViewDTO.PackageId}",
+				Description = $"{UserId}/{userDetail.FullName} thanh toan goi {package.Name}. Ma goi {package.Id}",
 				Amount = packageViewDTO.Price,
 				CreatedDate = DateTime.Now,
 			};
@@ -224,7 +236,7 @@ namespace ConsultingKoiFish.API.Controllers
 			try
 			{
 				var response = await _paymentService.GetPaymentByIdForMember(id, UserId, orderImage);
-				if (response == null) return GetError("Payment này không tồn tại.");
+				if (response == null) return GetError("Giao dịch này không tồn tại.");
 				return GetSuccess(response);
 			}
 			catch (Exception ex)
@@ -249,7 +261,7 @@ namespace ConsultingKoiFish.API.Controllers
 		{
 			var paymentUrl = _vnPayService.CreatePaymentUrl(HttpContext, requestDTO);
 			if (paymentUrl == null) return GetError("Nhận url thanh toán thất bại. Vui lòng thử lại sau ít phút.");
-			return Ok(new {Url = paymentUrl});
+			return Ok(new { Url = paymentUrl });
 		}
 
 		/// <summary>
@@ -264,47 +276,78 @@ namespace ConsultingKoiFish.API.Controllers
 			{
 				var vnPayResponse = _vnPayService.PaymentExcute(Request.Query);
 				if (!vnPayResponse.IsSuccess || !vnPayResponse.VnPayResponseCode.Equals("00"))
-					return GetError("Lỗi thanh toán VnPay. Vui lòng thử lại sau ít phút.");
+				{
+					return RedirectToAction("ResponsePaymentView", new { responseMessage = "Lỗi thanh toán VNpay. Vui lòng thử lại sau ít phút." });
+				}
+
 
 				string description = vnPayResponse.OrderDescription;
 				string[] parts = description.Split("Ma goi ");
-				string packageId = parts[1];
+				int packageId = Convert.ToInt32(parts[1]);
 
 				string[] parts1 = description.Split('/');
 				string userId = parts1[0];
 
+				var package = await _advertisementPackageService.GetPackageById(packageId, OrderImage.DatetimeDescending);
+				if (package == null)
+				{
+					var message = new EmailDTO
+					(
+						new string[] { UserEmail! },
+						"Thông báo phản hồi chuyển khoản.",
+						$@"
+<p>- Vì một số nguyên nhân nên gói bạn chọn không còn tồn tại</p>
+<p>- Vui lòng phản hồi lại mail này kèm hình ảnh thanh toán để chúng tôi thực hiện việc hoàn tiền cho bạn.</p>
+<p>- Chân thành xin lỗi vì sự bất tiện này. Và xin cảm vì đã đồng hành cùng chúng tôi.</p>"
+					);
+					var response = $"Hệ thống đã gửi mail đến Email: {UserEmail}. Xin vui lòng kiểm tra Email của bạn,";
+					return RedirectToAction("ResponsePaymentView", new { responseMessage = response });
+				}
+
 				var createdPaymentDTO = new PaymentCreateDTO
 				{
 					UserId = userId,
-					AdvertisementPackageId = Convert.ToInt32(packageId),
+					AdvertisementPackageId = packageId,
 					TransactionId = vnPayResponse.TransactionId,
 					Content = vnPayResponse.OrderDescription,
-					Amount = vnPayResponse.Amount/100,
+					Amount = vnPayResponse.Amount / 100,
 					CreatedDate = DateTime.Now,
+					SelectedPackage = package
 				};
 
+				//Snapshort metadata
+				createdPaymentDTO.SetMetaDataSnapshot(package);
+
 				var createdPayment = await _paymentService.CreatePayment(createdPaymentDTO);
-				if (!createdPayment.IsSuccess) return SaveError(createdPayment);
+				if (!createdPayment.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPayment.Message });
 
 				var createdPurchasedPackageDTO = new PurchasedPackageCreateDTO
 				{
 					UserId = userId,
-					AdvertisementPackageId = Convert.ToInt32(packageId),
+					AdvertisementPackageId = packageId,
 					MornitoredQuantity = 0,
 					Status = (int)PurchasedPackageStatus.Available,
 					CreatedDate = DateTime.Now,
 				};
 				var createdPurchasedPackage = await _purchasedPackageService.CreatePurchasedPacakge(createdPurchasedPackageDTO);
-				if (!createdPurchasedPackage.IsSuccess) return SaveError(createdPurchasedPackage);
-				return GetSuccess(Constants.vnp00);
+				if (!createdPurchasedPackage.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPurchasedPackage.Message });
+				return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
 			}
 			catch (Exception ex)
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine(ex.Message);
 				Console.ResetColor();
-				return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa.");
+				return RedirectToAction("ResponsePaymentView", new { responseMessage = "Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa." });
 			}
+		}
+
+		[HttpGet]
+		[Route("response-payment-view")]
+		public IActionResult ResponsePaymentView(string responseMessage)
+		{
+			if (string.IsNullOrEmpty(responseMessage)) return GetError();
+			return GetSuccess(responseMessage);
 		}
 	}
 }

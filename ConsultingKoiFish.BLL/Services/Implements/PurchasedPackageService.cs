@@ -21,40 +21,26 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		private readonly IAdvertisementPackageService _advertisementPackageService;
 
 		public PurchasedPackageService(IUnitOfWork unitOfWork, IMapper mapper, IAdvertisementPackageService advertisementPackageService)
-        {
+		{
 			this._unitOfWork = unitOfWork;
 			this._mapper = mapper;
 			this._advertisementPackageService = advertisementPackageService;
 		}
-        public async Task<BaseResponse> CreatePurchasedPacakge(PurchasedPackageCreateDTO dto)
+		public async Task<BaseResponse> CreatePurchasedPacakge(PurchasedPackageCreateDTO dto)
 		{
 			try
 			{
 				await _unitOfWork.BeginTransactionAsync();
 				var repo = _unitOfWork.GetRepo<PurchasedPackage>();
 				var packageRepo = _unitOfWork.GetRepo<AdvertisementPackage>();
-				var anyPackage = await packageRepo.AnyAsync(new QueryBuilder<AdvertisementPackage>()
-															.WithPredicate(x => x.Id == dto.AdvertisementPackageId)
-															.WithTracking(false)
-															.Build());
-				if (anyPackage)
-				{
-					var existPackage = await packageRepo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
-																	.WithPredicate(x => x.Id == dto.AdvertisementPackageId && x.IsActive == true)
-																	.WithTracking(false)
-																	.Build());
-					if (existPackage == null) return new BaseResponse { IsSuccess = false, Message = "Gói quảng cáo không khả dụng." };
-					var createdPurchasedPackage = _mapper.Map<PurchasedPackage>(dto);
-					createdPurchasedPackage.Status = (int)PurchasedPackageStatus.Available;
-					createdPurchasedPackage.IsActive = true;
-					await repo.CreateAsync(createdPurchasedPackage);
-					var saver = await _unitOfWork.SaveAsync();
-					await _unitOfWork.CommitTransactionAsync();
-					if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu gói đã mua của người dùng thất bại." };
-					return new BaseResponse { IsSuccess = true, Message = "Lưu gói đã mua của người dùng thành công." };
-				}
-
-				return new BaseResponse { IsSuccess = false, Message = "Gói quảng cáo không tồn tại" };
+				var createdPurchasedPackage = _mapper.Map<PurchasedPackage>(dto);
+				createdPurchasedPackage.Status = (int)PurchasedPackageStatus.Available;
+				createdPurchasedPackage.IsActive = true;
+				await repo.CreateAsync(createdPurchasedPackage);
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu gói đã mua của người dùng thất bại." };
+				return new BaseResponse { IsSuccess = true, Message = "Lưu gói đã mua của người dùng thành công." };
 			}
 			catch (Exception)
 			{
@@ -72,20 +58,20 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				.WithTracking(false)
 				.Build());
 
-			if(dto.Status.HasValue)
+			if (dto.Status.HasValue)
 			{
 				loadedRecords = loadedRecords.Where(x => x.Status == (int)dto.Status);
 			}
 
-			if(dto.OrderDate.HasValue)
+			if (dto.OrderDate.HasValue)
 			{
-				switch((int)dto.OrderDate)
+				switch ((int)dto.OrderDate)
 				{
 					case 1: loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate); break;
 					case 2: loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate); break;
 				}
 			}
-			
+
 			var pagedRecords = await PaginatedList<PurchasedPackage>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
 			var response = await ConvertPurchasedPackagesToPurchasedPackageViews(pagedRecords, dto.OrderImage);
 			return new PaginatedList<PurchasedPackageViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);

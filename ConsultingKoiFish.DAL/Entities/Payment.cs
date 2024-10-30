@@ -18,7 +18,7 @@ namespace ConsultingKoiFish.DAL.Entities
 		public string? Content { get; set; }
 		public double Amount { get; set; }
 		[Required]
-		public string DetailPackage { get; set; } = null!;
+		public string ClonePackage { get; set; } = null!;
 		public DateTime CreatedDate { get; set; }
 
 		public virtual ApplicationUser User { get; set; }
