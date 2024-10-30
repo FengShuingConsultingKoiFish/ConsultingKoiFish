@@ -21,40 +21,49 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		private readonly IAdvertisementPackageService _advertisementPackageService;
 
 		public PurchasedPackageService(IUnitOfWork unitOfWork, IMapper mapper, IAdvertisementPackageService advertisementPackageService)
-        {
+		{
 			this._unitOfWork = unitOfWork;
 			this._mapper = mapper;
 			this._advertisementPackageService = advertisementPackageService;
 		}
-        public async Task<BaseResponse> CreatePurchasedPacakge(PurchasedPackageCreateDTO dto)
+		public async Task<BaseResponse> CreatePurchasedPacakge(PurchasedPackageCreateDTO dto)
 		{
 			try
 			{
 				await _unitOfWork.BeginTransactionAsync();
 				var repo = _unitOfWork.GetRepo<PurchasedPackage>();
-				var packageRepo = _unitOfWork.GetRepo<AdvertisementPackage>();
-				var anyPackage = await packageRepo.AnyAsync(new QueryBuilder<AdvertisementPackage>()
-															.WithPredicate(x => x.Id == dto.AdvertisementPackageId)
-															.WithTracking(false)
-															.Build());
-				if (anyPackage)
-				{
-					var existPackage = await packageRepo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
-																	.WithPredicate(x => x.Id == dto.AdvertisementPackageId && x.IsActive == true)
-																	.WithTracking(false)
-																	.Build());
-					if (existPackage == null) return new BaseResponse { IsSuccess = false, Message = "Gói quảng cáo không khả dụng." };
-					var createdPurchasedPackage = _mapper.Map<PurchasedPackage>(dto);
-					createdPurchasedPackage.Status = (int)PurchasedPackageStatus.Available;
-					createdPurchasedPackage.IsActive = true;
-					await repo.CreateAsync(createdPurchasedPackage);
-					var saver = await _unitOfWork.SaveAsync();
-					await _unitOfWork.CommitTransactionAsync();
-					if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu gói đã mua của người dùng thất bại." };
-					return new BaseResponse { IsSuccess = true, Message = "Lưu gói đã mua của người dùng thành công." };
-				}
+				var createdPurchasedPackage = _mapper.Map<PurchasedPackage>(dto);
+				await repo.CreateAsync(createdPurchasedPackage);
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu gói đã mua của người dùng thất bại." };
+				return new BaseResponse { IsSuccess = true, Message = "Lưu gói đã mua của người dùng thành công." };
+			}
+			catch (Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
 
-				return new BaseResponse { IsSuccess = false, Message = "Gói quảng cáo không tồn tại" };
+		public async Task<BaseResponse> ExtendPurchasedPackage(PurchasedPackageViewDTO packageViewDTO, string userId)
+		{
+			try
+			{
+				await _unitOfWork.BeginTransactionAsync();
+				var repo = _unitOfWork.GetRepo<PurchasedPackage>();
+
+				var extendedPurchasedPackage = _mapper.Map<PurchasedPackage>(packageViewDTO);
+				extendedPurchasedPackage.CreatedDate = DateTime.Now;
+				extendedPurchasedPackage.Status = (int)PurchasedPackageStatus.Available;
+				extendedPurchasedPackage.ExpireDate = DateTime.Now.AddDays(packageViewDTO.DurationsInDays);
+				extendedPurchasedPackage.IsActive = true;
+
+				await repo.UpdateAsync(extendedPurchasedPackage);
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu gói đã mua của người dùng thất bại." };
+				return new BaseResponse { IsSuccess = true, Message = "Lưu gói đã mua của người dùng thành công." };
 			}
 			catch (Exception)
 			{
@@ -68,24 +77,24 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var repo = _unitOfWork.GetRepo<PurchasedPackage>();
 			var loadedRecords = repo.Get(new QueryBuilder<PurchasedPackage>()
 				.WithPredicate(x => x.IsActive == true && x.UserId.Equals(userId))
-				.WithInclude(x => x.AdvertisementPackage, x => x.User)
+				.WithInclude(x => x.User)
 				.WithTracking(false)
 				.Build());
 
-			if(dto.Status.HasValue)
+			if (dto.Status.HasValue)
 			{
 				loadedRecords = loadedRecords.Where(x => x.Status == (int)dto.Status);
 			}
 
-			if(dto.OrderDate.HasValue)
+			if (dto.OrderDate.HasValue)
 			{
-				switch((int)dto.OrderDate)
+				switch ((int)dto.OrderDate)
 				{
 					case 1: loadedRecords = loadedRecords.OrderByDescending(x => x.CreatedDate); break;
 					case 2: loadedRecords = loadedRecords.OrderBy(x => x.CreatedDate); break;
 				}
 			}
-			
+
 			var pagedRecords = await PaginatedList<PurchasedPackage>.CreateAsync(loadedRecords, dto.PageIndex, dto.PageSize);
 			var response = await ConvertPurchasedPackagesToPurchasedPackageViews(pagedRecords, dto.OrderImage);
 			return new PaginatedList<PurchasedPackageViewDTO>(response, pagedRecords.TotalItems, dto.PageIndex, dto.PageSize);
@@ -98,10 +107,27 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var package = await repo.GetSingleAsync(new QueryBuilder<PurchasedPackage>()
 				.WithPredicate(x => x.Id == id && x.IsActive == true && x.UserId.Equals(userId))
 				.WithTracking(false)
-				.WithInclude(r => r.AdvertisementPackage, x => x.User)
+				.WithInclude(x => x.User)
 				.Build());
 			if (package == null) return null;
 			var response = await ConvertPurchasedPackageToPurchasedPackageView(package, orderImage);
+			return response;
+		}
+
+		public async Task<PurchasedPackageViewDTO> GetUnavailablePackageForMember(int purchasedPackagedId, string userId)
+		{
+			var repo = _unitOfWork.GetRepo<PurchasedPackage>();
+
+			var extendedPurchasedPackage = await repo.GetSingleAsync(new QueryBuilder<PurchasedPackage>()
+																	.WithPredicate(x => x.Id == purchasedPackagedId &&
+																					x.UserId.Equals(userId) &&
+																					 x.Status == (int)PurchasedPackageStatus.Unavailable &&
+																					 x.IsActive == true)
+																	.WithInclude(x => x.User)
+																	.WithTracking(false)
+																	.Build());
+			if (extendedPurchasedPackage == null) return null;
+			var response = await ConvertPurchasedPackageToPurchasedPackageView(extendedPurchasedPackage, OrderImage.DatetimeDescending);
 			return response;
 		}
 
@@ -110,7 +136,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var repo = _unitOfWork.GetRepo<PurchasedPackage>();
 			var loadedRecords = repo.Get(new QueryBuilder<PurchasedPackage>()
 				.WithPredicate(x => x.IsActive == true)
-				.WithInclude(x => x.AdvertisementPackage, x => x.User)
+				.WithInclude(x => x.User)
 				.WithTracking(false)
 				.Build());
 
@@ -139,7 +165,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var package = await repo.GetSingleAsync(new QueryBuilder<PurchasedPackage>()
 				.WithPredicate(x => x.Id == id && x.IsActive == true)
 				.WithTracking(false)
-				.WithInclude(r => r.AdvertisementPackage, x => x.User)
+				.WithInclude(x => x.User)
 				.Build());
 			if (package == null) return null;
 			var response = await ConvertPurchasedPackageToPurchasedPackageView(package, orderImage);
@@ -159,8 +185,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var response = new List<PurchasedPackageViewDTO>();
 			foreach (var package in purchasedPackages)
 			{
-				var adPackageViewDto = await _advertisementPackageService.ConvertPackageToPackageView(package.AdvertisementPackage, orderImage);
-				var childResponse = new PurchasedPackageViewDTO(package, adPackageViewDto);
+				var childResponse = new PurchasedPackageViewDTO(package);
 				response.Add(childResponse);
 			}
 			return response;
@@ -175,8 +200,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		/// <returns></returns>
 		public async Task<PurchasedPackageViewDTO> ConvertPurchasedPackageToPurchasedPackageView(PurchasedPackage package, OrderImage? orderImage)
 		{
-			var adPackageViewDto = await _advertisementPackageService.ConvertPackageToPackageView(package.AdvertisementPackage, orderImage);
-			var response = new PurchasedPackageViewDTO(package, adPackageViewDto);
+			var response = new PurchasedPackageViewDTO(package);
 			return response;
 		}
 

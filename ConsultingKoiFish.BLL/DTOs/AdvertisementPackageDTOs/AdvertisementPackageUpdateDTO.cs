@@ -8,4 +8,5 @@ public class AdvertisementPackageUpdateDTO
     public int? LimitAd { get; set; }
     public int? LimitContent { get; set; }
     public int? LimitImage { get; set; }
+    public int? DurationsInDays { get; set; }
 }

@@ -21,14 +21,18 @@ namespace ConsultingKoiFish.BLL.DTOs.ImageDTOs
 		public string? UserName { get; set; }
 		public string? CreatedDate { get; set; }
 
-        public ImageViewDTO(Image image)
-        {
-            Id = image.Id;
+		public ImageViewDTO()
+		{
+
+		}
+		public ImageViewDTO(Image image)
+		{
+			Id = image.Id;
 			FilePath = image.FilePath;
 			AltText = image.AltText;
 			UserId = image.UserId;
 			UserName = image.User.UserName;
 			CreatedDate = image.CreatedDate.ToString("dd/MM/yyyy");
-        }
-    }
+		}
+	}
 }

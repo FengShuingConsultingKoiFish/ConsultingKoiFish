@@ -13,10 +13,11 @@ namespace ConsultingKoiFish.BLL.DTOs.AdvertisementDTOs
 		public int Id { get; set; }
 		[Required(ErrorMessage = "Hãy chọn gói quảng cáo bạn sẽ dùng để đăng quảng cáo này.")]
 		public int PurchasedPackageId { get; set; }
+		[StringLength(100, ErrorMessage = "Tiêu đề chỉ được 100 kí tự")]
 		public string Title { get; set; } = null!;
 		[Required(ErrorMessage = "Phần mô tả không được để trống.")]
 		public string? Description { get; set; }
 		public double Price { get; set; }
-        public List<int>? ImageIds { get; set; }
-    }
+		public List<int>? ImageIds { get; set; }
+	}
 }

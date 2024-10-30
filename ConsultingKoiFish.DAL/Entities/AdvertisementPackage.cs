@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -20,12 +21,13 @@ namespace ConsultingKoiFish.DAL.Entities
 		public int? LimitContent { get; set; }
 		[AllowNull]
 		public int? LimitImage { get; set; }
-        public bool IsActive { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public string CreatedBy { get; set; } = null!;
+		[Required]
+		public int DurationsInDays { get; set; }
+		public bool IsActive { get; set; }
+		public DateTime CreatedDate { get; set; }
+		public string CreatedBy { get; set; } = null!;
 
-		public virtual ICollection<PurchasedPackage> PurchasedPackages { get; set; } = new List<PurchasedPackage>();
-        public virtual ICollection<PackageImage> PackageImages { get; set; } = new List<PackageImage>();
+		public virtual ICollection<PackageImage> PackageImages { get; set; } = new List<PackageImage>();
 		public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 	}
 }

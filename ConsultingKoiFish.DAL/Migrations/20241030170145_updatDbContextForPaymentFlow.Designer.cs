@@ -4,6 +4,7 @@ using ConsultingKoiFish.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsultingKoiFish.DAL.Migrations
 {
     [DbContext(typeof(ConsultingKoiFishContext))]
-    partial class ConsultingKoiFishContextModelSnapshot : ModelSnapshot
+    [Migration("20241030170145_updatDbContextForPaymentFlow")]
+    partial class updatDbContextForPaymentFlow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -718,6 +721,8 @@ namespace ConsultingKoiFish.DAL.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AdvertisementPackageId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("PurchasedPackages", "dbo");
@@ -1269,10 +1274,17 @@ namespace ConsultingKoiFish.DAL.Migrations
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.PurchasedPackage", b =>
                 {
+                    b.HasOne("ConsultingKoiFish.DAL.Entities.AdvertisementPackage", "AdvertisementPackage")
+                        .WithMany("PurchasedPackages")
+                        .HasForeignKey("AdvertisementPackageId")
+                        .IsRequired();
+
                     b.HasOne("ConsultingKoiFish.DAL.Entities.ApplicationUser", "User")
                         .WithMany("PurchasedPackages")
                         .HasForeignKey("UserId")
                         .IsRequired();
+
+                    b.Navigation("AdvertisementPackage");
 
                     b.Navigation("User");
                 });
@@ -1391,6 +1403,8 @@ namespace ConsultingKoiFish.DAL.Migrations
                     b.Navigation("PackageImages");
 
                     b.Navigation("Payments");
+
+                    b.Navigation("PurchasedPackages");
                 });
 
             modelBuilder.Entity("ConsultingKoiFish.DAL.Entities.ApplicationUser", b =>
