@@ -16,6 +16,7 @@ using System.Net.Http;
 using ConsultingKoiFish.BLL.DTOs.BlogDTOs;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using ConsultingKoiFish.BLL.DTOs.EmailDTOs;
+using System.Text.RegularExpressions;
 
 namespace ConsultingKoiFish.API.Controllers
 {
@@ -31,11 +32,13 @@ namespace ConsultingKoiFish.API.Controllers
 		private readonly IConfiguration _configuration;
 		private readonly IAdvertisementPackageService _advertisementPackageService;
 		private readonly IEmailService _emailService;
+		private readonly IIdentityService _identityService;
 
 		public PaymentsController(IVnPayService vnPayService,
 			IPaymentService paymentService, IPurchasedPackageService purchasedPackageService,
 			IUserDetailService userDetailService, IHttpClientFactory httpClientFactory,
-			IConfiguration configuration, IAdvertisementPackageService advertisementPackageService, IEmailService emailService)
+			IConfiguration configuration, IAdvertisementPackageService advertisementPackageService, IEmailService emailService,
+			IIdentityService identityService)
 		{
 			this._vnPayService = vnPayService;
 			this._paymentService = paymentService;
@@ -45,6 +48,7 @@ namespace ConsultingKoiFish.API.Controllers
 			this._configuration = configuration;
 			this._advertisementPackageService = advertisementPackageService;
 			this._emailService = emailService;
+			this._identityService = identityService;
 		}
 
 		#region Admin
@@ -154,7 +158,47 @@ namespace ConsultingKoiFish.API.Controllers
 				PackageName = package.Name,
 				FullName = userDetail.FullName,
 				Description = $"{UserId}/{userDetail.FullName} thanh toan goi {package.Name}. Ma goi {package.Id}",
-				Amount = packageViewDTO.Price,
+				Amount = package.Price,
+				CreatedDate = DateTime.Now,
+			};
+
+			var httpClient = _httpClientFactory.CreateClient();
+			var responseUrl = await httpClient.PostAsJsonAsync(_configuration["VnPayConfiguration:RequestPaymentUrl"], vnpRequest);
+			if (!responseUrl.IsSuccessStatusCode)
+			{
+				var errorContent = await responseUrl.Content.ReadAsStringAsync();
+				return GetError($"Error: {errorContent}");
+			}
+			var paymentUrl = await responseUrl.Content.ReadFromJsonAsync<PaymentUrlResponseDTO>();
+			return GetSuccess(paymentUrl.Url);
+		}
+
+
+		/// <summary>
+		/// This is used to extend the unavailable package
+		/// </summary>
+		/// <param name="packageViewDTO"></param>
+		/// <returns></returns>
+		[Authorize(Roles = "Member")]
+		[HttpPost]
+		[Route("extend-package")]
+		public async Task<IActionResult> ExtendPackage(int purchasedPackageId)
+		{
+			var userDetail = await _userDetailService.GetUserDetailByUserId(UserId);
+			if (userDetail == null) return GetError("Vui lòng điền đầy đủ thông tin profile để tiếp tục thanh toán.");
+			var package = await _purchasedPackageService.GetUnavailablePackageForMember(purchasedPackageId, UserId);
+			if (package == null)
+			{
+				ModelState.AddModelError("PackageId", "Gói bạn chọn không còn tồn tại.");
+				return ModelInvalid();
+			}
+			var vnpRequest = new VnPayRequestDTO
+			{
+				UserId = UserId,
+				PackageName = package.Name,
+				FullName = userDetail.FullName,
+				Description = $"{UserId}/{userDetail.FullName} gia han goi {package.Name}. Ma goi {package.Id}",
+				Amount = package.Price,
 				CreatedDate = DateTime.Now,
 			};
 
@@ -288,61 +332,83 @@ namespace ConsultingKoiFish.API.Controllers
 				string[] parts1 = description.Split('/');
 				string userId = parts1[0];
 
-				var package = await _advertisementPackageService.GetPackageById(packageId, OrderImage.DatetimeDescending);
-				if (package == null)
+				var match = Regex.Match(description, @"\b(thanh toan|gia han)\b");
+
+				string action = match.Success ? match.Value : "khong xac dinh";
+
+				var user = await _identityService.GetByIdAsync(userId);
+				if (user == null)
+					return RedirectToAction("ResponsePaymentView", new { responseMessage = "Không tìm thấy người dùng." });
+
+
+				if (action.Equals("gia han"))
 				{
-					var message = new EmailDTO
+					var extendedPurchasedPackage = await _purchasedPackageService.GetUnavailablePackageForMember(packageId, userId);
+					var extendPackage = await _purchasedPackageService.ExtendPurchasedPackage(extendedPurchasedPackage, userId);
+					if (!extendPackage.IsSuccess)
+						return RedirectToAction("ResponsePaymentView", new { responseMessage = extendPackage.Message });
+
+					var extendMessage = new EmailDTO
 					(
-						new string[] { UserEmail! },
+						new string[] { user.Email! },
 						"Thông báo phản hồi chuyển khoản.",
 						$@"
+<p>- Bạn đã hoàn tất gia hạn gói <b>{packageId}</b>.</p>
+<p>- Cảm ơn đã sử dụng dịch vụ của chúng tôi.</p>"
+					);
+					_emailService.SendEmail(extendMessage);
+					return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
+				}
+				else
+				{
+					var package = await _advertisementPackageService.GetPackageById(packageId, OrderImage.DatetimeDescending);
+					if (package == null)
+					{
+						var message = new EmailDTO
+						(
+							new string[] { user.Email! },
+							"Thông báo phản hồi chuyển khoản.",
+							$@"
 <p>- Vì một số nguyên nhân nên gói bạn chọn không còn tồn tại</p>
 <p>- Vui lòng phản hồi lại mail này kèm hình ảnh thanh toán để chúng tôi thực hiện việc hoàn tiền cho bạn.</p>
 <p>- Chân thành xin lỗi vì sự bất tiện này. Và xin cảm vì đã đồng hành cùng chúng tôi.</p>"
-					);
-					_emailService.SendEmail(message);
-					var response = $"Hệ thống đã gửi mail đến Email: {UserEmail}. Xin vui lòng kiểm tra Email của bạn,";
-					return RedirectToAction("ResponsePaymentView", new { responseMessage = response });
-				}
+						);
+						_emailService.SendEmail(message);
+						var response = $"Hệ thống đã gửi mail đến Email: {UserEmail}. Xin vui lòng kiểm tra Email của bạn,";
+						return RedirectToAction("ResponsePaymentView", new { responseMessage = response });
+					}
 
-				var createdPaymentDTO = new PaymentCreateDTO
-				{
-					UserId = userId,
-					AdvertisementPackageId = packageId,
-					TransactionId = vnPayResponse.TransactionId,
-					Content = vnPayResponse.OrderDescription,
-					Amount = vnPayResponse.Amount / 100,
-					CreatedDate = DateTime.Now,
-					SelectedPackage = package
-				};
+					var createdPaymentDTO = new PaymentCreateDTO
+					{
+						UserId = userId,
+						AdvertisementPackageId = packageId,
+						TransactionId = vnPayResponse.TransactionId,
+						Content = vnPayResponse.OrderDescription,
+						Amount = vnPayResponse.Amount / 100,
+						CreatedDate = DateTime.Now,
+						SelectedPackage = package
+					};
 
-				//Snapshort metadata
-				createdPaymentDTO.SetMetaDataSnapshot(package);
+					//Snapshort metadata
+					createdPaymentDTO.SetMetaDataSnapshot(package);
 
-				var createdPayment = await _paymentService.CreatePayment(createdPaymentDTO);
-				if (!createdPayment.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPayment.Message });
+					var createdPayment = await _paymentService.CreatePayment(createdPaymentDTO);
+					if (!createdPayment.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPayment.Message });
 
-				var createdPurchasedPackageDTO = new PurchasedPackageCreateDTO
-				{
-					UserId = userId,
-					AdvertisementPackageId = packageId,
-					MornitoredQuantity = 0,
-					Status = (int)PurchasedPackageStatus.Available,
-					CreatedDate = DateTime.Now,
-					SelectedPackage = package
-				};
-				var createdPurchasedPackage = await _purchasedPackageService.CreatePurchasedPacakge(createdPurchasedPackageDTO);
-				if (!createdPurchasedPackage.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPurchasedPackage.Message });
-				var successMessage = new EmailDTO
-									(
-										new string[] { UserEmail! },
-										"Thông báo phản hồi chuyển khoản.",
-										$@"
-<p>- Bạn đã hoàn tất thanh toán gói.</p>
+					var createdPurchasedPackageDTO = new PurchasedPackageCreateDTO(package, userId);
+					var createdPurchasedPackage = await _purchasedPackageService.CreatePurchasedPacakge(createdPurchasedPackageDTO);
+					if (!createdPurchasedPackage.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPurchasedPackage.Message });
+					var successMessage = new EmailDTO
+										(
+											new string[] { user.Email! },
+											"Thông báo phản hồi chuyển khoản.",
+											$@"
+<p>- Bạn đã hoàn tất thanh toán gói <b>{package.Name}</b>.</p>
 <p>- Cảm ơn đã sử dụng dịch vụ của chúng tôi.</p>"
-									);
-				_emailService.SendEmail(successMessage);
-				return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
+										);
+					_emailService.SendEmail(successMessage);
+					return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
+				}
 			}
 			catch (Exception ex)
 			{

@@ -8,6 +8,8 @@ namespace ConsultingKoiFish.DAL.Enums
 {
     public enum PurchasedPackageStatus
     {
-        Available = 1, Unavailable = 2
+        Available = 1,
+        Unavailable = 2,
+        Extendable = 3
     }
 }

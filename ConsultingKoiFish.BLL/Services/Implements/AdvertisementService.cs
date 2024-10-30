@@ -52,6 +52,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				{
 					var advertisement = await repo.GetSingleAsync(new QueryBuilder<Advertisement>()
 						.WithPredicate(x => x.Id == dto.Id)
+						.WithInclude(x => x.PurchasedPackage)
 						.WithTracking(false)
 						.Build());
 					if (!advertisement.UserId.Equals(userId))
@@ -60,6 +61,10 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 							IsSuccess = false,
 							Message = "Quảng cáo không thuộc sở hữu người dùng."
 						};
+
+					if (dto.Description.Length > advertisement.PurchasedPackage.LimitContent)
+						return new BaseResponse { IsSuccess = false, Message = "Số kí tự trong phần mô tả đã vượt quá giới hạn cho phép của gói quảng cáo." };
+
 					var updateAdDto = new AdvertisementUpdateDTO(dto);
 					var updateAd = _mapper.Map(updateAdDto, advertisement);
 					await repo.UpdateAsync(updateAd);
@@ -68,14 +73,13 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				{
 					var selectedPurchasedPackage = await purchasedPacakgeRepo.GetSingleAsync(new QueryBuilder<PurchasedPackage>()
 																							.WithPredicate(x => x.Id == dto.PurchasedPackageId && x.IsActive == true)
-																							.WithInclude(x => x.AdvertisementPackage)
 																							.WithTracking(false)
 																							.Build());
 					//<===Check valid của gói===>
 					if (selectedPurchasedPackage == null || selectedPurchasedPackage.Status == (int)PurchasedPackageStatus.Unavailable)
 						return new BaseResponse { IsSuccess = false, Message = "Gói bạn chọn không khả dụng." };
 
-					if (dto.Description.Length > selectedPurchasedPackage.AdvertisementPackage.LimitContent)
+					if (dto.Description.Length > selectedPurchasedPackage.LimitContent)
 						return new BaseResponse { IsSuccess = false, Message = "Số kí tự trong phần mô tả đã vượt quá giới hạn cho phép của gói quảng cáo." };
 
 					//<===Thực hiện việc tạo mới ad===>
@@ -86,7 +90,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 
 					//<===Kiểm trá và cập nhật số lượng sau khi create===>
 					selectedPurchasedPackage.MornitoredQuantity += 1;
-					if (selectedPurchasedPackage.MornitoredQuantity >= selectedPurchasedPackage.AdvertisementPackage.LimitAd)
+					if (selectedPurchasedPackage.MornitoredQuantity >= selectedPurchasedPackage.LimitAd)
 						selectedPurchasedPackage.Status = (int)PurchasedPackageStatus.Unavailable;
 					await purchasedPacakgeRepo.UpdateAsync(selectedPurchasedPackage);
 					await _unitOfWork.SaveChangesAsync();
@@ -95,7 +99,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 
 					if (dto.ImageIds != null || dto.ImageIds.Any())
 					{
-						if (dto.ImageIds.Count > selectedPurchasedPackage.AdvertisementPackage.LimitImage)
+						if (dto.ImageIds.Count > selectedPurchasedPackage.LimitImage)
 							return new BaseResponse { IsSuccess = false, Message = "Số ảnh trong quảng cáo đã vượt quá giới hạn cho phép của gói." };
 
 						var createdAdImageDTOs = new List<AdImageCreateDTO>();
@@ -151,14 +155,10 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 														.WithInclude(x => x.PurchasedPackage, x => x.AdImages)
 														.WithTracking(false)
 														.Build());
-				var adPackage = await adPackageRepo.GetSingleAsync(new QueryBuilder<AdvertisementPackage>()
-																.WithPredicate(x => x.Id == advertisement.PurchasedPackage.AdvertisementPackageId)
-																.WithTracking(false)
-																.Build());
 
-				if (advertisement.AdImages.Count() + dto.ImagesId.Count() > adPackage.LimitImage)
+				if (advertisement.AdImages.Count() + dto.ImagesId.Count() > advertisement.PurchasedPackage.LimitImage)
 				{
-					var availableImages = adPackage.LimitImage - advertisement.AdImages.Count();
+					var availableImages = advertisement.PurchasedPackage.LimitImage - advertisement.AdImages.Count();
 					return new BaseResponse { IsSuccess = false, Message = $"Bạn chỉ có thể thêm {availableImages} ảnh vào quảng cáo này nữa." };
 				}
 
@@ -385,7 +385,6 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		}
 
 		#region PRIVATE
-
 		/// <summary>
 		/// This is used to get ad images for each Advertisement
 		/// </summary>

@@ -1,11 +1,6 @@
 ﻿using ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs;
 using ConsultingKoiFish.DAL.Entities;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
 {
@@ -18,7 +13,6 @@ namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
         public double Amount { get; set; }
         public string CreatedDate { get; set; }
         public AdvertisementPackageViewDTO AdvertisementPackageViewDTO { get; set; }
-        public string ClonePackage { get; set; } = null!;
 
         public PaymentViewDTO(Payment payment, AdvertisementPackageViewDTO advertisementPackageViewDTO)
         {
@@ -28,7 +22,14 @@ namespace ConsultingKoiFish.BLL.DTOs.PaymentDTOs
             Content = payment.Content;
             Amount = GetPaymentAmount(payment, advertisementPackageViewDTO);
             CreatedDate = payment.CreatedDate.ToString("dd/MM/yyyy");
-            ClonePackage = payment.ClonePackage;
+            if (!string.IsNullOrEmpty(payment.ClonePackage))
+            {
+                AdvertisementPackageViewDTO = JsonConvert.DeserializeObject<AdvertisementPackageViewDTO>(payment.ClonePackage);
+            }
+            else
+            {
+                AdvertisementPackageViewDTO = null;
+            }
         }
 
         public double GetPaymentAmount(Payment payment, AdvertisementPackageViewDTO advertisementPackageViewDto)

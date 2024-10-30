@@ -23,8 +23,13 @@ namespace ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs
 		public bool IsActive { get; set; }
 		public string CreatedDate { get; set; }
 		public string CreatedBy { get; set; } = null!;
-		public List<ImageViewDTO> ImageViewDTOs { get; set; } = new List<ImageViewDTO>();
+		public List<ImageViewDTO> ImageViewDTOs { get; set; }
 
+
+		public AdvertisementPackageViewDTO()
+		{
+
+		}
 		public AdvertisementPackageViewDTO(AdvertisementPackage package, List<ImageViewDTO> packageImageViewDtos)
 		{
 			Id = package.Id;

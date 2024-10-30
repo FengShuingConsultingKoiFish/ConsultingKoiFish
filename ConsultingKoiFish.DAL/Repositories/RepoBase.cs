@@ -29,7 +29,7 @@ namespace ConsultingKoiFish.DAL.Repositories
 		{
 			await _dbSet.AddRangeAsync(entities);
 		}
-		
+
 		public Task DeleteAsync(T entity)
 		{
 			if (_context.Entry<T>(entity).State == EntityState.Detached)
@@ -51,7 +51,7 @@ namespace ConsultingKoiFish.DAL.Repositories
 		{
 			IQueryable<T> query = _dbSet;
 
-			if (!options.Tracked)
+			if (options.Tracked == false)
 			{
 				query = query.AsNoTracking();
 			}
@@ -101,7 +101,7 @@ namespace ConsultingKoiFish.DAL.Repositories
 
 		public async Task<bool> AnyAsync(QueryOptions<T> options)
 		{
-			if(options.Predicate != null)
+			if (options.Predicate != null)
 			{
 				var result = await _dbSet.AnyAsync(options.Predicate);
 				return result;

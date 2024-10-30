@@ -32,14 +32,34 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			{
 				await _unitOfWork.BeginTransactionAsync();
 				var repo = _unitOfWork.GetRepo<PurchasedPackage>();
-				var packageRepo = _unitOfWork.GetRepo<AdvertisementPackage>();
-
 				var createdPurchasedPackage = _mapper.Map<PurchasedPackage>(dto);
-				createdPurchasedPackage.Status = (int)PurchasedPackageStatus.Available;
-				createdPurchasedPackage.IsActive = true;
-				createdPurchasedPackage.ExpireDate = DateTime.Now.AddDays(dto.SelectedPackage.DurationsInDays);
-
 				await repo.CreateAsync(createdPurchasedPackage);
+				var saver = await _unitOfWork.SaveAsync();
+				await _unitOfWork.CommitTransactionAsync();
+				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu gói đã mua của người dùng thất bại." };
+				return new BaseResponse { IsSuccess = true, Message = "Lưu gói đã mua của người dùng thành công." };
+			}
+			catch (Exception)
+			{
+				await _unitOfWork.RollBackAsync();
+				throw;
+			}
+		}
+
+		public async Task<BaseResponse> ExtendPurchasedPackage(PurchasedPackageViewDTO packageViewDTO, string userId)
+		{
+			try
+			{
+				await _unitOfWork.BeginTransactionAsync();
+				var repo = _unitOfWork.GetRepo<PurchasedPackage>();
+
+				var extendedPurchasedPackage = _mapper.Map<PurchasedPackage>(packageViewDTO);
+				extendedPurchasedPackage.CreatedDate = DateTime.Now;
+				extendedPurchasedPackage.Status = (int)PurchasedPackageStatus.Available;
+				extendedPurchasedPackage.ExpireDate = DateTime.Now.AddDays(packageViewDTO.DurationsInDays);
+				extendedPurchasedPackage.IsActive = true;
+
+				await repo.UpdateAsync(extendedPurchasedPackage);
 				var saver = await _unitOfWork.SaveAsync();
 				await _unitOfWork.CommitTransactionAsync();
 				if (!saver) return new BaseResponse { IsSuccess = false, Message = "Lưu gói đã mua của người dùng thất bại." };
@@ -57,7 +77,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var repo = _unitOfWork.GetRepo<PurchasedPackage>();
 			var loadedRecords = repo.Get(new QueryBuilder<PurchasedPackage>()
 				.WithPredicate(x => x.IsActive == true && x.UserId.Equals(userId))
-				.WithInclude(x => x.AdvertisementPackage, x => x.User)
+				.WithInclude(x => x.User)
 				.WithTracking(false)
 				.Build());
 
@@ -87,10 +107,27 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var package = await repo.GetSingleAsync(new QueryBuilder<PurchasedPackage>()
 				.WithPredicate(x => x.Id == id && x.IsActive == true && x.UserId.Equals(userId))
 				.WithTracking(false)
-				.WithInclude(r => r.AdvertisementPackage, x => x.User)
+				.WithInclude(x => x.User)
 				.Build());
 			if (package == null) return null;
 			var response = await ConvertPurchasedPackageToPurchasedPackageView(package, orderImage);
+			return response;
+		}
+
+		public async Task<PurchasedPackageViewDTO> GetUnavailablePackageForMember(int purchasedPackagedId, string userId)
+		{
+			var repo = _unitOfWork.GetRepo<PurchasedPackage>();
+
+			var extendedPurchasedPackage = await repo.GetSingleAsync(new QueryBuilder<PurchasedPackage>()
+																	.WithPredicate(x => x.Id == purchasedPackagedId &&
+																					x.UserId.Equals(userId) &&
+																					 x.Status == (int)PurchasedPackageStatus.Unavailable &&
+																					 x.IsActive == true)
+																	.WithInclude(x => x.User)
+																	.WithTracking(false)
+																	.Build());
+			if (extendedPurchasedPackage == null) return null;
+			var response = await ConvertPurchasedPackageToPurchasedPackageView(extendedPurchasedPackage, OrderImage.DatetimeDescending);
 			return response;
 		}
 
@@ -99,7 +136,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var repo = _unitOfWork.GetRepo<PurchasedPackage>();
 			var loadedRecords = repo.Get(new QueryBuilder<PurchasedPackage>()
 				.WithPredicate(x => x.IsActive == true)
-				.WithInclude(x => x.AdvertisementPackage, x => x.User)
+				.WithInclude(x => x.User)
 				.WithTracking(false)
 				.Build());
 
@@ -128,7 +165,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var package = await repo.GetSingleAsync(new QueryBuilder<PurchasedPackage>()
 				.WithPredicate(x => x.Id == id && x.IsActive == true)
 				.WithTracking(false)
-				.WithInclude(r => r.AdvertisementPackage, x => x.User)
+				.WithInclude(x => x.User)
 				.Build());
 			if (package == null) return null;
 			var response = await ConvertPurchasedPackageToPurchasedPackageView(package, orderImage);
@@ -148,8 +185,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 			var response = new List<PurchasedPackageViewDTO>();
 			foreach (var package in purchasedPackages)
 			{
-				var adPackageViewDto = await _advertisementPackageService.ConvertPackageToPackageView(package.AdvertisementPackage, orderImage);
-				var childResponse = new PurchasedPackageViewDTO(package, adPackageViewDto);
+				var childResponse = new PurchasedPackageViewDTO(package);
 				response.Add(childResponse);
 			}
 			return response;
@@ -164,8 +200,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 		/// <returns></returns>
 		public async Task<PurchasedPackageViewDTO> ConvertPurchasedPackageToPurchasedPackageView(PurchasedPackage package, OrderImage? orderImage)
 		{
-			var adPackageViewDto = await _advertisementPackageService.ConvertPackageToPackageView(package.AdvertisementPackage, orderImage);
-			var response = new PurchasedPackageViewDTO(package, adPackageViewDto);
+			var response = new PurchasedPackageViewDTO(package);
 			return response;
 		}
 

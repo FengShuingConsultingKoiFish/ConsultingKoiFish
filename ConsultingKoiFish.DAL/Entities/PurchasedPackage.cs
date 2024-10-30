@@ -11,6 +11,13 @@ namespace ConsultingKoiFish.DAL.Entities
 		public int Id { get; set; }
 		public string UserId { get; set; }
 		public int AdvertisementPackageId { get; set; }
+		public string Name { get; set; } = null!;
+		public double Price { get; set; }
+		public string? Description { get; set; }
+		public int? LimitAd { get; set; }
+		public int? LimitContent { get; set; }
+		public int? LimitImage { get; set; }
+		public int DurationsInDays { get; set; }
 		public int MornitoredQuantity { get; set; }
 		public int Status { get; set; }
 		public DateTime CreatedDate { get; set; }
@@ -19,6 +26,5 @@ namespace ConsultingKoiFish.DAL.Entities
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual ICollection<Advertisement> Advertisements { get; set; } = new List<Advertisement>();
-		public virtual AdvertisementPackage AdvertisementPackage { get; set; }
 	}
 }
