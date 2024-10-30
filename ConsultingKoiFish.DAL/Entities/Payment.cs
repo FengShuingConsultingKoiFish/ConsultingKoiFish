@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -15,8 +16,10 @@ namespace ConsultingKoiFish.DAL.Entities
 		public long TransactionId { get; set; }
 		[AllowNull]
 		public string? Content { get; set; }
-        public double Amount { get; set; }
-        public DateTime CreatedDate { get; set; }
+		public double Amount { get; set; }
+		[Required]
+		public string DetailPackage { get; set; } = null!;
+		public DateTime CreatedDate { get; set; }
 
 		public virtual ApplicationUser User { get; set; }
 		public virtual AdvertisementPackage AdvertisementPackage { get; set; }
