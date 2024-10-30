@@ -14,5 +14,7 @@ public class AdvertisementPackageRequestDTO
     public int? LimitAd { get; set; }
     public int? LimitContent { get; set; }
     public int? LimitImage { get; set; }
+    [Required(ErrorMessage = "Thời hạn không được để trống.")]
+    public int DurationsInDays { get; set; }
     public List<int>? ImageIds { get; set; }
 }

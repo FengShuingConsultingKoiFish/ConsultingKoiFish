@@ -300,6 +300,7 @@ namespace ConsultingKoiFish.API.Controllers
 <p>- Vui lòng phản hồi lại mail này kèm hình ảnh thanh toán để chúng tôi thực hiện việc hoàn tiền cho bạn.</p>
 <p>- Chân thành xin lỗi vì sự bất tiện này. Và xin cảm vì đã đồng hành cùng chúng tôi.</p>"
 					);
+					_emailService.SendEmail(message);
 					var response = $"Hệ thống đã gửi mail đến Email: {UserEmail}. Xin vui lòng kiểm tra Email của bạn,";
 					return RedirectToAction("ResponsePaymentView", new { responseMessage = response });
 				}
@@ -328,9 +329,19 @@ namespace ConsultingKoiFish.API.Controllers
 					MornitoredQuantity = 0,
 					Status = (int)PurchasedPackageStatus.Available,
 					CreatedDate = DateTime.Now,
+					SelectedPackage = package
 				};
 				var createdPurchasedPackage = await _purchasedPackageService.CreatePurchasedPacakge(createdPurchasedPackageDTO);
 				if (!createdPurchasedPackage.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPurchasedPackage.Message });
+				var successMessage = new EmailDTO
+									(
+										new string[] { UserEmail! },
+										"Thông báo phản hồi chuyển khoản.",
+										$@"
+<p>- Bạn đã hoàn tất thanh toán gói.</p>
+<p>- Cảm ơn đã sử dụng dịch vụ của chúng tôi.</p>"
+									);
+				_emailService.SendEmail(successMessage);
 				return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
 			}
 			catch (Exception ex)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,7 @@ namespace ConsultingKoiFish.DAL.Entities
 		public int? LimitContent { get; set; }
 		[AllowNull]
 		public int? LimitImage { get; set; }
+		[Required]
 		public int DurationsInDays { get; set; }
 		public bool IsActive { get; set; }
 		public DateTime CreatedDate { get; set; }

@@ -14,5 +14,6 @@ namespace ConsultingKoiFish.BLL.DTOs.PurchasedPackageDTOs
 		public int MornitoredQuantity { get; set; }
 		public int Status { get; set; }
 		public DateTime CreatedDate { get; set; }
+		public AdvertisementPackageViewDTO SelectedPackage { get; set; }
 	}
 }

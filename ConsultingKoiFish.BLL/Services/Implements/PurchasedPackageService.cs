@@ -33,9 +33,12 @@ namespace ConsultingKoiFish.BLL.Services.Implements
 				await _unitOfWork.BeginTransactionAsync();
 				var repo = _unitOfWork.GetRepo<PurchasedPackage>();
 				var packageRepo = _unitOfWork.GetRepo<AdvertisementPackage>();
+
 				var createdPurchasedPackage = _mapper.Map<PurchasedPackage>(dto);
 				createdPurchasedPackage.Status = (int)PurchasedPackageStatus.Available;
 				createdPurchasedPackage.IsActive = true;
+				createdPurchasedPackage.ExpireDate = DateTime.Now.AddDays(dto.SelectedPackage.DurationsInDays);
+
 				await repo.CreateAsync(createdPurchasedPackage);
 				var saver = await _unitOfWork.SaveAsync();
 				await _unitOfWork.CommitTransactionAsync();

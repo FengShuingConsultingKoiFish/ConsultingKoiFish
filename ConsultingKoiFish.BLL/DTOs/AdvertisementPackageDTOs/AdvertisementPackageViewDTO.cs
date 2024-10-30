@@ -19,24 +19,26 @@ namespace ConsultingKoiFish.BLL.DTOs.AdvertisementPackageDTOs
 		public int? LimitAd { get; set; }
 		public int? LimitContent { get; set; }
 		public int? LimitImage { get; set; }
+		public int DurationsInDays { get; set; }
 		public bool IsActive { get; set; }
 		public string CreatedDate { get; set; }
 		public string CreatedBy { get; set; } = null!;
-        public List<ImageViewDTO> ImageViewDTOs { get; set; } = new List<ImageViewDTO>();
+		public List<ImageViewDTO> ImageViewDTOs { get; set; } = new List<ImageViewDTO>();
 
-        public AdvertisementPackageViewDTO(AdvertisementPackage package, List<ImageViewDTO> packageImageViewDtos)
-        {
-            Id = package.Id;
+		public AdvertisementPackageViewDTO(AdvertisementPackage package, List<ImageViewDTO> packageImageViewDtos)
+		{
+			Id = package.Id;
 			Name = package.Name;
 			Price = package.Price;
 			Description = package.Description;
 			LimitAd = package.LimitAd;
 			LimitContent = package.LimitContent;
 			LimitImage = package.LimitImage;
+			DurationsInDays = package.DurationsInDays;
 			IsActive = package.IsActive;
 			CreatedDate = package.CreatedDate.ToString("dd/MM/yyyy");
 			CreatedBy = package.CreatedBy;
 			ImageViewDTOs = packageImageViewDtos;
-        }
-    }
+		}
+	}
 }

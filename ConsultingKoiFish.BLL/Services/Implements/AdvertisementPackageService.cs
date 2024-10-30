@@ -89,7 +89,8 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 					Description = dto.Description,
 					LimitContent = dto.LimitContent,
 					LimitImage = dto.LimitImage,
-					LimitAd = dto.LimitAd
+					LimitAd = dto.LimitAd,
+					DurationsInDays = dto.DurationsInDays
 				};
 				var updatePackage = _mapper.Map(updatePackageDto, adPackage);
 				await repo.UpdateAsync(updatePackage);
@@ -103,7 +104,8 @@ public class AdvertisementPackageService : IAdvertisementPackageService
 					Description = dto.Description,
 					LimitContent = dto.LimitContent,
 					LimitImage = dto.LimitImage,
-					LimitAd = dto.LimitAd
+					LimitAd = dto.LimitAd,
+					DurationsInDays = dto.DurationsInDays
 				};
 				var createdPackage = _mapper.Map<AdvertisementPackage>(createdPackageDto);
 				createdPackage.CreatedBy = userName;
