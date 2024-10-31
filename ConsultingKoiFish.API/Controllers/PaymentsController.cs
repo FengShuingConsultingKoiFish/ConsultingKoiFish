@@ -316,12 +316,15 @@ namespace ConsultingKoiFish.API.Controllers
 		[Route("response-payment")]
 		public async Task<IActionResult> ResponsePayment()
 		{
+			var responseUrlFe = _configuration["VnPayConfiguration:ResponseUrlFe"];
 			try
 			{
 				var vnPayResponse = _vnPayService.PaymentExcute(Request.Query);
 				if (!vnPayResponse.IsSuccess || !vnPayResponse.VnPayResponseCode.Equals("00"))
 				{
-					return RedirectToAction("ResponsePaymentView", new { responseMessage = "Lỗi thanh toán VNpay. Vui lòng thử lại sau ít phút." });
+					var response = "Lỗi thanh toán VNpay. Vui lòng thử lại sau ít phút.";
+					// return RedirectToAction("ResponsePaymentView", new { responseMessage = "Lỗi thanh toán VNpay. Vui lòng thử lại sau ít phút." });
+					return Redirect($@"{responseUrlFe}?responseMessage={response}");
 				}
 
 
@@ -338,7 +341,8 @@ namespace ConsultingKoiFish.API.Controllers
 
 				var user = await _identityService.GetByIdAsync(userId);
 				if (user == null)
-					return RedirectToAction("ResponsePaymentView", new { responseMessage = "Không tìm thấy người dùng." });
+					// return RedirectToAction("ResponsePaymentView", new { responseMessage = "Không tìm thấy người dùng." });
+					return Redirect($@"{responseUrlFe}?responseMessage=Không tìm thấy người dùng.");
 
 
 				if (action.Equals("gia han"))
@@ -346,7 +350,8 @@ namespace ConsultingKoiFish.API.Controllers
 					var extendedPurchasedPackage = await _purchasedPackageService.GetUnavailablePackageForMember(packageId, userId);
 					var extendPackage = await _purchasedPackageService.ExtendPurchasedPackage(extendedPurchasedPackage, userId);
 					if (!extendPackage.IsSuccess)
-						return RedirectToAction("ResponsePaymentView", new { responseMessage = extendPackage.Message });
+						// return RedirectToAction("ResponsePaymentView", new { responseMessage = extendPackage.Message });
+						return Redirect($@"{responseUrlFe}?responseMessage={extendPackage.Message}");
 
 					var extendMessage = new EmailDTO
 					(
@@ -357,7 +362,8 @@ namespace ConsultingKoiFish.API.Controllers
 <p>- Cảm ơn đã sử dụng dịch vụ của chúng tôi.</p>"
 					);
 					_emailService.SendEmail(extendMessage);
-					return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
+					// return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
+					return Redirect($@"{responseUrlFe}?responseMessage={Constants.vnp00}");
 				}
 				else
 				{
@@ -375,7 +381,8 @@ namespace ConsultingKoiFish.API.Controllers
 						);
 						_emailService.SendEmail(message);
 						var response = $"Hệ thống đã gửi mail đến Email: {UserEmail}. Xin vui lòng kiểm tra Email của bạn,";
-						return RedirectToAction("ResponsePaymentView", new { responseMessage = response });
+						// return RedirectToAction("ResponsePaymentView", new { responseMessage = response });
+						return Redirect($@"{responseUrlFe}?responseMessage={response}");
 					}
 
 					var createdPaymentDTO = new PaymentCreateDTO
@@ -393,11 +400,15 @@ namespace ConsultingKoiFish.API.Controllers
 					createdPaymentDTO.SetMetaDataSnapshot(package);
 
 					var createdPayment = await _paymentService.CreatePayment(createdPaymentDTO);
-					if (!createdPayment.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPayment.Message });
+					if (!createdPayment.IsSuccess)
+						// return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPayment.Message });
+						return Redirect($@"{responseUrlFe}?responseMessage={createdPayment.Message}");
 
 					var createdPurchasedPackageDTO = new PurchasedPackageCreateDTO(package, userId);
 					var createdPurchasedPackage = await _purchasedPackageService.CreatePurchasedPacakge(createdPurchasedPackageDTO);
-					if (!createdPurchasedPackage.IsSuccess) return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPurchasedPackage.Message });
+					if (!createdPurchasedPackage.IsSuccess)
+						// return RedirectToAction("ResponsePaymentView", new { responseMessage = createdPurchasedPackage.Message });
+						return Redirect($@"{responseUrlFe}?responseMessage={createdPurchasedPackage.Message}");
 					var successMessage = new EmailDTO
 										(
 											new string[] { user.Email! },
@@ -407,7 +418,8 @@ namespace ConsultingKoiFish.API.Controllers
 <p>- Cảm ơn đã sử dụng dịch vụ của chúng tôi.</p>"
 										);
 					_emailService.SendEmail(successMessage);
-					return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
+					// return RedirectToAction("ResponsePaymentView", new { responseMessage = Constants.vnp00 });
+					return Redirect($@"{responseUrlFe}?responseMessage={Constants.vnp00}");
 				}
 			}
 			catch (Exception ex)
@@ -415,7 +427,7 @@ namespace ConsultingKoiFish.API.Controllers
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine(ex.Message);
 				Console.ResetColor();
-				return RedirectToAction("ResponsePaymentView", new { responseMessage = "Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút nữa." });
+				return Redirect($@"{responseUrlFe}?responseMessage=Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau.");
 			}
 		}
 
