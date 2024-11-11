@@ -26,12 +26,12 @@ namespace ConsultingKoiFish.BLL.Services.Implements
             try
             {
                 var repo = _unitOfWork.GetRepo<PondCategory>();
-               // var pondCategory = _mapper.Map<PondCategory>(pondCategoryDto);
-               var pondCategory = new PondCategory()
-               {
-                   Name = pondCategoryDto.Name,
-                   Description = pondCategoryDto.Description
-               };
+                // var pondCategory = _mapper.Map<PondCategory>(pondCategoryDto);
+                var pondCategory = new PondCategory()
+                {
+                    Name = pondCategoryDto.Name,
+                    Description = pondCategoryDto.Description
+                };
                 await repo.CreateAsync(pondCategory);
                 await _unitOfWork.SaveChangesAsync();
                 return new BaseResponse { IsSuccess = true, Message = "Pond category added successfully." };
@@ -232,6 +232,8 @@ namespace ConsultingKoiFish.BLL.Services.Implements
             try
             {
                 var repo = _unitOfWork.GetRepo<Pond>();
+
+                // Kiểm tra nếu pondCharacteristic tồn tại
                 var pondCharacteristic = await repo.GetSingleAsync(new QueryBuilder<Pond>()
                     .WithPredicate(x => x.Id == pondCharacteristicId)
                     .Build());
@@ -241,13 +243,20 @@ namespace ConsultingKoiFish.BLL.Services.Implements
                     return new BaseResponse { IsSuccess = false, Message = "Pond characteristic not found." };
                 }
 
-                await repo.DeleteAsync(pondCharacteristic);
-                var saver = await _unitOfWork.SaveAsync();
+                // Xóa các bản ghi liên quan trong bảng PondZodiacs
+                var pondZodiacRepo = _unitOfWork.GetRepo<PondZodiac>();
+                var relatedPondZodiacs = await pondZodiacRepo.GetAllAsync(new QueryBuilder<PondZodiac>()
+                    .WithPredicate(pz => pz.PondId == pondCharacteristicId)
+                    .Build());
 
-                if (!saver)
+                foreach (var pondZodiac in relatedPondZodiacs)
                 {
-                    return new BaseResponse { IsSuccess = false, Message = "Failed to delete pond characteristic." };
+                    await pondZodiacRepo.DeleteAsync(pondZodiac);
                 }
+
+                // Sau khi xóa các bản ghi phụ thuộc, xóa pondCharacteristic
+                await repo.DeleteAsync(pondCharacteristic);
+                await _unitOfWork.SaveChangesAsync(); // Save without assigning result
 
                 return new BaseResponse { IsSuccess = true, Message = "Pond characteristic deleted successfully." };
             }
@@ -257,6 +266,8 @@ namespace ConsultingKoiFish.BLL.Services.Implements
                 return new BaseResponse { IsSuccess = false, Message = "Error occurred while deleting pond characteristic." };
             }
         }
+
+
 
         public async Task<BaseResponse> AddSuitablePondZodiac(ZodiacPondDTO zodiacPondDto)
         {
@@ -268,10 +279,10 @@ namespace ConsultingKoiFish.BLL.Services.Implements
                     PondId = zodiacPondDto.PondId,
                     ZodiacId = zodiacPondDto.ZodiacId
                 };
-                
+
                 await repo.CreateAsync(zodiacPond);
                 await _unitOfWork.SaveChangesAsync();
-                
+
                 return new BaseResponse { IsSuccess = true, Message = "Thêm tương hợp cung hoàng đạo-Hồ thành công" };
             }
             catch (Exception e)
@@ -286,9 +297,9 @@ namespace ConsultingKoiFish.BLL.Services.Implements
             try
             {
                 var repo = _unitOfWork.GetRepo<PondZodiac>();
-                
+
                 await _unitOfWork.BeginTransactionAsync();
-                
+
                 var zodiacExists = await repo.AnyAsync(new QueryBuilder<PondZodiac>()
                     .WithPredicate(x => x.Id.Equals(zodiacPondId))
                     .Build());
@@ -297,17 +308,17 @@ namespace ConsultingKoiFish.BLL.Services.Implements
                 {
                     return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy tương hợp cung hoàng đạo-Hồ." };
                 }
-                
+
                 var zodiacPondDetail = await repo.GetSingleAsync(new QueryBuilder<PondZodiac>()
                     .WithPredicate(x => x.Id.Equals(zodiacPondId))
                     .Build());
-                
+
                 zodiacPondDetail.PondId = zodiacPondDto.PondId;
                 zodiacPondDetail.ZodiacId = zodiacPondDto.ZodiacId;
-                
+
                 await repo.UpdateAsync(zodiacPondDetail);
                 var isSaved = await _unitOfWork.SaveAsync();
-                
+
                 await _unitOfWork.CommitTransactionAsync();
 
                 if (!isSaved)
@@ -331,7 +342,7 @@ namespace ConsultingKoiFish.BLL.Services.Implements
                 var queryBuilder = new QueryBuilder<PondZodiac>()
                     .WithOrderBy(q => q.OrderBy(p => p.PondId))
                     .WithTracking(false);
-                    
+
                 var repo = _unitOfWork.GetRepo<PondZodiac>();
                 var zodiacPonds = await repo.GetAllAsync(queryBuilder.Build());
 
@@ -377,52 +388,52 @@ namespace ConsultingKoiFish.BLL.Services.Implements
         }
 
         public async Task<ResponseApiDTO> GetSuitablePondForUser(string userId)
-{
-    try
-    {
-        // Retrieve user's zodiac sign from the UserZodiac repository
-        var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
-        var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
-            .WithPredicate(x => x.UserId.Equals(userId))
-            .Build());
-
-        if (userZodiac == null)
         {
-            return new ResponseApiDTO { IsSuccess = false, Message = "User's zodiac not found." };
+            try
+            {
+                // Retrieve user's zodiac sign from the UserZodiac repository
+                var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+                var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+                    .WithPredicate(x => x.UserId.Equals(userId))
+                    .Build());
+
+                if (userZodiac == null)
+                {
+                    return new ResponseApiDTO { IsSuccess = false, Message = "User's zodiac not found." };
+                }
+
+                // Retrieve matching ponds based on the user's zodiac sign, including pond and zodiac details
+                var pondZodiacRepo = _unitOfWork.GetRepo<PondZodiac>();
+                var queryBuilder = new QueryBuilder<PondZodiac>()
+                    .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match ZodiacId from PondZodiac
+                    .WithInclude(x => x.Pond) // Include Pond details
+                    .WithInclude(x => x.Zodiac) // Include Zodiac details
+                    .Build();
+
+                var matchingPonds = await pondZodiacRepo.GetAllAsync(queryBuilder);
+                if (matchingPonds == null || !matchingPonds.Any())
+                {
+                    return new ResponseApiDTO { IsSuccess = false, Message = "No suitable ponds found for the user's zodiac sign." };
+                }
+
+
+                var suitablePondDTOs = matchingPonds.Select(pondZodiac => new
+                {
+                    PondId = pondZodiac.PondId,
+                    PondName = pondZodiac.Pond?.Name,
+                    ZodiacId = pondZodiac.ZodiacId,
+                    ZodiacName = pondZodiac.Zodiac?.ZodiacName,
+                    Image = pondZodiac.Pond?.Image,
+                }).ToList();
+
+                return new ResponseApiDTO { IsSuccess = true, Result = suitablePondDTOs, Message = "Suitable ponds retrieved successfully." };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable ponds." };
+            }
         }
-
-        // Retrieve matching ponds based on the user's zodiac sign, including pond and zodiac details
-        var pondZodiacRepo = _unitOfWork.GetRepo<PondZodiac>();
-        var queryBuilder = new QueryBuilder<PondZodiac>()
-            .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match ZodiacId from PondZodiac
-            .WithInclude(x => x.Pond) // Include Pond details
-            .WithInclude(x => x.Zodiac) // Include Zodiac details
-            .Build();
-        
-        var matchingPonds = await pondZodiacRepo.GetAllAsync(queryBuilder);
-        if (matchingPonds == null || !matchingPonds.Any())
-        {
-            return new ResponseApiDTO { IsSuccess = false, Message = "No suitable ponds found for the user's zodiac sign." };
-        }
-
-       
-        var suitablePondDTOs = matchingPonds.Select(pondZodiac => new 
-        {
-            PondId = pondZodiac.PondId,
-            PondName = pondZodiac.Pond?.Name,
-            ZodiacId = pondZodiac.ZodiacId,
-            ZodiacName = pondZodiac.Zodiac?.ZodiacName,
-            Image = pondZodiac.Pond?.Image,
-        }).ToList();
-
-        return new ResponseApiDTO { IsSuccess = true, Result = suitablePondDTOs, Message = "Suitable ponds retrieved successfully." };
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine(e);
-        return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable ponds." };
-    }
-}
         public async Task<ResponseApiDTO> GetPondByPondCategory(int pondCategoryId)
         {
             try

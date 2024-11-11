@@ -29,7 +29,7 @@ public class KoiService : IKoiService
             {
                 Name = koiCategoryDto.Name,
                 Description = koiCategoryDto.Description
-                
+
             };
             await repo.CreateAsync(koiCategory);
             await _unitOfWork.SaveChangesAsync();
@@ -47,9 +47,9 @@ public class KoiService : IKoiService
         try
         {
             var repo = _unitOfWork.GetRepo<KoiCategory>();
-            
+
             await _unitOfWork.BeginTransactionAsync();
-            
+
             var categoryExists = await repo.AnyAsync(new QueryBuilder<KoiCategory>()
                 .WithPredicate(x => x.Id.Equals(koiCategoryId))
                 .Build());
@@ -58,18 +58,18 @@ public class KoiService : IKoiService
             {
                 return new BaseResponse { IsSuccess = false, Message = "Danh mục Koi không tồn tại." };
             }
-            
+
             var koiCategoryDetail = await repo.GetSingleAsync(new QueryBuilder<KoiCategory>()
                 .WithPredicate(x => x.Id.Equals(koiCategoryId))
                 .Build());
-            
+
             koiCategoryDetail.Name = koiCategoryDto.Name;
             koiCategoryDetail.Description = koiCategoryDto.Description;
-            
+
             await repo.UpdateAsync(koiCategoryDetail);
-            
+
             var isSaved = await _unitOfWork.SaveAsync();
-            
+
             await _unitOfWork.CommitTransactionAsync();
 
             if (!isSaved)
@@ -91,12 +91,12 @@ public class KoiService : IKoiService
         try
         {
             var queryBuilder = new QueryBuilder<KoiCategory>()
-                .WithOrderBy(q => q.OrderBy(k => k.Name))  
-                .WithTracking(false);  
-            
+                .WithOrderBy(q => q.OrderBy(k => k.Name))
+                .WithTracking(false);
+
             var repo = _unitOfWork.GetRepo<KoiCategory>();
             var koiCategories = await repo.GetAllAsync(queryBuilder.Build());
-            
+
             var koiCategoryDTOs = _mapper.Map<List<KoiCategory>>(koiCategories);
             return new ResponseApiDTO { IsSuccess = true, Result = koiCategoryDTOs };
         }
@@ -124,7 +124,7 @@ public class KoiService : IKoiService
             await repo.DeleteAsync(koiCategory);
             var isSaved = await _unitOfWork.SaveAsync();
 
-            if (!isSaved) 
+            if (!isSaved)
                 return new BaseResponse { IsSuccess = false, Message = "Xóa thất bại." };
 
             return new BaseResponse { IsSuccess = true, Message = "Xóa thành công." };
@@ -166,9 +166,9 @@ public class KoiService : IKoiService
         try
         {
             var repo = _unitOfWork.GetRepo<KoiBreed>();
-                
+
             await _unitOfWork.BeginTransactionAsync();
-                
+
             var breedExists = await repo.AnyAsync(new QueryBuilder<KoiBreed>()
                 .WithPredicate(x => x.Id.Equals(koiBreedId))
                 .Build());
@@ -177,7 +177,7 @@ public class KoiService : IKoiService
             {
                 return new BaseResponse { IsSuccess = false, Message = "Giống Koi không tồn tại." };
             }
-                
+
             var koiBreedDetail = await repo.GetSingleAsync(new QueryBuilder<KoiBreed>()
                 .WithPredicate(x => x.Id.Equals(koiBreedId))
                 .Build());
@@ -215,7 +215,7 @@ public class KoiService : IKoiService
             var queryBuilder = new QueryBuilder<KoiBreed>()
                 .WithOrderBy(q => q.OrderBy(k => k.Name))
                 .WithTracking(false);
-                
+
             var repo = _unitOfWork.GetRepo<KoiBreed>();
             var koiBreeds = await repo.GetAllAsync(queryBuilder.Build());
 
@@ -234,6 +234,8 @@ public class KoiService : IKoiService
         try
         {
             var repo = _unitOfWork.GetRepo<KoiBreed>();
+
+            // Retrieve the koi breed by ID
             var koiBreed = await repo.GetSingleAsync(new QueryBuilder<KoiBreed>()
                 .WithPredicate(x => x.Id == koiBreedId)
                 .Build());
@@ -243,13 +245,20 @@ public class KoiService : IKoiService
                 return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy giống Koi." };
             }
 
-            await repo.DeleteAsync(koiBreed);
-            var isSaved = await _unitOfWork.SaveAsync();
+            // Delete any related records in dependent tables, if necessary
+            var koiBreedZodiacRepo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+            var relatedKoiBreedZodiacs = await koiBreedZodiacRepo.GetAllAsync(new QueryBuilder<KoiBreedZodiac>()
+                .WithPredicate(kbz => kbz.KoiBreedId == koiBreedId)
+                .Build());
 
-            if (!isSaved)
+            foreach (var koiBreedZodiac in relatedKoiBreedZodiacs)
             {
-                return new BaseResponse { IsSuccess = false, Message = "Xóa thất bại." };
+                await koiBreedZodiacRepo.DeleteAsync(koiBreedZodiac);
             }
+
+            // Delete the koi breed itself
+            await repo.DeleteAsync(koiBreed);
+            await _unitOfWork.SaveChangesAsync(); // Execute the save without assigning a result
 
             return new BaseResponse { IsSuccess = true, Message = "Xóa thành công." };
         }
@@ -260,6 +269,7 @@ public class KoiService : IKoiService
         }
     }
 
+
     public async Task<BaseResponse> AddSuitableKoiZodiac(ZodiacKoiBreedDTO zodiacKoiBreedDto)
     {
         try
@@ -269,12 +279,12 @@ public class KoiService : IKoiService
             {
                 KoiBreedId = zodiacKoiBreedDto.KoiBreedId,
                 ZodiacId = zodiacKoiBreedDto.ZodiacId,
-               
+
             };
-            
+
             await repo.CreateAsync(zodiacKoiBreed);
             await _unitOfWork.SaveChangesAsync();
-            
+
             return new BaseResponse { IsSuccess = true, Message = "Thêm tương hợp cung hoàng đạo-Koi thành công" };
         }
         catch (Exception e)
@@ -289,9 +299,9 @@ public class KoiService : IKoiService
         try
         {
             var repo = _unitOfWork.GetRepo<KoiBreedZodiac>();
-            
+
             await _unitOfWork.BeginTransactionAsync();
-            
+
             var zodiacExists = await repo.AnyAsync(new QueryBuilder<KoiBreedZodiac>()
                 .WithPredicate(x => x.Id.Equals(koiZodiacId))
                 .Build());
@@ -300,17 +310,17 @@ public class KoiService : IKoiService
             {
                 return new BaseResponse { IsSuccess = false, Message = "Không tìm thấy tương hợp cung hoàng đạo-Koi." };
             }
-            
+
             var zodiacKoiBreedDetail = await repo.GetSingleAsync(new QueryBuilder<KoiBreedZodiac>()
                 .WithPredicate(x => x.Id.Equals(koiZodiacId))
                 .Build());
-            
+
             zodiacKoiBreedDetail.KoiBreedId = zodiacKoiBreedDto.KoiBreedId;
             zodiacKoiBreedDetail.ZodiacId = zodiacKoiBreedDto.ZodiacId;
-            
+
             await repo.UpdateAsync(zodiacKoiBreedDetail);
             var isSaved = await _unitOfWork.SaveAsync();
-            
+
             await _unitOfWork.CommitTransactionAsync();
 
             if (!isSaved)
@@ -334,7 +344,7 @@ public class KoiService : IKoiService
             var queryBuilder = new QueryBuilder<KoiBreedZodiac>()
                 .WithOrderBy(q => q.OrderBy(k => k.KoiBreedId))
                 .WithTracking(false);
-                
+
             var repo = _unitOfWork.GetRepo<KoiBreedZodiac>();
             var zodiacKoiBreeds = await repo.GetAllAsync(queryBuilder.Build());
 
@@ -380,53 +390,53 @@ public class KoiService : IKoiService
     }
 
     public async Task<ResponseApiDTO> GetSuitableKoiForUser(string userId)
-{
-    try
     {
-        // Step 1: Retrieve user's zodiac sign from the UserZodiac repository
-        var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
-        var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
-            .WithPredicate(x => x.UserId.Equals(userId))
-            .Build());
-
-        if (userZodiac == null)
+        try
         {
-            return new ResponseApiDTO { IsSuccess = false, Message = "Zodiac for the user not found." };
+            // Step 1: Retrieve user's zodiac sign from the UserZodiac repository
+            var userZodiacRepo = _unitOfWork.GetRepo<UserZodiac>();
+            var userZodiac = await userZodiacRepo.GetSingleAsync(new QueryBuilder<UserZodiac>()
+                .WithPredicate(x => x.UserId.Equals(userId))
+                .Build());
+
+            if (userZodiac == null)
+            {
+                return new ResponseApiDTO { IsSuccess = false, Message = "Zodiac for the user not found." };
+            }
+
+            // Step 2: Retrieve matching Koi breeds for the user's zodiac, including KoiBreed and Zodiac details
+            var koiZodiacRepo = _unitOfWork.GetRepo<KoiBreedZodiac>();
+            var queryBuilder = new QueryBuilder<KoiBreedZodiac>()
+                .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match the ZodiacId from UserZodiac
+                .WithInclude(x => x.KoiBreed) // Include KoiBreed details
+                .WithInclude(x => x.Zodiac) // Include Zodiac details
+                .Build();
+
+            var suitableKoiBreeds = await koiZodiacRepo.GetAllAsync(queryBuilder);
+            if (suitableKoiBreeds == null || !suitableKoiBreeds.Any())
+            {
+                return new ResponseApiDTO { IsSuccess = false, Message = "No suitable Koi breeds found for the user's zodiac." };
+            }
+
+            var suitableKoiBreedDTOs = suitableKoiBreeds.Select(koiBreedZodiac => new
+            {
+                KoiBreedId = koiBreedZodiac.KoiBreedId,
+                KoiBreedName = koiBreedZodiac.KoiBreed?.Name,
+                ZodiacId = koiBreedZodiac.ZodiacId,
+                ZodiacName = koiBreedZodiac.Zodiac?.ZodiacName,
+                Image = koiBreedZodiac.KoiBreed?.Image
+
+
+            }).ToList();
+
+            return new ResponseApiDTO { IsSuccess = true, Result = suitableKoiBreedDTOs, Message = "Suitable Koi breeds retrieved successfully." };
         }
-
-        // Step 2: Retrieve matching Koi breeds for the user's zodiac, including KoiBreed and Zodiac details
-        var koiZodiacRepo = _unitOfWork.GetRepo<KoiBreedZodiac>();
-        var queryBuilder = new QueryBuilder<KoiBreedZodiac>()
-            .WithPredicate(x => x.ZodiacId == userZodiac.ZodiacId)  // Match the ZodiacId from UserZodiac
-            .WithInclude(x => x.KoiBreed) // Include KoiBreed details
-            .WithInclude(x => x.Zodiac) // Include Zodiac details
-            .Build();
-
-        var suitableKoiBreeds = await koiZodiacRepo.GetAllAsync(queryBuilder);
-        if (suitableKoiBreeds == null || !suitableKoiBreeds.Any())
+        catch (Exception e)
         {
-            return new ResponseApiDTO { IsSuccess = false, Message = "No suitable Koi breeds found for the user's zodiac." };
+            Console.WriteLine(e);
+            return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable Koi breeds." };
         }
-        
-        var suitableKoiBreedDTOs = suitableKoiBreeds.Select(koiBreedZodiac => new 
-        {
-            KoiBreedId = koiBreedZodiac.KoiBreedId,
-            KoiBreedName = koiBreedZodiac.KoiBreed?.Name,
-            ZodiacId = koiBreedZodiac.ZodiacId,
-            ZodiacName = koiBreedZodiac.Zodiac?.ZodiacName,
-            Image = koiBreedZodiac.KoiBreed?.Image
-            
-            
-        }).ToList();
-
-        return new ResponseApiDTO { IsSuccess = true, Result = suitableKoiBreedDTOs, Message = "Suitable Koi breeds retrieved successfully." };
     }
-    catch (Exception e)
-    {
-        Console.WriteLine(e);
-        return new ResponseApiDTO { IsSuccess = false, Message = "An error occurred while retrieving suitable Koi breeds." };
-    }
-}
     public async Task<ResponseApiDTO> GetKoiBreedByKoiCategory(int koiCategoryId)
     {
         try
