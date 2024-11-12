@@ -60,4 +60,24 @@ public class AdminService : IAdminService
         };
 
     }
+
+    public async Task<List<MonthlyRevenueDTO>> GetMonthlyRevenue()
+    {
+        var paymentRepo =  _unitOfWork.GetRepo<Payment>();
+        var currentYear = DateTime.Now.Year;
+
+        var payments = paymentRepo.Get(new QueryBuilder<Payment>()
+            .WithPredicate(x => x.CreatedDate.Year == currentYear)
+            .WithTracking(false)
+            .Build());
+
+        var monthlyReveNue = await payments.GroupBy(p => new {p.CreatedDate.Year, p.CreatedDate.Month})
+            .Select(g => new MonthlyRevenueDTO
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                TotalRevenue = g.Sum(x => x.Amount)
+            }).OrderBy(m => m.Month).ToListAsync();
+        return monthlyReveNue;
+    }
 }

@@ -18,12 +18,31 @@ namespace ConsultingKoiFish.API.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        [Route("get-total-stastistic- in-year")]
+        [Route("get-total-statistics- in-year")]
         public async Task<IActionResult> GetTotalStatistic()
         {
             try
             {
                 var response = await _adminService.GetTotalStatisticInYear();
+                return GetSuccess(response);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex.Message, ex.StackTrace);
+                Console.ResetColor();
+                return Error("Đã xảy ra lỗi trong quá trình xử lý. Vui lòng thử lại sau ít phút.");
+            }
+        }
+        
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        [Route("get-monthly-revenue-in-year")]
+        public async Task<IActionResult> GetMonthlyRevenue()
+        {
+            try
+            {
+                var response = await _adminService.GetMonthlyRevenue();
                 return GetSuccess(response);
             }
             catch (Exception ex)
