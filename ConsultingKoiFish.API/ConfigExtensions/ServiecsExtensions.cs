@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using System.Reflection;
 using CloudinaryDotNet;
 using ConsultingKoiFish.BLL.Helpers.Validations.PurchasePackagedValidation;
+using ConsultingKoiFish.BLL.Services.Implements;
+using ConsultingKoiFish.BLL.Services.Interfaces;
 
 namespace ConsultingKoiFish.API.ConfigExtensions
 {
@@ -31,6 +33,7 @@ namespace ConsultingKoiFish.API.ConfigExtensions
 					.AddClasses(classes => classes.Where(type => type.Namespace == $"ConsultingKoiFish.BLL.Services.Implements" && type.Name.EndsWith("Service")))
 					.AsImplementedInterfaces()
 					.WithScopedLifetime());
+			services.AddScoped<IAdminService, AdminService>();
 		}
 
 		//Add BackGround Service

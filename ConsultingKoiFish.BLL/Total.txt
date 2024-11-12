@@ -1,0 +1,5 @@
+tính tổng số doanh thu trong năm
+tổng lượng ngừoi dùng trong năm
+tổng số quảng cáo trong năm
+tổng số gói quảng cáo đã giao dịch trong năm
+tính biểu đồ doanh thu trong năm (12 tháng)
